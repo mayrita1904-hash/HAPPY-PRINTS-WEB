@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Happy Prints — Panel Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://ocwzwrapiqvyxdlijdoc.supabase.co; connect-src 'self' https://ocwzwrapiqvyxdlijdoc.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:#F5F5F8;color:#1A1F4B;min-height:100vh}
+nav{background:#1A1F4B;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:50}
+.logo{display:flex;align-items:center;gap:10px}
+.lc{width:34px;height:34px;background:#FF2D78;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff}
+.lt{font-size:14px;font-weight:800;color:#fff}
+.ls{font-size:9px;color:#C8E63A;letter-spacing:1.5px;text-transform:uppercase}
+.nbadge{background:#C8E63A;color:#1A1F4B;font-size:11px;font-weight:800;padding:4px 12px;border-radius:999px}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 20px}
+.ptitle{font-size:22px;font-weight:900;margin-bottom:3px}
+.psub{font-size:13px;color:#9090A8;margin-bottom:24px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:28px}
+.stat{background:#fff;border-radius:14px;border:1.5px solid #EBEBEB;padding:16px 18px}
+.sv{font-size:28px;font-weight:900}
+.sl{font-size:11px;color:#9090A8;font-weight:700;margin-top:2px}
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.sinput{flex:1;min-width:180px;padding:9px 14px;border:1.5px solid #E0E0E8;border-radius:999px;font-family:'Nunito',sans-serif;font-size:13px;color:#1A1F4B;outline:none;background:#fff}
+.sinput:focus{border-color:#FF2D78}
+.btn{padding:9px 18px;border-radius:999px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:#FF2D78;color:#fff}.btn-p:hover{background:#e0245e}
+.btn-s{background:#1A1F4B;color:#fff}.btn-s:hover{background:#2d3470}
+.btn-g{background:transparent;border:1.5px solid #E0E0E8;color:#1A1F4B}.btn-g:hover{border-color:#1A1F4B}
+.btn-sm{padding:6px 13px;font-size:11px}
+.btn-del{background:#FEE2E2;color:#DC2626;border:none}.btn-del:hover{background:#FECACA}
+.tbl{background:#fff;border-radius:16px;border:1.5px solid #EBEBEB;overflow:hidden}
+.th{display:grid;grid-template-columns:56px 1fr 130px 110px 80px 140px;background:#F8F8FA;border-bottom:1.5px solid #EBEBEB;padding:10px 16px;font-size:11px;font-weight:800;color:#9090A8;text-transform:uppercase;letter-spacing:.5px}
+.tr{display:grid;grid-template-columns:56px 1fr 130px 110px 80px 140px;padding:11px 16px;border-bottom:1px solid #F2F2F2;align-items:center;transition:background .12s}
+.tr:last-child{border-bottom:none}
+.tr:hover{background:#FFF8FA}
+.pimg{width:46px;height:46px;border-radius:10px;object-fit:cover;background:#F4F4F4;border:1px solid #EBEBEB;display:block}
+.piph{width:46px;height:46px;border-radius:10px;background:#F4F4F4;border:1px solid #EBEBEB;display:flex;align-items:center;justify-content:center;font-size:20px}
+.pname{font-size:13px;font-weight:800;color:#1A1F4B;margin-bottom:1px}
+.pcat{font-size:10px;color:#9090A8}
+.price{font-size:15px;font-weight:900;color:#FF2D78}
+.cbadge{display:inline-block;border-radius:6px;font-size:10px;font-weight:800;padding:3px 8px;background:#F0F0F5;color:#1A1F4B}
+.tog{position:relative;width:40px;height:22px;cursor:pointer;display:inline-block}
+.tog input{opacity:0;width:0;height:0;position:absolute}
+.togslide{position:absolute;inset:0;background:#E0E0E8;border-radius:999px;transition:.2s}
+.togslide::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+input:checked+.togslide{background:#22C55E}
+input:checked+.togslide::before{transform:translateX(18px)}
+.actions{display:flex;gap:6px}
+/* MODAL */
+.mbg{display:none;position:fixed;inset:0;background:rgba(26,31,75,.6);z-index:200;align-items:center;justify-content:center;padding:20px}
+.mbg.open{display:flex}
+.mbox{background:#fff;border-radius:20px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;padding:28px}
+.mbox h2{font-size:18px;font-weight:900;color:#1A1F4B;margin-bottom:20px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:800;color:#1A1F4B;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select,.field textarea{width:100%;padding:10px 14px;border:1.5px solid #E0E0E8;border-radius:10px;font-family:'Nunito',sans-serif;font-size:13px;color:#1A1F4B;outline:none;transition:border-color .15s;background:#fff}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#FF2D78}
+.field textarea{resize:vertical;min-height:70px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.upload-zone{border:2px dashed #E0E0E8;border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:border-color .15s;position:relative;overflow:hidden}
+.upload-zone:hover{border-color:#FF2D78}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-preview{width:100%;height:150px;object-fit:cover;border-radius:10px;margin-bottom:10px;display:none}
+.colors{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.col-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border-color .15s;flex-shrink:0}
+.col-dot.sel{border-color:#1A1F4B}
+.mfooter{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;padding-top:14px;border-top:1px solid #F0F0F0}
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:#22C55E;color:#fff}
+.toast.err{background:#EF4444;color:#fff}
+.toast.info{background:#1A1F4B;color:#fff}
+.empty{text-align:center;padding:50px;color:#9090A8;font-size:14px}
+.loading{text-align:center;padding:40px;color:#9090A8;font-size:14px}
+.err-banner{background:#FEE2E2;color:#DC2626;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:700;margin-bottom:16px;display:none}
+/* LOGIN */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#1A1F4B}
+.login-card{background:#fff;border-radius:20px;padding:32px 28px;width:100%;max-width:360px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.login-title{font-size:18px;font-weight:900;color:#1A1F4B}
+.login-sub{font-size:12px;color:#9090A8;margin-top:2px}
+.login-err{background:#FEE2E2;color:#DC2626;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:700;margin-bottom:14px;display:none}
+.nbadge-row{display:flex;align-items:center;gap:10px}
+.logout-btn{background:transparent;border:1.5px solid rgba(255,255,255,.3);color:#fff;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;padding:6px 12px;border-radius:999px;cursor:pointer}
+.logout-btn:hover{border-color:#fff}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="lc">H</div>
+      <div><div class="login-title">Happy Prints</div><div class="login-sub">Panel de administración</div></div>
+    </div>
+    <div class="login-err" id="loginErr"></div>
+    <div class="field">
+      <label>Correo</label>
+      <input type="email" id="loginEmail" placeholder="tu@correo.com" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="btn btn-p" id="loginBtn" style="width:100%;justify-content:center" onclick="doLogin()">Iniciar sesión</button>
+    <div style="text-align:center;margin-top:14px">
+      <a href="#" style="font-size:12px;color:#9090A8;font-weight:700;text-decoration:underline" onclick="forgotPassword();return false;">¿Olvidaste tu contraseña?</a>
+    </div>
+  </div>
+</div>
+
+<!-- RESET DE CONTRASEÑA (se muestra al entrar desde el enlace del correo) -->
+<div class="login-screen" id="resetScreen" style="display:none">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="lc">H</div>
+      <div><div class="login-title">Nueva contraseña</div><div class="login-sub">Elige una contraseña nueva</div></div>
+    </div>
+    <div class="login-err" id="resetErr"></div>
+    <div class="field">
+      <label>Nueva contraseña</label>
+      <input type="password" id="resetPass" placeholder="Mínimo 6 caracteres" autocomplete="new-password" onkeydown="if(event.key==='Enter') confirmarReset()">
+    </div>
+    <button class="btn btn-p" id="resetBtn" style="width:100%;justify-content:center" onclick="confirmarReset()">Guardar y entrar</button>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+<nav>
+  <div class="logo">
+    <div class="lc">H</div>
+    <div><div class="lt">Happy Prints</div><div class="ls">Panel de administración</div></div>
+  </div>
+  <div class="nbadge-row">
+    <div class="nbadge" id="nbadge">👋 Hola</div>
+    <button class="logout-btn" onclick="cambiarPassword()">Cambiar contraseña</button>
+    <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="ptitle">Productos</div>
+  <div class="psub">Edita precios, sube fotos y activa o desactiva productos desde aquí.</div>
+
+  <div class="err-banner" id="err-banner"></div>
+
+  <div class="stats">
+    <div class="stat"><div class="sv" id="s1">—</div><div class="sl">Total productos</div></div>
+    <div class="stat"><div class="sv" id="s2">—</div><div class="sl">Activos</div></div>
+    <div class="stat"><div class="sv" id="s3">—</div><div class="sl">Categorías</div></div>
+    <div class="stat"><div class="sv" id="s4" style="color:#FF2D78">—</div><div class="sl">Precio mínimo</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input class="sinput" type="text" id="q" placeholder="🔍  Buscar producto..." oninput="filtrar()">
+    <select class="sinput" style="flex:0;width:auto" id="qcat" onchange="filtrar()">
+      <option value="">Todas las categorías</option>
+    </select>
+    <button class="btn btn-p" onclick="abrirModal()">＋ Nuevo producto</button>
+    <button class="btn btn-g btn-sm" onclick="cargar()">↻ Actualizar</button>
+  </div>
+
+  <div class="tbl">
+    <div class="th">
+      <div>Foto</div><div>Producto</div><div>Categoría</div>
+      <div>Precio</div><div>Activo</div><div>Acciones</div>
+    </div>
+    <div id="tbody"><div class="loading">Cargando productos…</div></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="mbg" id="mbg">
+  <div class="mbox">
+    <h2 id="mtitle">Nuevo producto</h2>
+
+    <div class="field">
+      <label>Foto del producto</label>
+      <div class="upload-zone" id="uzone">
+        <img id="uprv" class="upload-preview" src="" alt="Vista previa">
+        <input type="file" id="ufile" accept="image/jpeg,image/png,image/webp" onchange="previsualizarImg(this)">
+        <div id="upholder">
+          <div style="font-size:28px;margin-bottom:6px">📷</div>
+          <div style="font-size:13px;font-weight:700;color:#1A1F4B">Toca para elegir foto</div>
+          <div style="font-size:11px;color:#9090A8;margin-top:3px">JPG · PNG · WebP · máx 5 MB</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Nombre del producto *</label>
+      <input type="text" id="fn" placeholder="Ej: Taza Básica 11oz">
+    </div>
+    <div class="field">
+      <label>Descripción</label>
+      <textarea id="fd" placeholder="Describe brevemente el producto…"></textarea>
+    </div>
+    <div class="frow">
+      <div class="field">
+        <label>Categoría *</label>
+        <select id="fc"><option value="">Seleccionar…</option></select>
+      </div>
+      <div class="field">
+        <label>Tipo de precio *</label>
+        <select id="ft" onchange="toggleCampos()">
+          <option value="simple">Precio fijo</option>
+          <option value="talla">Por talla (adulto/infantil)</option>
+          <option value="cantidad">Por cantidad (libretas)</option>
+          <option value="escalonado">Escalonado (plumas)</option>
+        </select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="field">
+        <label>Precio base (MXN) *</label>
+        <input type="number" id="fp" placeholder="0.00" step="0.01" min="0">
+      </div>
+      <div class="field" id="finfantil" style="display:none">
+        <label>Precio infantil (MXN)</label>
+        <input type="number" id="fpi" placeholder="0.00" step="0.01" min="0">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Color de categoría</label>
+      <div class="colors" id="cpicker">
+        <div class="col-dot sel" style="background:#FF2D78" data-c="#FF2D78" onclick="elegirColor('#FF2D78',this)"></div>
+        <div class="col-dot" style="background:#39B54A" data-c="#39B54A" onclick="elegirColor('#39B54A',this)"></div>
+        <div class="col-dot" style="background:#7C3AED" data-c="#7C3AED" onclick="elegirColor('#7C3AED',this)"></div>
+        <div class="col-dot" style="background:#0EA5E9" data-c="#0EA5E9" onclick="elegirColor('#0EA5E9',this)"></div>
+        <div class="col-dot" style="background:#F59E0B" data-c="#F59E0B" onclick="elegirColor('#F59E0B',this)"></div>
+        <div class="col-dot" style="background:#EC4899" data-c="#EC4899" onclick="elegirColor('#EC4899',this)"></div>
+        <div class="col-dot" style="background:#1A1F4B" data-c="#1A1F4B" onclick="elegirColor('#1A1F4B',this)"></div>
+      </div>
+      <input type="hidden" id="fcolor" value="#FF2D78">
+    </div>
+
+    <div class="mfooter">
+      <button class="btn btn-g" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-p" id="sbtn" onclick="guardar()">Guardar producto</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+</div><!-- /#app -->
+
+<script>
+const URL_SB  = 'https://ocwzwrapiqvyxdlijdoc.supabase.co';
+const KEY     = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jd3p3cmFwaXF2eXhkbGlqZG9jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MzA1NzgsImV4cCI6MjA5ODUwNjU3OH0._3r9pDu7Vg09o_5MZt3tcu7i2CZoWk3xKtbOMWcY_wM';
+
+/* ── Sesión (Supabase Auth) ── */
+let session = JSON.parse(localStorage.getItem('hp_admin_session') || 'null');
+function authToken() { return (session && session.access_token) || KEY; }
+function HDR()     { return { 'apikey': KEY, 'Authorization': 'Bearer ' + authToken(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' }; }
+function HDR_GET() { return { 'apikey': KEY, 'Authorization': 'Bearer ' + authToken() }; }
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const err   = document.getElementById('loginErr');
+  const btn   = document.getElementById('loginBtn');
+  err.style.display = 'none';
+  if (!email || !pass) { err.textContent = 'Ingresa tu correo y contraseña.'; err.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Entrando…';
+  try {
+    const r = await fetch(URL_SB + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'apikey': KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      const msg = data.error_code === 'email_not_confirmed'
+        ? 'Debes confirmar tu correo primero (revisa tu bandeja de entrada).'
+        : (data.msg || data.error_description || 'Correo o contraseña incorrectos.');
+      throw new Error(msg);
+    }
+    session = data;
+    localStorage.setItem('hp_admin_session', JSON.stringify(session));
+    mostrarApp();
+  } catch (e) {
+    err.textContent = e.message;
+    err.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Iniciar sesión';
+  }
+}
+
+function doLogout() {
+  session = null;
+  localStorage.removeItem('hp_admin_session');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginPass').value = '';
+}
+
+async function cambiarPassword() {
+  const nueva = prompt('Escribe tu nueva contraseña (mínimo 6 caracteres):');
+  if (!nueva) return;
+  if (nueva.length < 6) { toast('La contraseña debe tener al menos 6 caracteres.', 'err'); return; }
+  try {
+    const r = await fetch(URL_SB + '/auth/v1/user', {
+      method: 'PUT',
+      headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + authToken(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: nueva })
+    });
+    if (!r.ok) throw new Error((await r.json()).msg || 'No se pudo actualizar.');
+    toast('Contraseña actualizada ✔', 'ok');
+  } catch (e) { toast('Error: ' + e.message, 'err'); }
+}
+
+function mostrarApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('resetScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('nbadge').textContent = '👋 Hola, ' + ((session && session.user && session.user.email) || '');
+  cargar();
+}
+
+/* ── Olvidé mi contraseña ── */
+async function forgotPassword() {
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email) { toast('Escribe tu correo arriba primero.', 'err'); return; }
+  try {
+    const r = await fetch(URL_SB + '/auth/v1/recover', {
+      method: 'POST',
+      headers: { 'apikey': KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, options: { redirect_to: window.location.href.split('#')[0] } })
+    });
+    if (!r.ok) throw new Error((await r.json()).msg || 'No se pudo enviar el correo.');
+    toast('Te enviamos un correo con un enlace para elegir una nueva contraseña ✔', 'ok');
+  } catch (e) { toast('Error: ' + e.message, 'err'); }
+}
+
+/* Sesión temporal de recuperación, obtenida del enlace del correo */
+let recoverySession = null;
+
+function checkRecoveryLink() {
+  const hash = window.location.hash;
+  if (!hash || hash.indexOf('type=recovery') === -1) return false;
+  const params = new URLSearchParams(hash.slice(1));
+  const access_token = params.get('access_token');
+  if (!access_token) return false;
+  recoverySession = { access_token };
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('resetScreen').style.display = 'flex';
+  return true;
+}
+
+async function confirmarReset() {
+  const nueva = document.getElementById('resetPass').value;
+  const err = document.getElementById('resetErr');
+  err.style.display = 'none';
+  if (!nueva || nueva.length < 6) { err.textContent = 'La contraseña debe tener al menos 6 caracteres.'; err.style.display = 'block'; return; }
+  try {
+    const r = await fetch(URL_SB + '/auth/v1/user', {
+      method: 'PUT',
+      headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + recoverySession.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: nueva })
+    });
+    if (!r.ok) throw new Error((await r.json()).msg || 'No se pudo actualizar la contraseña.');
+    session = recoverySession;
+    localStorage.setItem('hp_admin_session', JSON.stringify(session));
+    history.replaceState(null, '', window.location.pathname);
+    toast('Contraseña actualizada, ¡bienvenida! 👋', 'ok');
+    mostrarApp();
+  } catch (e) { err.textContent = e.message; err.style.display = 'block'; }
+}
+
+const EMOJI = {
+  'tazas':'☕','playeras':'👕','sudaderas':'🧥','termos':'🥤',
+  'vasos':'🧋','libretas':'📓','plumas':'🖊️','calendarios':'📅','servicios':'🖨️'
+};
+function catEmoji(c) { return EMOJI[(c||'').toLowerCase()] || '📦'; }
+
+
+let prods = [], cats = [], editId = null, archivoImg = null, colorSel = '#FF2D78';
+
+/* ── API helpers ── */
+function checkAuthError(status) {
+  if (status === 401) { doLogout(); toast('Tu sesión expiró, inicia sesión de nuevo.', 'err'); }
+}
+async function sbGet(path) {
+  const r = await fetch(URL_SB + '/rest/v1/' + path, { headers: HDR_GET() });
+  if (!r.ok) { checkAuthError(r.status); throw new Error((await r.json()).message || r.statusText); }
+  return r.json();
+}
+async function sbPost(path, body) {
+  const r = await fetch(URL_SB + '/rest/v1/' + path, { method:'POST', headers: HDR(), body: JSON.stringify(body) });
+  if (!r.ok) { checkAuthError(r.status); throw new Error((await r.json()).message || r.statusText); }
+  return r.json();
+}
+async function sbPatch(path, body) {
+  const r = await fetch(URL_SB + '/rest/v1/' + path, { method:'PATCH', headers: HDR(), body: JSON.stringify(body) });
+  if (!r.ok) { checkAuthError(r.status); throw new Error((await r.json()).message || r.statusText); }
+  return r.status === 204 ? null : r.json();
+}
+async function sbDelete(path) {
+  const r = await fetch(URL_SB + '/rest/v1/' + path, { method:'DELETE', headers: HDR_GET() });
+  if (!r.ok) { checkAuthError(r.status); throw new Error((await r.json()).message || r.statusText); }
+}
+async function sbUpload(path, file) {
+  const r = await fetch(URL_SB + '/storage/v1/object/productos/' + path, {
+    method: 'POST',
+    headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + authToken(), 'Content-Type': file.type, 'x-upsert': 'true' },
+    body: file
+  });
+  if (!r.ok) throw new Error('Error subiendo imagen: ' + r.statusText);
+  return URL_SB + '/storage/v1/object/public/productos/' + path;
+}
+
+/* ── Init ── */
+async function cargar() {
+  ocultarError();
+  document.getElementById('tbody').innerHTML = '<div class="loading">Cargando…</div>';
+  try {
+    [cats, prods] = await Promise.all([
+      sbGet('categorias?select=*&order=orden'),
+      sbGet('productos?select=*,categorias(nombre,emoji)&order=categoria_id,orden')
+    ]);
+    poblarCats();
+    renderTabla(prods);
+    actualizarStats(prods);
+  } catch(e) {
+    mostrarError('No se pudieron cargar los productos: ' + e.message);
+    document.getElementById('tbody').innerHTML = '<div class="empty">⚠️ Error de conexión. Verifica tu internet.</div>';
+  }
+}
+
+function poblarCats() {
+  const s1 = document.getElementById('qcat');
+  const s2 = document.getElementById('fc');
+  // limpiar opciones anteriores excepto la primera
+  while (s1.options.length > 1) s1.remove(1);
+  while (s2.options.length > 1) s2.remove(1);
+  cats.forEach(c => {
+    s1.add(new Option(catEmoji(c.emoji||c.nombre) + ' ' + c.nombre, c.id));
+    s2.add(new Option(catEmoji(c.emoji||c.nombre) + ' ' + c.nombre, c.id));
+  });
+}
+
+function actualizarStats(list) {
+  document.getElementById('s1').textContent = list.length;
+  document.getElementById('s2').textContent = list.filter(p => p.activo).length;
+  document.getElementById('s3').textContent = new Set(list.map(p => p.categoria_id)).size;
+  const min = list.length ? Math.min(...list.map(p => Number(p.precio_base))) : 0;
+  document.getElementById('s4').textContent = '$' + min.toFixed(2);
+}
+
+function filtrar() {
+  const q   = document.getElementById('q').value.toLowerCase();
+  const cat = document.getElementById('qcat').value;
+  renderTabla(prods.filter(p =>
+    (!q   || p.nombre.toLowerCase().includes(q) || (p.descripcion||'').toLowerCase().includes(q)) &&
+    (!cat || String(p.categoria_id) === String(cat))
+  ));
+}
+
+/* ── Tabla ── */
+function renderTabla(list) {
+  if (!list.length) {
+    document.getElementById('tbody').innerHTML = '<div class="empty">No hay productos. ¡Agrega el primero!</div>';
+    return;
+  }
+  document.getElementById('tbody').innerHTML = list.map(p => {
+    const c   = p.categorias || {};
+    const img = p.imagen_url
+      ? `<img class="pimg" src="${p.imagen_url}" alt="${p.nombre}"
+           onerror="this.style.display='none';this.nextSibling.style.display='flex'">`
+      : '';
+    const ph = `<div class="piph" style="${p.imagen_url?'display:none':''}">${c.emoji||'📦'}</div>`;
+    return `<div class="tr" id="fila-${p.id}">
+      <div style="display:flex">${img}${ph}</div>
+      <div>
+        <div class="pname">${p.nombre}</div>
+        <div class="pcat">${(p.descripcion||'').substring(0,50)}${(p.descripcion||'').length>50?'…':''}</div>
+      </div>
+      <div><span class="cbadge">${catEmoji(c.emoji||c.nombre)} ${c.nombre||'—'}</span></div>
+      <div class="price">$${Number(p.precio_base).toFixed(2)}</div>
+      <div>
+        <label class="tog">
+          <input type="checkbox" ${p.activo?'checked':''} onchange="toggleActivo(${p.id},this.checked)">
+          <span class="togslide"></span>
+        </label>
+      </div>
+      <div class="actions">
+        <button class="btn btn-g btn-sm" onclick="editarProd(${p.id})">✏️ Editar</button>
+        <button class="btn btn-del btn-sm" onclick="eliminarProd(${p.id},'${p.nombre.replace(/'/g,"\\'")}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Toggle activo ── */
+async function toggleActivo(id, activo) {
+  try {
+    await sbPatch(`productos?id=eq.${id}`, { activo, actualizado_en: new Date().toISOString() });
+    const p = prods.find(x => x.id === id);
+    if (p) p.activo = activo;
+    toast(activo ? '✓ Producto activado' : 'Producto desactivado', 'ok');
+    actualizarStats(prods);
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+/* ── Modal ── */
+function toggleCampos() {
+  document.getElementById('finfantil').style.display =
+    document.getElementById('ft').value === 'talla' ? 'block' : 'none';
+}
+
+function elegirColor(c, el) {
+  colorSel = c;
+  document.getElementById('fcolor').value = c;
+  document.querySelectorAll('.col-dot').forEach(d => d.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function previsualizarImg(input) {
+  if (!input.files[0]) return;
+  if (input.files[0].size > 5 * 1024 * 1024) {
+    toast('La imagen debe pesar menos de 5 MB', 'err');
+    input.value = '';
+    return;
+  }
+  archivoImg = input.files[0];
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prv = document.getElementById('uprv');
+    prv.src = e.target.result;
+    prv.style.display = 'block';
+    document.getElementById('upholder').style.display = 'none';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function abrirModal(prod = null) {
+  editId = prod ? prod.id : null;
+  archivoImg = null;
+  document.getElementById('mtitle').textContent = prod ? 'Editar producto' : 'Nuevo producto';
+  document.getElementById('fn').value   = prod?.nombre || '';
+  document.getElementById('fd').value   = prod?.descripcion || '';
+  document.getElementById('fc').value   = prod?.categoria_id || '';
+  document.getElementById('ft').value   = prod?.tipo || 'simple';
+  document.getElementById('fp').value   = prod?.precio_base || '';
+  document.getElementById('fpi').value  = prod?.precio_infantil || '';
+  const color = prod?.color_marca || '#FF2D78';
+  colorSel = color;
+  document.getElementById('fcolor').value = color;
+  document.querySelectorAll('.col-dot').forEach(d => {
+    d.classList.toggle('sel', d.dataset.c === color);
+  });
+  const prv = document.getElementById('uprv');
+  if (prod?.imagen_url) {
+    prv.src = prod.imagen_url;
+    prv.style.display = 'block';
+    document.getElementById('upholder').style.display = 'none';
+  } else {
+    prv.style.display = 'none';
+    document.getElementById('upholder').style.display = 'block';
+  }
+  document.getElementById('ufile').value = '';
+  toggleCampos();
+  document.getElementById('mbg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarModal() {
+  document.getElementById('mbg').classList.remove('open');
+  document.body.style.overflow = '';
+  editId = null;
+  archivoImg = null;
+}
+
+function editarProd(id) {
+  abrirModal(prods.find(p => p.id === id));
+}
+
+/* ── Guardar ── */
+async function guardar() {
+  const nombre = document.getElementById('fn').value.trim();
+  const precio = parseFloat(document.getElementById('fp').value);
+  const catId  = document.getElementById('fc').value;
+
+  if (!nombre) { toast('Escribe el nombre del producto', 'err'); return; }
+  if (!precio || precio <= 0) { toast('Escribe un precio válido', 'err'); return; }
+  if (!catId)  { toast('Selecciona una categoría', 'err'); return; }
+
+  const btn = document.getElementById('sbtn');
+  btn.textContent = 'Guardando…';
+  btn.disabled = true;
+
+  try {
+    const datos = {
+      nombre,
+      descripcion:    document.getElementById('fd').value.trim() || null,
+      categoria_id:   parseInt(catId),
+      tipo:           document.getElementById('ft').value,
+      precio_base:    precio,
+      precio_infantil: parseFloat(document.getElementById('fpi').value) || null,
+      color_marca:    colorSel,
+      activo:         true,
+      actualizado_en: new Date().toISOString()
+    };
+
+    let prodId = editId;
+    if (editId) {
+      await sbPatch(`productos?id=eq.${editId}`, datos);
+    } else {
+      const [creado] = await sbPost('productos', datos);
+      prodId = creado.id;
+    }
+
+    /* subir imagen si hay archivo nuevo */
+    if (archivoImg && prodId) {
+      toast('Subiendo imagen…', 'info');
+      const ext  = archivoImg.name.split('.').pop().toLowerCase();
+      const path = `prod-${prodId}-${Date.now()}.${ext}`;
+      const imgUrl = await sbUpload(path, archivoImg);
+      await sbPatch(`productos?id=eq.${prodId}`, { imagen_url: imgUrl });
+    }
+
+    toast(editId ? '✓ Producto actualizado' : '✓ Producto creado', 'ok');
+    cerrarModal();
+    await cargar();
+  } catch(e) {
+    toast('Error al guardar: ' + e.message, 'err');
+  } finally {
+    btn.textContent = 'Guardar producto';
+    btn.disabled = false;
+  }
+}
+
+/* ── Eliminar ── */
+async function eliminarProd(id, nombre) {
+  if (!confirm(`¿Eliminar "${nombre}"?\nEsta acción no se puede deshacer.`)) return;
+  try {
+    await sbDelete(`productos?id=eq.${id}`);
+    toast('Producto eliminado', 'ok');
+    await cargar();
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+/* ── UI helpers ── */
+function toast(msg, tipo = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${tipo}`;
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className = 'toast', 3500);
+}
+function mostrarError(msg) {
+  const b = document.getElementById('err-banner');
+  b.textContent = '⚠️ ' + msg;
+  b.style.display = 'block';
+}
+function ocultarError() {
+  document.getElementById('err-banner').style.display = 'none';
+}
+
+document.getElementById('mbg').addEventListener('click', e => {
+  if (e.target === document.getElementById('mbg')) cerrarModal();
+});
+
+if (!checkRecoveryLink()) {
+  if (session && session.access_token) {
+    mostrarApp();
+  } else {
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
+}
+</script>
+</body>
+</html>
