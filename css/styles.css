@@ -384,6 +384,13 @@ footer p { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 4px; }
 .mdesc { font-size: 12px; color: var(--ink-soft); margin-bottom: 16px; line-height: 1.5; }
 .olbl { font-family: 'Fredoka', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--navy); margin: 14px 0 6px; display: block; }
 .ogrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.attach-zone {
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  border: 2px dashed #E0E0E8; border-radius: var(--radius-sm); padding: 14px 12px;
+  font-size: 12px; font-weight: 700; color: var(--ink-soft); cursor: pointer;
+  transition: border-color .15s; line-height: 1.4;
+}
+.attach-zone:hover { border-color: var(--pink); }
 .obtn {
   border: 2px solid #E0E0E8; border-radius: var(--radius-sm); background: #fff; font-family: 'Nunito', sans-serif;
   font-size: 12px; font-weight: 700; color: var(--navy); padding: 10px 4px; cursor: pointer; text-align: center;
