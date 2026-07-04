@@ -66,6 +66,9 @@ input:checked+.togslide::before{transform:translateX(18px)}
 .upload-zone:hover{border-color:#FF2D78}
 .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .upload-preview{width:100%;height:150px;object-fit:cover;border-radius:10px;margin-bottom:10px;display:none}
+.gal-thumb{position:relative;border-radius:8px;overflow:hidden;border:1.5px solid #EBEBEB;aspect-ratio:1/1}
+.gal-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.gal-thumb .gal-del{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(220,38,38,.9);color:#fff;border:none;font-size:12px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
 .colors{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .col-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border-color .15s;flex-shrink:0}
 .col-dot.sel{border-color:#1A1F4B}
@@ -191,6 +194,16 @@ input:checked+.togslide::before{transform:translateX(18px)}
           <div style="font-size:13px;font-weight:700;color:#1A1F4B">Toca para elegir foto</div>
           <div style="font-size:11px;color:#9090A8;margin-top:3px">JPG · PNG · WebP · máx 5 MB</div>
         </div>
+      </div>
+    </div>
+
+    <div class="field" id="galeriaField">
+      <label>Galería de fotos adicionales (estilo Amazon)</label>
+      <div id="galeriaNota" style="font-size:12px;color:#9090A8;padding:8px 0">Guarda el producto primero para poder agregarle más fotos.</div>
+      <div id="galeriaGrid" style="display:none;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px"></div>
+      <div class="upload-zone" id="galeriaZone" style="display:none;padding:10px">
+        <input type="file" id="gfile" accept="image/jpeg,image/png,image/webp" onchange="agregarGaleriaImg(this)">
+        <div style="font-size:11px;font-weight:700;color:#1A1F4B">＋ Agregar foto a la galería (máx 5 MB)</div>
       </div>
     </div>
 
@@ -578,8 +591,71 @@ function abrirModal(prod = null) {
   }
   document.getElementById('ufile').value = '';
   toggleCampos();
+  cargarGaleria();
   document.getElementById('mbg').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+/* ── Galería de fotos adicionales ── */
+let galeriaImgs = [];
+
+async function cargarGaleria() {
+  galeriaImgs = [];
+  if (!editId) {
+    document.getElementById('galeriaNota').style.display = 'block';
+    document.getElementById('galeriaGrid').style.display = 'none';
+    document.getElementById('galeriaZone').style.display = 'none';
+    return;
+  }
+  document.getElementById('galeriaNota').style.display = 'none';
+  document.getElementById('galeriaZone').style.display = 'block';
+  try {
+    galeriaImgs = await sbGet(`producto_imagenes?producto_id=eq.${editId}&order=orden`);
+  } catch (e) { galeriaImgs = []; }
+  renderGaleria();
+}
+
+function renderGaleria() {
+  const grid = document.getElementById('galeriaGrid');
+  grid.style.display = 'grid';
+  grid.innerHTML = galeriaImgs.map(g => `
+    <div class="gal-thumb">
+      <img src="${g.url}" alt="">
+      <button class="gal-del" onclick="eliminarGaleriaImg(${g.id})" aria-label="Quitar foto">✕</button>
+    </div>
+  `).join('');
+}
+
+async function agregarGaleriaImg(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('La imagen debe pesar menos de 5 MB', 'err'); input.value = ''; return; }
+  if (!editId) return;
+  toast('Subiendo foto…', 'info');
+  try {
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `prod-${editId}-gal-${Date.now()}.${ext}`;
+    const url = await sbUpload(path, file);
+    const orden = galeriaImgs.length ? Math.max(...galeriaImgs.map(g => g.orden)) + 1 : 1;
+    const [nueva] = await sbPost('producto_imagenes', { producto_id: editId, url, orden });
+    galeriaImgs.push(nueva);
+    renderGaleria();
+    toast('✓ Foto agregada a la galería', 'ok');
+  } catch (e) {
+    toast('Error al subir la foto: ' + e.message, 'err');
+  } finally {
+    input.value = '';
+  }
+}
+
+async function eliminarGaleriaImg(id) {
+  if (!confirm('¿Quitar esta foto de la galería?')) return;
+  try {
+    await sbDelete(`producto_imagenes?id=eq.${id}`);
+    galeriaImgs = galeriaImgs.filter(g => g.id !== id);
+    renderGaleria();
+    toast('Foto eliminada', 'ok');
+  } catch (e) { toast('Error: ' + e.message, 'err'); }
 }
 
 function cerrarModal() {
@@ -587,6 +663,7 @@ function cerrarModal() {
   document.body.style.overflow = '';
   editId = null;
   archivoImg = null;
+  galeriaImgs = [];
 }
 
 function editarProd(id) {
