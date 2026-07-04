@@ -31,7 +31,7 @@ const SERVICE_TILES = [
   { title: 'Offset y Serigrafía', sub: '', icon: '🖨️', img: 'assets/images/offset-serigrafia.png', color: '#7C3AED', kw: ['offset','serigraf'] },
   { title: 'Invitaciones y Papelería Social', sub: '', icon: '💌', img: 'assets/images/invitaciones-papeleria-social.png', color: '#1FB6AE', kw: ['invitac','papeler'] },
   { title: 'Grabado y Corte Láser', sub: '', icon: '✂️', img: 'assets/images/grabado-corte-laser.png', color: '#F5A623', kw: ['grabado','laser','corte'] },
-  { title: 'Sublimación, DTF y Vinil', sub: '', icon: '👕', img: 'assets/images/sublimacion-dtf-vinil.png', color: '#FF2D78', kw: ['sublimac','dtf','vinil'] },
+  { title: 'Sublimación, DTF y Vinil', sub: '', icon: '👕', img: 'assets/images/sublimacion-dtf-vinil.png', color: '#FF2D78', showAll: true },
   { title: 'Libretas, Agendas y Planners', sub: '', icon: '📓', img: 'assets/images/libretas-agendas-planners.png', color: '#F6C55B', kw: ['libreta','agenda','planner'] },
   { title: 'Impresión Digital y Publicidad', sub: '', icon: '🖼️', img: 'assets/images/impresion-digital-publicidad.png', color: '#E91E8C', kw: ['impresion','digital','publicidad'] },
   { title: 'Sellos, Etiquetas y Credenciales', sub: '', icon: '🏷️', img: 'assets/images/sellos-etiquetas-credenciales.png', color: '#B4C430', kw: ['sello','etiqueta','credencial'] },
@@ -56,8 +56,7 @@ function buildCatGrid() {
   const grid = document.getElementById('cat-grid-visual');
   if (!grid) return;
   grid.innerHTML = SERVICE_TILES.map(t => {
-    const ids = matchCatIds(t.kw);
-    const arg = ids.length ? JSON.stringify(ids) : `'all'`;
+    const arg = t.showAll ? `'all'` : (() => { const ids = matchCatIds(t.kw); return ids.length ? JSON.stringify(ids) : `'all'`; })();
     const fitClass = t.imgFit === 'cover' ? ' cover' : '';
     const media = t.img
       ? `<img class="cat-tile-img${fitClass}" src="${t.img}" alt="${t.title}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'cat-tile-icon',textContent:'${t.icon}'}))">`
