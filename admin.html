@@ -345,10 +345,19 @@ let recoverySession = null;
 
 function checkRecoveryLink() {
   const hash = window.location.hash;
-  if (!hash || hash.indexOf('type=recovery') === -1) return false;
+  if (!hash) return false;
   const params = new URLSearchParams(hash.slice(1));
+
+  if (params.get('error_code') === 'otp_expired') {
+    history.replaceState(null, '', window.location.pathname);
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('loginErr').textContent = 'Ese enlace ya venció. Pide uno nuevo con "¿Olvidaste tu contraseña?" y ábrelo apenas te llegue.';
+    document.getElementById('loginErr').style.display = 'block';
+    return true;
+  }
+
   const access_token = params.get('access_token');
-  if (!access_token) return false;
+  if (params.get('type') !== 'recovery' || !access_token) return false;
   recoverySession = { access_token };
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').style.display = 'none';
