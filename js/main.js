@@ -15,7 +15,8 @@ const EMOJI = {
   'vasos':'🧊','libretas':'📓','plumas':'🖊️','calendarios':'📅','servicios':'🖨️','stickers':'⭐','invitaciones':'💌',
   'promociones':'🔥','bordados':'🧵',
   'fiesta de niños':'🎈','despedida de soltera':'💃','despedida de soltero':'🕺','para mamá':'💐',
-  'para papá':'👔','graduación':'🎓','día del maestro':'🍎','día del niño':'🧸','bautizo':'👶','jubilación':'🎉'
+  'para papá':'👔','graduación':'🎓','día del maestro':'🍎','día del niño':'🧸','bautizo':'👶','jubilación':'🎉',
+  'sellos':'🏷️','etiquetas':'🔖','credenciales':'🪪','impresión digital':'🖼️','publicidad':'📣','grabado y corte láser':'✂️'
 };
 function catEmoji(k) { return EMOJI[(k||'').toLowerCase()] || '📦'; }
 
@@ -44,19 +45,19 @@ const FEATURED = [
   { key: 'stickers', label: 'Stickers', icon: '⭐', color: '#F5A623' }
 ];
 
-function matchCatId(keywords) {
-  const found = allCats.find(c => keywords.some(k => c.nombre.toLowerCase().includes(k)));
-  if (found) return found.id;
+function matchCatIds(keywords) {
+  const found = allCats.filter(c => keywords.some(k => c.nombre.toLowerCase().includes(k)));
+  if (found.length) return found.map(c => c.id);
   const serv = allCats.find(c => c.nombre.toLowerCase().includes('servicio'));
-  return serv ? serv.id : 'all';
+  return serv ? [serv.id] : [];
 }
 
 function buildCatGrid() {
   const grid = document.getElementById('cat-grid-visual');
   if (!grid) return;
   grid.innerHTML = SERVICE_TILES.map(t => {
-    const catId = matchCatId(t.kw);
-    const arg = typeof catId === 'string' ? `'${catId}'` : catId;
+    const ids = matchCatIds(t.kw);
+    const arg = ids.length ? JSON.stringify(ids) : `'all'`;
     const fitClass = t.imgFit === 'cover' ? ' cover' : '';
     const media = t.img
       ? `<img class="cat-tile-img${fitClass}" src="${t.img}" alt="${t.title}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'cat-tile-icon',textContent:'${t.icon}'}))">`
@@ -120,7 +121,7 @@ function filt(cat, chipEl) {
   document.querySelectorAll('.hnl').forEach(e => e.classList.remove('on'));
   if (chipEl) {
     chipEl.classList.add('on');
-  } else {
+  } else if (!Array.isArray(cat)) {
     const match = document.querySelector(`.chip[data-cat="${cat}"]`);
     if (match) match.classList.add('on');
   }
@@ -139,7 +140,9 @@ function inquireWA(topic) {
 }
 
 function renderGrid(cat) {
-  const list = cat === 'all' ? allProds : allProds.filter(p => p.categoria_id === cat);
+  const list = cat === 'all' ? allProds
+    : Array.isArray(cat) ? allProds.filter(p => cat.includes(p.categoria_id))
+    : allProds.filter(p => p.categoria_id === cat);
   if (!list.length) {
     document.getElementById('grid').innerHTML = '<div class="empty">No hay productos en esta categoría todavía.</div>';
     return;
