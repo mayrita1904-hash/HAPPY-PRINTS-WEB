@@ -2,6 +2,11 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<script>
+if (location.hash.indexOf('type=recovery') !== -1 || location.hash.indexOf('type=magiclink') !== -1) {
+  location.replace('/admin.html' + location.hash);
+}
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Happy Prints — Catálogo</title>
 <meta name="description" content="Tazas, playeras, libretas, stickers y más productos personalizados. Sublimación, DTF, impresión digital y diseño gráfico.">
