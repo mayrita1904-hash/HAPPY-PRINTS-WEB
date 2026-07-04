@@ -5,6 +5,8 @@ const WA_NUMBER = '5217224616543';
 
 let allProds = [], allCats = [], allNiveles = [];
 let cur = null, st = { qty: 1, talla: 'adulto', hojas: 50 };
+const ATTACH_MAX_BYTES = 5 * 1024 * 1024;
+let attachUrl = null, attachTooBig = false, attachName = '';
 
 const fmt = n => '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 2 });
 
@@ -197,6 +199,7 @@ function openM(id) {
   cur = allProds.find(p => p.id === id);
   if (!cur) return;
   st = { qty: 1, talla: 'adulto', hojas: 50 };
+  attachUrl = null; attachTooBig = false; attachName = '';
   const c = cur.categorias || {};
   const color = cur.color_marca || '#FF2D78';
 
@@ -350,6 +353,12 @@ function renderMB() {
     <span style="font-size:12px;color:#9090A8;margin-left:6px">piezas</span>
   </div>
 
+  <span class="olbl">Foto de referencia (opcional)</span>
+  <label class="attach-zone" id="attachZone" for="attachInput">
+    <input type="file" id="attachInput" accept="image/*" onchange="handleAttach(event)" style="display:none">
+    <span id="attachLabel">📎 Toca para adjuntar una foto o diseño (máx. 5 MB)</span>
+  </label>
+
   <div class="tbox">
     <div>
       <div class="tlbl">Total estimado</div>
@@ -379,13 +388,52 @@ function chgQ(d) {
 
 function pick(k, v) { st[k] = v; renderMB(); }
 
+function renderAttachZone(html) {
+  const label = document.getElementById('attachLabel');
+  if (label) label.innerHTML = html;
+}
+
+async function handleAttach(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  attachUrl = null; attachTooBig = false; attachName = file.name;
+
+  if (file.size > ATTACH_MAX_BYTES) {
+    attachTooBig = true;
+    renderAttachZone(`⚠️ "${file.name}" pesa más de 5 MB. No hay problema: mándala directo por este chat de WhatsApp después de hacer tu pedido.`);
+    return;
+  }
+
+  renderAttachZone(`⏳ Subiendo "${file.name}"…`);
+  try {
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `pedidos/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+    const r = await fetch(`${SB_URL}/storage/v1/object/productos/${path}`, {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' },
+      body: file
+    });
+    if (!r.ok) throw new Error();
+    attachUrl = `${SB_URL}/storage/v1/object/public/productos/${path}`;
+    renderAttachZone(`✅ "${file.name}" lista — se incluirá con tu pedido.`);
+  } catch (err) {
+    attachUrl = null;
+    renderAttachZone(`⚠️ No se pudo subir "${file.name}". Puedes intentar de nuevo o mandarla directo por WhatsApp con tu pedido.`);
+  }
+}
+
 function pedirWA() {
   const t  = calcT();
   const ex = cur.tipo === 'talla'    ? `\n📏 *Talla:* ${st.talla}`
            : cur.tipo === 'cantidad' ? `\n📄 *Hojas:* ${st.hojas}`
            : '';
+  const foto = attachUrl
+    ? `\n📎 *Foto de referencia:* ${attachUrl}`
+    : attachTooBig
+      ? `\n📎 *Foto de referencia:* les mando el archivo por este mismo chat (pesa más de 5 MB)`
+      : '';
   const msg = encodeURIComponent(
-    `¡Hola! 👋 Vengo de su catálogo y me encantó lo que vi ✨\n\nMe gustaría apartar este pedido:\n\n🛍️ *Producto:* ${cur.nombre}\n🔢 *Cantidad:* ${st.qty} pieza(s)${ex}\n💰 *Total estimado:* ${fmt(t)} MXN\n\n¿Podrían confirmarme disponibilidad, tiempo de entrega y cómo realizar el pago? ¡Quedo al pendiente! 😊`
+    `¡Hola! 👋 Vengo de su catálogo y me encantó lo que vi ✨\n\nMe gustaría apartar este pedido:\n\n🛍️ *Producto:* ${cur.nombre}\n🔢 *Cantidad:* ${st.qty} pieza(s)${ex}${foto}\n💰 *Total estimado:* ${fmt(t)} MXN\n\n¿Podrían confirmarme disponibilidad, tiempo de entrega y cómo realizar el pago? ¡Quedo al pendiente! 😊`
   );
   window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
 }
