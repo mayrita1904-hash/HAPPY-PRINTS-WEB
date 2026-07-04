@@ -3,7 +3,7 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const HDR = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
 const WA_NUMBER = '5217224616543';
 
-let allProds = [], allCats = [], allNiveles = [];
+let allProds = [], allCats = [], allNiveles = [], allImgs = [];
 let cur = null, st = { qty: 1, talla: 'adulto', hojas: 50 };
 const ATTACH_MAX_BYTES = 5 * 1024 * 1024;
 let attachUrl = null, attachTooBig = false, attachName = '';
@@ -98,6 +98,9 @@ async function init() {
       get('productos?select=*,categorias(nombre,emoji)&order=categoria_id,orden&activo=eq.true'),
       get('precios_niveles?select=*&order=producto_id,cantidad_min')
     ]);
+    try {
+      allImgs = await get('producto_imagenes?select=*&order=producto_id,orden');
+    } catch (e) { allImgs = []; }
     buildCatGrid();
     buildFeatured();
     buildChips();
@@ -209,8 +212,15 @@ function openM(id) {
   const mph   = document.getElementById('mph');
   const mzoom = document.getElementById('mzoom');
   resetModalZoom();
-  if (cur.imagen_url) {
-    mimg.src = cur.imagen_url;
+
+  const gallery = allImgs
+    .filter(i => i.producto_id === cur.id)
+    .sort((a, b) => a.orden - b.orden)
+    .map(i => i.url);
+  if (!gallery.length && cur.imagen_url) gallery.push(cur.imagen_url);
+
+  if (gallery.length) {
+    mimg.src = gallery[0];
     mimg.alt = cur.nombre;
     mimg.style.display  = 'block';
     mph.style.display   = 'none';
@@ -222,6 +232,7 @@ function openM(id) {
     mph.textContent     = catEmoji(c.emoji||c.nombre);
     mzoom.style.display = 'none';
   }
+  renderThumbs(gallery);
 
   document.getElementById('mbar').style.background = color;
   document.getElementById('mbdg').textContent       = c.nombre || '';
@@ -281,6 +292,25 @@ function resetModalZoom() {
   mip.classList.remove('zoomed');
   mzoom.classList.remove('on');
   mimg.style.transformOrigin = '';
+}
+
+/* ── Galería de miniaturas (estilo Amazon) ── */
+function renderThumbs(gallery) {
+  const wrap = document.getElementById('mthumbs');
+  if (!wrap) return;
+  if (gallery.length < 2) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  wrap.style.display = 'flex';
+  wrap.innerHTML = gallery.map((url, i) => `
+    <img src="${url}" class="mthumb ${i === 0 ? 'on' : ''}" alt="Vista ${i + 1}" loading="lazy" onclick="selectGalleryImg('${url}', this)">
+  `).join('');
+}
+
+function selectGalleryImg(url, el) {
+  const mimg = document.getElementById('mimg');
+  mimg.src = url;
+  resetModalZoom();
+  document.querySelectorAll('.mthumb').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
 }
 
 document.addEventListener('keydown', e => {
