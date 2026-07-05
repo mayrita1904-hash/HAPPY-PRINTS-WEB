@@ -205,6 +205,7 @@ function openM(id) {
   if (!cur) return;
   st = { qty: 1, talla: 'adulto', hojas: 50 };
   attachUrl = null; attachTooBig = false; attachName = '';
+  hideDesignPreview();
   const c = cur.categorias || {};
   const color = cur.color_marca || '#FF2D78';
 
@@ -274,6 +275,8 @@ function toggleModalZoom(e) {
   mimg.classList.add('zoomed');
   mip.classList.add('zoomed');
   mzoom.classList.add('on');
+  const box = document.getElementById('designBox');
+  if (design) box.style.display = 'none';
 }
 
 /* Mientras está en zoom, seguir el cursor/dedo sin necesidad de volver a tocar */
@@ -292,6 +295,8 @@ function resetModalZoom() {
   mip.classList.remove('zoomed');
   mzoom.classList.remove('on');
   mimg.style.transformOrigin = '';
+  const box = document.getElementById('designBox');
+  if (design) box.style.display = 'block';
 }
 
 /* ── Galería de miniaturas (estilo Amazon) ── */
@@ -325,6 +330,7 @@ function renderMB() {
   const color = p.color_marca || '#FF2D78';
   const nivs  = nivelesDe(p.id);
   const total = calcT();
+  const permitePersonalizar = esPersonalizable(p);
   let h = '';
 
   if (p.tipo === 'talla') {
@@ -385,11 +391,24 @@ function renderMB() {
     <span style="font-size:12px;color:#9090A8;margin-left:6px">piezas</span>
   </div>
 
-  <span class="olbl">Foto de referencia (opcional)</span>
+  <span class="olbl">${permitePersonalizar ? '✨ Personaliza tu producto (opcional)' : '📎 Foto de referencia (opcional)'}</span>
   <label class="attach-zone" id="attachZone" for="attachInput">
     <input type="file" id="attachInput" accept="image/*" onchange="handleAttach(event)" style="display:none">
-    <span id="attachLabel">📎 Toca para adjuntar una foto o diseño (máx. 5 MB)</span>
+    <span id="attachLabel">${permitePersonalizar
+      ? '📎 Toca para subir tu foto o diseño y ver una vista previa (máx. 5 MB)'
+      : '📎 Toca para adjuntar una foto o diseño (máx. 5 MB)'}</span>
   </label>
+  ${permitePersonalizar ? `
+  <div id="designHint" style="display:none;margin-top:8px">
+    <div style="font-size:11px;color:var(--ink-soft);text-align:center;margin-bottom:8px">
+      Arrastra el diseño para moverlo · esquinas para agrandarlo · ⟳ para girarlo
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;background:#F5F5F8;border-radius:10px;padding:8px 12px">
+      <img id="designThumb" src="" alt="" style="width:36px;height:36px;object-fit:cover;border-radius:8px;flex-shrink:0">
+      <button type="button" onclick="document.getElementById('attachInput').click()" style="background:none;border:none;font-size:11px;font-weight:700;color:var(--navy);cursor:pointer;display:flex;align-items:center;gap:4px">🔄 Reemplazar</button>
+      <button type="button" onclick="removeDesign()" style="background:none;border:none;font-size:11px;font-weight:700;color:#DC2626;cursor:pointer;display:flex;align-items:center;gap:4px;margin-left:auto">🗑️ Eliminar</button>
+    </div>
+  </div>` : ''}
 
   <div class="tbox">
     <div>
@@ -425,10 +444,211 @@ function renderAttachZone(html) {
   if (label) label.innerHTML = html;
 }
 
+/* ── Editor de personalización: mover, agrandar y girar el diseño ── */
+function esPersonalizable(p) {
+  const catNombre = ((p && p.categorias && p.categorias.nombre) || '').toLowerCase();
+  return catNombre.includes('playera') || catNombre.includes('sudadera');
+}
+
+let design = null; // { x, y, w, h, angle } — x,y = centro en px relativos a #mip
+
+function showDesignPreview(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const mip = document.getElementById('mip');
+      const cw = mip.clientWidth, ch = mip.clientHeight;
+      const w = Math.min(cw * 0.42, img.naturalWidth || cw * 0.42);
+      const h = w * ((img.naturalHeight || w) / (img.naturalWidth || w));
+      design = { x: cw / 2, y: ch / 2, w, h, angle: 0 };
+      document.getElementById('mimgOverlay').src = e.target.result;
+      renderDesignBox();
+      if (!document.getElementById('mimg').classList.contains('zoomed')) {
+        document.getElementById('designBox').style.display = 'block';
+      }
+      const hint = document.getElementById('designHint');
+      if (hint) hint.style.display = 'block';
+      const thumb = document.getElementById('designThumb');
+      if (thumb) thumb.src = e.target.result;
+      const zone = document.getElementById('attachZone');
+      if (zone) zone.style.display = 'none';
+      scheduleCombinedUpdate();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function hideDesignPreview() {
+  design = null;
+  combinedUrl = null;
+  clearTimeout(combinedTimer);
+  document.getElementById('designBox').style.display = 'none';
+  document.getElementById('mimgOverlay').src = '';
+  const hint = document.getElementById('designHint');
+  if (hint) hint.style.display = 'none';
+}
+
+function removeDesign() {
+  hideDesignPreview();
+  attachUrl = null; attachTooBig = false; attachName = '';
+  document.getElementById('attachInput').value = '';
+  renderAttachZone('📎 Toca para subir tu foto o diseño y ver una vista previa (máx. 5 MB)');
+  const zone = document.getElementById('attachZone');
+  if (zone) zone.style.display = 'flex';
+}
+
+function renderDesignBox() {
+  if (!design) return;
+  const box = document.getElementById('designBox');
+  box.style.left      = design.x + 'px';
+  box.style.top       = design.y + 'px';
+  box.style.width     = design.w + 'px';
+  box.style.height    = design.h + 'px';
+  box.style.transform = `translate(-50%,-50%) rotate(${design.angle}deg)`;
+}
+
+/* ── Generar una sola imagen: producto + diseño en su posición/tamaño/ángulo ── */
+let combinedUrl = null;
+let combinedTimer = null;
+
+function loadImgEl(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+function fitRect(naturalW, naturalH, boxW, boxH) {
+  const containerRatio = boxW / boxH, imageRatio = naturalW / naturalH;
+  if (imageRatio > containerRatio) {
+    const renderedW = boxW, renderedH = boxW / imageRatio;
+    return { renderedW, renderedH, offsetX: 0, offsetY: (boxH - renderedH) / 2 };
+  }
+  const renderedH = boxH, renderedW = boxH * imageRatio;
+  return { renderedW, renderedH, offsetX: (boxW - renderedW) / 2, offsetY: 0 };
+}
+
+async function generarImagenCombinada() {
+  if (!design || !cur) return null;
+  const mimg = document.getElementById('mimg');
+  const mip  = document.getElementById('mip');
+  const overlaySrc = document.getElementById('mimgOverlay').src;
+  if (!mimg.src || !overlaySrc) return null;
+
+  try {
+    const [baseImg, designImg] = await Promise.all([loadImgEl(mimg.src), loadImgEl(overlaySrc)]);
+    const canvas = document.createElement('canvas');
+    canvas.width  = baseImg.naturalWidth;
+    canvas.height = baseImg.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
+
+    const { renderedW, offsetX, offsetY } = fitRect(baseImg.naturalWidth, baseImg.naturalHeight, mip.clientWidth, mip.clientHeight);
+    const scale = canvas.width / renderedW;
+    const cx = (design.x - offsetX) * scale, cy = (design.y - offsetY) * scale;
+    const dw = design.w * scale, dh = design.h * scale;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(design.angle * Math.PI / 180);
+    ctx.drawImage(designImg, -dw / 2, -dh / 2, dw, dh);
+    ctx.restore();
+
+    return await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+  } catch (err) {
+    return null;
+  }
+}
+
+async function actualizarCombinada() {
+  const blob = await generarImagenCombinada();
+  if (!blob) { combinedUrl = null; return; }
+  try {
+    const path = `pedidos/combo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+    const r = await fetch(`${SB_URL}/storage/v1/object/productos/${path}`, {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'image/jpeg', 'x-upsert': 'true' },
+      body: blob
+    });
+    if (!r.ok) throw new Error();
+    combinedUrl = `${SB_URL}/storage/v1/object/public/productos/${path}`;
+  } catch (err) {
+    combinedUrl = null;
+  }
+}
+
+function scheduleCombinedUpdate() {
+  clearTimeout(combinedTimer);
+  combinedTimer = setTimeout(actualizarCombinada, 350);
+}
+
+(function initDesignEditor() {
+  const box    = document.getElementById('designBox');
+  const rotate = document.getElementById('designRotate');
+  const resizeHandles = box.querySelectorAll('.resize-handle');
+  let drag = null, rot = null, rsz = null;
+
+  box.addEventListener('pointerdown', e => {
+    if (e.target.classList.contains('design-handle') || !design) return;
+    drag = { sx: e.clientX, sy: e.clientY, ox: design.x, oy: design.y };
+    box.setPointerCapture(e.pointerId);
+  });
+  box.addEventListener('pointermove', e => {
+    if (!drag) return;
+    design.x = drag.ox + (e.clientX - drag.sx);
+    design.y = drag.oy + (e.clientY - drag.sy);
+    renderDesignBox();
+  });
+  box.addEventListener('pointerup', () => { if (drag) scheduleCombinedUpdate(); drag = null; });
+
+  resizeHandles.forEach(handle => {
+    handle.addEventListener('pointerdown', e => {
+      e.stopPropagation();
+      if (!design) return;
+      const r = box.getBoundingClientRect();
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      rsz = { dist0: Math.hypot(e.clientX - cx, e.clientY - cy) || 1, w0: design.w, h0: design.h, cx, cy };
+      handle.setPointerCapture(e.pointerId);
+    });
+    handle.addEventListener('pointermove', e => {
+      if (!rsz) return;
+      const dist  = Math.hypot(e.clientX - rsz.cx, e.clientY - rsz.cy);
+      const scale = Math.max(0.3, Math.min(3, dist / rsz.dist0));
+      design.w = Math.max(30, rsz.w0 * scale);
+      design.h = Math.max(30, rsz.h0 * scale);
+      renderDesignBox();
+    });
+    handle.addEventListener('pointerup', () => { if (rsz) scheduleCombinedUpdate(); rsz = null; });
+  });
+
+  rotate.addEventListener('pointerdown', e => {
+    e.stopPropagation();
+    if (!design) return;
+    const r = box.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
+    rot = { startAngle, angle0: design.angle, cx, cy };
+    rotate.setPointerCapture(e.pointerId);
+  });
+  rotate.addEventListener('pointermove', e => {
+    if (!rot) return;
+    const angle = Math.atan2(e.clientY - rot.cy, e.clientX - rot.cx) * 180 / Math.PI;
+    design.angle = rot.angle0 + (angle - rot.startAngle);
+    renderDesignBox();
+  });
+  rotate.addEventListener('pointerup', () => { if (rot) scheduleCombinedUpdate(); rot = null; });
+})();
+
 async function handleAttach(e) {
   const file = e.target.files[0];
   if (!file) return;
   attachUrl = null; attachTooBig = false; attachName = file.name;
+  if (esPersonalizable(cur)) showDesignPreview(file);
 
   if (file.size > ATTACH_MAX_BYTES) {
     attachTooBig = true;
@@ -459,11 +679,13 @@ function pedirWA() {
   const ex = cur.tipo === 'talla'    ? `\n📏 *Talla:* ${st.talla}`
            : cur.tipo === 'cantidad' ? `\n📄 *Hojas:* ${st.hojas}`
            : '';
-  const foto = attachUrl
-    ? `\n📎 *Foto de referencia:* ${attachUrl}`
-    : attachTooBig
-      ? `\n📎 *Foto de referencia:* les mando el archivo por este mismo chat (pesa más de 5 MB)`
-      : '';
+  let foto = '';
+  if (combinedUrl) foto += `\n🎨 *Vista previa con mi diseño:* ${combinedUrl}`;
+  if (attachUrl) {
+    foto += `\n📎 *${combinedUrl ? 'Diseño original que subí' : 'Foto de referencia'}:* ${attachUrl}`;
+  } else if (attachTooBig) {
+    foto += `\n📎 *${combinedUrl ? 'Diseño original' : 'Foto de referencia'}:* les mando el archivo por este mismo chat (pesa más de 5 MB)`;
+  }
   const msg = encodeURIComponent(
     `¡Hola! 👋 Vengo de su catálogo y me encantó lo que vi ✨\n\nMe gustaría apartar este pedido:\n\n🛍️ *Producto:* ${cur.nombre}\n🔢 *Cantidad:* ${st.qty} pieza(s)${ex}${foto}\n💰 *Total estimado:* ${fmt(t)} MXN\n\n¿Podrían confirmarme disponibilidad, tiempo de entrega y cómo realizar el pago? ¡Quedo al pendiente! 😊`
   );
