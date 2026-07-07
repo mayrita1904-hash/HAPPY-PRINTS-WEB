@@ -720,22 +720,50 @@ function renderNiveles() {
   }
   nota.style.display = 'none';
   list.style.display = 'block';
-  labels.style.display = 'grid';
   addBtn.style.display = 'inline-flex';
 
-  const cols = esCantidad ? '1fr 1fr 1fr 1fr auto' : '1fr 1fr 1fr auto';
-  labels.style.gridTemplateColumns = cols;
-  labels.innerHTML = `<span>Desde (pzs)</span><span>Hasta (vacío=sin límite)</span><span>Precio c/u</span>${esCantidad ? '<span>Precio 100 hojas</span>' : ''}<span></span>`;
+  const vacio = '<div style="font-size:12px;color:#9090A8;padding:6px 0 10px">Todavía no hay niveles — agrega el primero.</div>';
 
-  list.innerHTML = nivelesActuales.map((n, idx) => `
-    <div class="nivel-row" style="grid-template-columns:${cols}">
-      <input type="number" min="1" placeholder="1" value="${n.cantidad_min ?? ''}" onchange="actualizarNivel(${idx},'cantidad_min',this.value)">
-      <input type="number" min="1" placeholder="Sin límite" value="${n.cantidad_max ?? ''}" onchange="actualizarNivel(${idx},'cantidad_max',this.value)">
-      <input type="number" min="0" step="0.01" placeholder="0.00" value="${n.precio ?? ''}" onchange="actualizarNivel(${idx},'precio',this.value)">
-      ${esCantidad ? `<input type="number" min="0" step="0.01" placeholder="0.00" value="${n.precio_100_hojas ?? ''}" onchange="actualizarNivel(${idx},'precio_100_hojas',this.value)">` : ''}
+  if (!esCantidad) {
+    labels.style.display = 'grid';
+    labels.style.gridTemplateColumns = '1fr 1fr 1fr auto';
+    labels.innerHTML = `<span>Desde (pzs)</span><span>Hasta (vacío=sin límite)</span><span>Precio c/u</span><span></span>`;
+    list.innerHTML = nivelesActuales.map((n, idx) => `
+      <div class="nivel-row" style="grid-template-columns:1fr 1fr 1fr auto">
+        <input type="number" min="1" placeholder="1" value="${n.cantidad_min ?? ''}" onchange="actualizarNivel(${idx},'cantidad_min',this.value)">
+        <input type="number" min="1" placeholder="Sin límite" value="${n.cantidad_max ?? ''}" onchange="actualizarNivel(${idx},'cantidad_max',this.value)">
+        <input type="number" min="0" step="0.01" placeholder="0.00" value="${n.precio ?? ''}" onchange="actualizarNivel(${idx},'precio',this.value)">
+        <button type="button" class="nivel-del" onclick="eliminarNivel(${idx})" title="Quitar nivel">✕</button>
+      </div>
+    `).join('') || vacio;
+    return;
+  }
+
+  /* "Por cantidad" (libretas): dos tablas separadas, mismos rangos de cantidad para ambas */
+  labels.style.display = 'none';
+  const filas50 = nivelesActuales.map((n, idx) => `
+    <div class="nivel-row" style="grid-template-columns:1fr 1fr 1fr auto">
+      <input type="number" min="1" placeholder="Desde" value="${n.cantidad_min ?? ''}" onchange="actualizarNivel(${idx},'cantidad_min',this.value)">
+      <input type="number" min="1" placeholder="Hasta (vacío=sin límite)" value="${n.cantidad_max ?? ''}" onchange="actualizarNivel(${idx},'cantidad_max',this.value)">
+      <input type="number" min="0" step="0.01" placeholder="Precio 50 hojas" value="${n.precio ?? ''}" onchange="actualizarNivel(${idx},'precio',this.value)">
       <button type="button" class="nivel-del" onclick="eliminarNivel(${idx})" title="Quitar nivel">✕</button>
     </div>
-  `).join('') || '<div style="font-size:12px;color:#9090A8;padding:6px 0 10px">Todavía no hay niveles — agrega el primero.</div>';
+  `).join('') || vacio;
+
+  const filas100 = nivelesActuales.map((n, idx) => `
+    <div class="nivel-row" style="grid-template-columns:1fr 1fr 1fr">
+      <div style="font-size:12px;color:#9090A8;padding:8px 0">${n.cantidad_min ?? '—'} pzs</div>
+      <div style="font-size:12px;color:#9090A8;padding:8px 0">${n.cantidad_max ? 'hasta ' + n.cantidad_max : 'sin límite'}</div>
+      <input type="number" min="0" step="0.01" placeholder="Precio 100 hojas" value="${n.precio_100_hojas ?? ''}" onchange="actualizarNivel(${idx},'precio_100_hojas',this.value)">
+    </div>
+  `).join('') || vacio;
+
+  list.innerHTML = `
+    <div style="font-size:11px;font-weight:800;color:#1A1F4B;text-transform:uppercase;margin-bottom:6px">📄 Precios para 50 hojas</div>
+    ${filas50}
+    <div style="font-size:11px;font-weight:800;color:#1A1F4B;text-transform:uppercase;margin:14px 0 6px">📄 Precios para 100 hojas <span style="font-weight:600;color:#9090A8;text-transform:none">(mismos rangos que arriba)</span></div>
+    ${filas100}
+  `;
 }
 
 function agregarNivelVacio() {
