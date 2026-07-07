@@ -203,7 +203,9 @@ function calcT() {
 function openM(id) {
   cur = allProds.find(p => p.id === id);
   if (!cur) return;
-  st = { qty: 1, talla: 'adulto', hojas: 50 };
+  const tallaInicial = cur.talla_adulto_activo === false && cur.precio_infantil && cur.talla_infantil_activo !== false
+    ? 'infantil' : 'adulto';
+  st = { qty: 1, talla: tallaInicial, hojas: 50 };
   attachUrl = null; attachTooBig = false; attachName = '';
   hideDesignPreview();
   const c = cur.categorias || {};
@@ -334,16 +336,23 @@ function renderMB() {
   let h = '';
 
   if (p.tipo === 'talla') {
+    const adultoOn   = p.talla_adulto_activo !== false;
+    const infantilOn = !!p.precio_infantil && p.talla_infantil_activo !== false;
     h += `<span class="olbl">Talla</span><div class="ogrid">
-      <button class="obtn ${st.talla==='adulto'?'on':''}" onclick="pick('talla','adulto')">
-        🧑 Adulto<br><small style="font-size:10px;font-weight:600;color:#9090A8">${fmt(p.precio_base)} c/u</small>
-      </button>
-      ${p.precio_infantil
+      ${adultoOn
+        ? `<button class="obtn ${st.talla==='adulto'?'on':''}" onclick="pick('talla','adulto')">
+            🧑 Adulto<br><small style="font-size:10px;font-weight:600;color:#9090A8">${fmt(p.precio_base)} c/u</small>
+           </button>`
+        : ''
+      }
+      ${infantilOn
         ? `<button class="obtn ${st.talla==='infantil'?'on':''}" onclick="pick('talla','infantil')">
             🧒 Infantil<br><small style="font-size:10px;font-weight:600;color:#9090A8">${fmt(p.precio_infantil)} c/u</small>
            </button>`
         : ''
-      }</div>`;
+      }
+      ${!adultoOn && !infantilOn ? '<div style="grid-column:1/-1;font-size:12px;color:var(--ink-soft)">Sin tallas disponibles por el momento.</div>' : ''}
+    </div>`;
   }
 
   if (p.tipo === 'cantidad' && nivs.length) {
