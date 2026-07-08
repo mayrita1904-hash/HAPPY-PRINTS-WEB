@@ -466,3 +466,30 @@ footer p { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 4px; }
   .wa-float { right: 24px; bottom: 24px; width: 60px; height: 60px; }
   .wa-float svg { width: 30px; height: 30px; }
 }
+
+/* ===== Ubicación ===== */
+.location { background: #fff; padding-bottom: 8px; }
+.location-wrap {
+  display: flex; flex-direction: column; gap: 16px;
+  max-width: 900px; margin: 0 auto; padding: 0 16px 28px;
+}
+.location-map {
+  width: 100%; height: 260px; border: 0; border-radius: var(--radius-md);
+}
+.location-info { text-align: center; }
+.location-address {
+  font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700;
+  color: var(--navy); line-height: 1.5; margin-bottom: 12px;
+}
+.location-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--pink); color: #fff; font-family: 'Fredoka', sans-serif;
+  font-weight: 700; font-size: 13px; text-decoration: none;
+  border-radius: 999px; padding: 10px 22px; transition: background .15s;
+}
+.location-btn:hover { background: #E0206A; }
+@media (min-width: 768px) {
+  .location-wrap { flex-direction: row; align-items: center; }
+  .location-map { height: 320px; flex: 1.3; }
+  .location-info { flex: 1; text-align: left; }
+}
