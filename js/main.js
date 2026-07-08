@@ -59,7 +59,7 @@ function buildCatGrid() {
     const arg = t.showAll ? `'all'` : (() => { const ids = matchCatIds(t.kw); return ids.length ? JSON.stringify(ids) : `'all'`; })();
     const fitClass = t.imgFit === 'cover' ? ' cover' : '';
     const media = t.img
-      ? `<img class="cat-tile-img${fitClass}" src="${t.img}" alt="${t.title}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'cat-tile-icon',textContent:'${t.icon}'}))">`
+      ? `<img class="cat-tile-img${fitClass}" src="${t.img}" alt="${t.title} - Happy Prints" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'cat-tile-icon',textContent:'${t.icon}'}))">`
       : `<div class="cat-tile-icon">${t.icon}</div>`;
     return `<div class="cat-tile ${t.img?'has-img':''}${fitClass}" style="background:${t.color}" onclick="filt(${arg})">
       ${media}
@@ -79,7 +79,7 @@ function buildFeatured() {
     const minPrice = Math.min(...prods.map(p => Number(p.precio_base)));
     const withImg = prods.find(p => p.imagen_url);
     const media = withImg
-      ? `<img src="${withImg.imagen_url}" alt="${f.label}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;feat-ph&quot;>${f.icon}</div>'">`
+      ? `<img src="${withImg.imagen_url}" alt="${f.label} personalizados - Happy Prints" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;feat-ph&quot;>${f.icon}</div>'">`
       : `<div class="feat-ph">${f.icon}</div>`;
     return `<div class="feat-card">
       <div class="feat-media" style="background:${f.color}22">${media}</div>
@@ -152,7 +152,7 @@ function renderGrid(cat) {
   document.getElementById('grid').innerHTML = list.map(p => {
     const c = p.categorias || {};
     const imgTag = p.imagen_url
-      ? `<img class="cimg" src="${p.imagen_url}" alt="${p.nombre}" loading="lazy"
+      ? `<img class="cimg" src="${p.imagen_url}" alt="${p.nombre}${c.nombre ? ' - ' + c.nombre + ' personalizado' : ''} | Happy Prints" loading="lazy"
            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : '';
     const ph = `<div class="cph" style="${p.imagen_url ? 'display:none' : ''}">${catEmoji(c.emoji||c.nombre)}</div>`;
@@ -224,7 +224,7 @@ function openM(id) {
 
   if (gallery.length) {
     mimg.src = gallery[0];
-    mimg.alt = cur.nombre;
+    mimg.alt = `${cur.nombre}${c.nombre ? ' - ' + c.nombre + ' personalizado' : ''} | Happy Prints`;
     mimg.style.display  = 'block';
     mph.style.display   = 'none';
     mzoom.style.display = 'flex';
@@ -308,7 +308,7 @@ function renderThumbs(gallery) {
   if (gallery.length < 2) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
   wrap.style.display = 'flex';
   wrap.innerHTML = gallery.map((url, i) => `
-    <img src="${url}" class="mthumb ${i === 0 ? 'on' : ''}" alt="Vista ${i + 1}" loading="lazy" onclick="selectGalleryImg('${url}', this)">
+    <img src="${url}" class="mthumb ${i === 0 ? 'on' : ''}" alt="Vista ${i + 1} de ${cur.nombre} | Happy Prints" loading="lazy" onclick="selectGalleryImg('${url}', this)">
   `).join('');
 }
 
