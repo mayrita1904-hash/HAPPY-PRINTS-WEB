@@ -23,11 +23,11 @@ if (location.hash.indexOf('type=recovery') !== -1 || location.hash.indexOf('type
 <meta name="twitter:title" content="Happy Prints México — Productos Personalizados">
 <meta name="twitter:description" content="Tazas, playeras, sudaderas, libretas y más, personalizados por sublimación. Pide el tuyo por WhatsApp.">
 <meta name="twitter:image" content="https://happy-prints-web.vercel.app/assets/images/hero-banner.jpg">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://ocwzwrapiqvyxdlijdoc.supabase.co; connect-src 'self' https://ocwzwrapiqvyxdlijdoc.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://ocwzwrapiqvyxdlijdoc.supabase.co; connect-src 'self' https://ocwzwrapiqvyxdlijdoc.supabase.co; frame-src https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=9">
+<link rel="stylesheet" href="css/styles.css?v=10">
 </head>
 <body>
 
@@ -41,9 +41,7 @@ if (location.hash.indexOf('type=recovery') !== -1 || location.hash.indexOf('type
   <div class="nav-links">
     <a class="hnl on" href="#top">Home</a><span class="hnl-sep">|</span>
     <a class="hnl" href="#prods" onclick="filt('all')">Productos</a><span class="hnl-sep">|</span>
-    <a class="hnl" href="#prods" onclick="goServicios()">Servicios</a><span class="hnl-sep">|</span>
-    <a class="hnl" href="#" onclick="inquireWA('Cursos');return false;">Cursos</a><span class="hnl-sep">|</span>
-    <a class="hnl" href="#" onclick="inquireWA('Kits');return false;">Kits</a>
+    <a class="hnl" href="#prods" onclick="goServicios()">Servicios</a>
   </div>
   <div class="nav-social">
     <a class="hsoc" href="mailto:happyprints.contacto@gmail.com" title="Correo" aria-label="Enviar correo">
@@ -121,6 +119,17 @@ if (location.hash.indexOf('type=recovery') !== -1 || location.hash.indexOf('type
   <div class="ti">💳 Transferencia o tarjeta</div>
   <div class="ti">📦 Envío a todo México</div>
 </div>
+
+<section class="location" aria-labelledby="loc-h">
+  <h2 id="loc-h" class="section-h">📍 Encuéntranos en</h2>
+  <div class="location-wrap">
+    <iframe class="location-map" src="https://www.google.com/maps?q=Ignacio+Allende+224%2C+Centro%2C+50000+Toluca+de+Lerdo%2C+M%C3%A9x.&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Ubicación de Happy Prints en el mapa"></iframe>
+    <div class="location-info">
+      <p class="location-address"><strong>Happy Prints</strong><br>Ignacio Allende 224, primer piso<br>Centro, 50000 Toluca de Lerdo, Méx.</p>
+      <a class="location-btn" href="https://share.google/bBVNMcEDftOxyx0vw" target="_blank" rel="noopener">Ver en Google Maps →</a>
+    </div>
+  </div>
+</section>
 
 <footer>
   <img class="footer-logo" src="assets/images/logo.jpg" alt="Logo de Happy Prints" width="72" height="72">
