@@ -136,11 +136,6 @@ function goServicios() {
   filt(c ? c.id : 'all');
 }
 
-function inquireWA(topic) {
-  const msg = encodeURIComponent(`¡Hola! 👋 Vi su página y me interesa *${topic}* que ofrecen en Happy Prints.\n\n¿Me podrían compartir más información, precios y disponibilidad? ¡Gracias! 😊`);
-  window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
-}
-
 function renderGrid(cat) {
   const list = cat === 'all' ? allProds
     : Array.isArray(cat) ? allProds.filter(p => cat.includes(p.categoria_id))
