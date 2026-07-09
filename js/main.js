@@ -173,6 +173,10 @@ function renderGrid(cat) {
 }
 
 /* ── Checklist de cotización personalizada (categorías sin costo fijo) ── */
+const QUOTE_ICON_IMG = {
+  'impresión digital': 'assets/images/impresion-digital-sticker.png'
+};
+
 function renderQuoteChecklist(catObj) {
   const items = allCotItems.filter(i => i.categoria_id === catObj.id);
   const opciones = items.length
@@ -183,9 +187,14 @@ function renderQuoteChecklist(catObj) {
         </label>`).join('')
     : '<div class="empty">Muy pronto agregaremos las opciones de esta categoría. Escríbenos directo por WhatsApp.</div>';
 
+  const iconImg = QUOTE_ICON_IMG[(catObj.nombre || '').toLowerCase()];
+  const iconHtml = iconImg
+    ? `<img class="quote-icon-img" src="${iconImg}" alt="${catObj.nombre}">`
+    : `<div class="quote-icon">${catEmoji(catObj.emoji || catObj.nombre)}</div>`;
+
   document.getElementById('grid').innerHTML = `
     <div class="quote-box">
-      <div class="quote-icon">${catEmoji(catObj.emoji || catObj.nombre)}</div>
+      ${iconHtml}
       <h3 class="quote-title">${catObj.nombre} — Cotización personalizada</h3>
       <p class="quote-sub">El precio depende del formato, material y cantidad. Marca lo que te interesa y te enviamos una cotización a la medida, sin compromiso.</p>
       <div class="qi-list">${opciones}</div>
