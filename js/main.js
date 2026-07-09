@@ -390,7 +390,8 @@ function renderMB() {
   h += `<span class="olbl">Cantidad de piezas</span>
   <div class="qrow">
     <button class="qbtn" onclick="chgQ(-1)" aria-label="Restar">−</button>
-    <span class="qv" id="qv">${st.qty}</span>
+    <input type="text" inputmode="numeric" pattern="[0-9]*" class="qv" id="qv" value="${st.qty}"
+      oninput="this.value=this.value.replace(/[^0-9]/g,'')" onchange="setQty(this.value)" aria-label="Cantidad de piezas">
     <button class="qbtn" onclick="chgQ(1)" aria-label="Sumar">+</button>
     <span style="font-size:12px;color:#9090A8;margin-left:6px">piezas</span>
   </div>
@@ -436,7 +437,17 @@ function renderMB() {
 function chgQ(d) {
   st.qty = Math.max(1, st.qty + d);
   if (cur.tipo === 'escalonado' || cur.tipo === 'cantidad') { renderMB(); return; }
-  document.getElementById('qv').textContent  = st.qty;
+  document.getElementById('qv').value       = st.qty;
+  document.getElementById('ta').textContent  = fmt(calcT());
+  document.getElementById('tqi').textContent = st.qty + ' pieza(s)';
+}
+
+function setQty(val) {
+  let n = parseInt(val, 10);
+  if (isNaN(n) || n < 1) n = 1;
+  st.qty = n;
+  if (cur.tipo === 'escalonado' || cur.tipo === 'cantidad') { renderMB(); return; }
+  document.getElementById('qv').value       = st.qty;
   document.getElementById('ta').textContent  = fmt(calcT());
   document.getElementById('tqi').textContent = st.qty + ' pieza(s)';
 }
