@@ -43,12 +43,12 @@ const SERVICE_TILES = [
 ];
 
 const FEATURED = [
-  { key: 'tazas', label: 'Tazas', icon: '☕', color: '#1FB6AE' },
-  { key: 'playeras', label: 'Playeras', icon: '👕', color: '#FF2D78' },
-  { key: 'sudaderas', label: 'Sudaderas', icon: '🧥', color: '#7C3AED' },
-  { key: 'termos', label: 'Termos', icon: '🥤', color: '#F5A623' },
-  { key: 'vasos', label: 'Vasos', icon: '🧊', color: '#F6C55B' },
-  { key: 'libretas', label: 'Libretas', icon: '📓', color: '#1FADA0' }
+  { key: 'tazas', label: 'Tazas', icon: '☕', color: '#1FB6AE', desc: 'Cambian de color o se personalizan con tu foto o diseño favorito.' },
+  { key: 'playeras', label: 'Playeras', icon: '👕', color: '#FF2D78', desc: 'Estampado full color de alta durabilidad, en el diseño que imagines.' },
+  { key: 'sudaderas', label: 'Sudaderas', icon: '🧥', color: '#7C3AED', desc: 'Ideal para regalo o uniforme de equipo, con tu diseño o logo.' },
+  { key: 'termos', label: 'Termos', icon: '🥤', color: '#F5A623', desc: 'Mantienen la temperatura y resisten el uso diario.' },
+  { key: 'vasos', label: 'Vasos', icon: '🧊', color: '#F6C55B', desc: 'Para el café o bebida de todos los días, con tu nombre o diseño.' },
+  { key: 'libretas', label: 'Libretas', icon: '📓', color: '#1FADA0', desc: 'Pasta dura o suave, perfectas para regalo u oficina.' }
 ];
 
 function matchCatIds(keywords) {
@@ -90,11 +90,38 @@ function buildFeatured() {
     return `<div class="feat-card">
       <div class="feat-media" style="background:${f.color}22">${media}</div>
       <div class="feat-name">${f.label}</div>
+      <div class="feat-desc">${f.desc}</div>
       <div class="feat-price">Desde ${fmt(minPrice)}</div>
       <button class="feat-btn" onclick="filt(${cat.id})">Ver catálogo</button>
     </div>`;
   }).join('');
   wrap.innerHTML = cards || '<p style="text-align:center;color:var(--ink-soft);grid-column:1/-1">Cargando productos destacados…</p>';
+}
+
+const MORE_PRODUCTS = [
+  { label: 'Sudaderas', icon: '🧥', catName: 'sudaderas' },
+  { label: 'Vasos', icon: '🧊', catName: 'vasos' },
+  { label: 'Termos', icon: '🥤', catName: 'termos' },
+  { label: 'Agendas', icon: '📓', catName: 'libretas' },
+  { label: 'Sellos', icon: '🏷️', catName: 'sellos' },
+  { label: 'Invitaciones', icon: '💌', catName: 'invitaciones' },
+  { label: 'Volantes', icon: '📄', catName: 'offset y serigrafía' },
+  { label: 'Lonas', icon: '🖼️', catName: 'impresión digital' },
+  { label: 'Acrílicos', icon: '✂️', catName: 'grabado y corte láser' },
+  { label: 'Tarjetas de presentación', icon: '📇', catName: 'publicidad' }
+];
+
+function buildMoreProducts() {
+  const wrap = document.getElementById('more-grid');
+  if (!wrap) return;
+  wrap.innerHTML = MORE_PRODUCTS.map(m => {
+    const cat = allCats.find(c => c.nombre.toLowerCase() === m.catName);
+    if (!cat) return '';
+    return `<button class="more-card" onclick="filt(${cat.id})">
+      <span class="more-icon">${m.icon}</span>
+      <span class="more-label">${m.label}</span>
+    </button>`;
+  }).join('');
 }
 
 async function init() {
@@ -112,6 +139,7 @@ async function init() {
     } catch (e) { allCotItems = []; }
     buildCatGrid();
     buildFeatured();
+    buildMoreProducts();
     buildChips();
     renderGrid('all');
   } catch (e) {
