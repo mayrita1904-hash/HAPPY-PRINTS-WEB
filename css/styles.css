@@ -158,7 +158,7 @@ img { max-width: 100%; display: block; }
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
-@media (min-width: 720px) { .featured-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 720px) { .featured-grid { grid-template-columns: repeat(3, 1fr); } }
 .feat-card { text-align: center; }
 .feat-media {
   border-radius: var(--radius-md);
@@ -368,6 +368,27 @@ img { max-width: 100%; display: block; }
   padding: 14px 16px; margin-top: 10px; justify-content: space-around;
 }
 .ti { font-size: 12px; font-weight: 800; color: var(--navy); }
+
+/* ===== Reseñas ===== */
+.reviews { background: #fff; padding: 8px 16px 28px; }
+.reviews-grid { display: grid; grid-template-columns: 1fr; gap: 14px; max-width: 1000px; margin: 0 auto; }
+.review-card { background: var(--bg); border-radius: var(--radius-md); padding: 18px; }
+.review-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.review-avatar {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; color: #fff;
+  font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+.review-name { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 13px; color: var(--navy); }
+.review-stars { color: #F5A623; font-size: 12px; letter-spacing: 1px; }
+.review-body { font-size: 13px; color: var(--navy); line-height: 1.6; }
+.reviews-cta {
+  display: block; text-align: center; font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 13px;
+  color: var(--pink); text-decoration: none; margin: 18px auto 0; max-width: 1000px;
+}
+.reviews-cta:hover { text-decoration: underline; }
+@media (min-width: 700px) { .reviews-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .reviews-grid { grid-template-columns: repeat(4, 1fr); } }
 
 /* ===== Footer ===== */
 footer { background: var(--navy); padding: 26px 16px; text-align: center; }
