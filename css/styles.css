@@ -497,3 +497,73 @@ footer p { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 4px; }
   .location-map { height: 320px; flex: 1.3; }
   .location-info { flex: 1; text-align: left; }
 }
+
+/* ===== Happy Prints Experience (pages/experience.html) ===== */
+.exp-hero-img-wrap { background: #FF2D78; line-height: 0; }
+.exp-hero-img { width: 100%; display: block; }
+.exp-pitch { background: #fff; padding: 34px 20px 30px; text-align: center; }
+.exp-pitch-h { font-family: 'Fredoka', sans-serif; font-weight: 800; color: var(--navy); font-size: clamp(22px, 5vw, 30px); max-width: 560px; margin: 0 auto 16px; line-height: 1.25; }
+.exp-pitch-body { font-family: 'Nunito', sans-serif; font-size: 14px; color: var(--navy); line-height: 1.7; max-width: 560px; margin: 0 auto; }
+.exp-pitch-body strong { color: var(--pink); }
+.exp-pitch-bullets { list-style: none; max-width: 420px; margin: 22px auto 0; text-align: left; display: flex; flex-direction: column; gap: 10px; }
+.exp-pitch-bullets li { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 13px; color: var(--navy); background: var(--bg); border-radius: 10px; padding: 10px 14px; }
+.exp-pitch-urgency { font-family: 'Nunito', sans-serif; font-size: 11px; color: var(--ink-soft); margin-top: 12px; }
+.exp-cta {
+  display: block; text-align: center; background: var(--pink); color: #fff; font-family: 'Fredoka', sans-serif;
+  font-weight: 700; text-decoration: none; max-width: 320px; margin: 28px auto 0; padding: 15px 20px;
+  border-radius: 999px; font-size: 15px; box-shadow: 0 6px 16px rgba(255,45,120,.35); transition: transform .15s;
+}
+.exp-cta:hover { transform: translateY(-2px); }
+
+.exp-pricing { background: var(--bg); padding: 44px 16px; }
+.exp-pricing-h {
+  text-align: center; font-family: 'Fredoka', sans-serif; font-weight: 800; font-size: clamp(20px, 4.4vw, 28px);
+  color: var(--navy);
+}
+.exp-pricing-sub { text-align: center; font-family: 'Nunito', sans-serif; font-size: 13px; color: var(--ink-soft); margin: 12px auto 32px; max-width: 420px; line-height: 1.5; }
+.exp-pricing-sub strong { color: var(--navy); }
+
+.exp-tiers { display: grid; grid-template-columns: 1fr; gap: 22px; max-width: 1100px; margin: 0 auto; }
+.exp-tiers-loading { text-align: center; font-size: 13px; color: var(--ink-soft); padding: 20px; grid-column: 1/-1; }
+.exp-tier {
+  position: relative; border-radius: var(--radius-lg); overflow: visible; background: #fff;
+  box-shadow: 0 4px 16px rgba(26,31,75,.07); display: flex; flex-direction: column;
+  transition: transform .18s, box-shadow .18s;
+}
+.exp-tier:hover { transform: translateY(-4px); box-shadow: 0 10px 26px rgba(26,31,75,.12); }
+.exp-tier-highlight { box-shadow: 0 8px 24px rgba(255,45,120,.22); }
+.exp-tier-head {
+  font-family: 'Fredoka', sans-serif; font-weight: 700; color: #fff; text-align: center; padding: 16px 14px;
+  font-size: 18px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; display: flex; align-items: center;
+  justify-content: center; gap: 8px;
+}
+.exp-tier-icon { font-size: 20px; }
+.exp-tier-mini .exp-tier-head { background: linear-gradient(120deg, #22B573, #1D9C63); }
+.exp-tier-fiesta .exp-tier-head { background: linear-gradient(120deg, #3B82F6, #2563EB); }
+.exp-tier-evento .exp-tier-head { background: linear-gradient(120deg, var(--purple), #6425C4); }
+.exp-tier-full .exp-tier-head { background: linear-gradient(120deg, var(--pink), #E11D48); }
+.exp-tier-badge {
+  position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+  background: #FFD23F; color: var(--navy); font-size: 11px; font-weight: 800; white-space: nowrap;
+  padding: 5px 14px; border-radius: 999px; z-index: 2; box-shadow: 0 3px 8px rgba(0,0,0,.18);
+}
+.exp-tier-body { padding: 22px 18px 18px; display: flex; flex-direction: column; flex: 1; }
+.exp-tier-qty { font-family: 'Fredoka', sans-serif; font-weight: 800; font-size: 24px; color: var(--navy); text-align: center; }
+.exp-tier-time { text-align: center; font-size: 11px; color: var(--ink-soft); margin: 4px 0 16px; }
+.exp-tier-feats { list-style: none; font-size: 12px; color: var(--navy); font-weight: 700; margin-bottom: 18px; }
+.exp-tier-feats li { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
+.exp-tier-check {
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--lime-2); color: var(--navy); font-size: 10px; font-weight: 900;
+}
+.exp-tier-price { font-family: 'Fredoka', sans-serif; font-weight: 800; font-size: 26px; color: var(--navy); text-align: center; border-top: 1px dashed var(--line); padding-top: 16px; margin-top: auto; }
+.exp-tier-full .exp-tier-price { color: var(--pink); }
+.exp-tier-note { text-align: center; font-size: 11px; color: var(--ink-soft); margin-top: 6px; }
+.exp-pricing-foot { text-align: center; font-size: 11px; color: var(--ink-soft); margin: 34px auto 0; max-width: 520px; }
+.exp-cta-2 { margin-top: 22px; background: var(--pink); }
+.exp-cta-2:hover { background: #E0206A; }
+@media (min-width: 900px) {
+  .exp-tiers { grid-template-columns: repeat(4, 1fr); align-items: start; }
+  .exp-tier-highlight { transform: scale(1.05); }
+  .exp-tier-highlight:hover { transform: scale(1.05) translateY(-4px); }
+}
