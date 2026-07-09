@@ -139,20 +139,20 @@ function filt(cat, chipEl) {
 }
 
 function renderGrid(cat) {
-  const singleId = Array.isArray(cat) ? (cat.length === 1 ? cat[0] : null) : (cat === 'all' ? null : cat);
-  if (singleId != null) {
-    const catObj = allCats.find(c => c.id === singleId);
-    if (catObj && esCategoriaCotizacion(catObj.nombre)) { renderQuoteChecklist(catObj); return; }
-  }
+  const ids = cat === 'all' ? null : Array.isArray(cat) ? cat : [cat];
+  const quoteCats = ids ? ids.map(id => allCats.find(c => c.id === id)).filter(c => c && esCategoriaCotizacion(c.nombre)) : [];
+  const quoteHtml = quoteCats.map(quoteChecklistHtml).join('');
 
   const list = cat === 'all' ? allProds
     : Array.isArray(cat) ? allProds.filter(p => cat.includes(p.categoria_id))
     : allProds.filter(p => p.categoria_id === cat);
-  if (!list.length) {
+
+  if (!list.length && !quoteHtml) {
     document.getElementById('grid').innerHTML = '<div class="empty">No hay productos en esta categoría todavía.</div>';
     return;
   }
-  document.getElementById('grid').innerHTML = list.map(p => {
+
+  const cardsHtml = list.map(p => {
     const c = p.categorias || {};
     const imgTag = p.imagen_url
       ? `<img class="cimg" src="${p.imagen_url}" alt="${p.nombre}${c.nombre ? ' - ' + c.nombre + ' personalizado' : ''} | Happy Prints" loading="lazy"
@@ -170,6 +170,8 @@ function renderGrid(cat) {
       </div>
     </div>`;
   }).join('');
+
+  document.getElementById('grid').innerHTML = cardsHtml + quoteHtml;
 }
 
 /* ── Checklist de cotización personalizada (categorías sin costo fijo) ── */
@@ -177,7 +179,7 @@ const QUOTE_ICON_IMG = {
   'impresión digital': 'assets/images/impresion-digital-sticker.png'
 };
 
-function renderQuoteChecklist(catObj) {
+function quoteChecklistHtml(catObj) {
   const items = allCotItems.filter(i => i.categoria_id === catObj.id);
   const opciones = items.length
     ? items.map(i => `
@@ -192,14 +194,14 @@ function renderQuoteChecklist(catObj) {
     ? `<img class="quote-icon-img" src="${iconImg}" alt="${catObj.nombre}">`
     : `<div class="quote-icon">${catEmoji(catObj.emoji || catObj.nombre)}</div>`;
 
-  document.getElementById('grid').innerHTML = `
-    <div class="quote-box">
+  return `
+    <div class="quote-box" id="quoteBox${catObj.id}">
       ${iconHtml}
       <h3 class="quote-title">${catObj.nombre} — Cotización personalizada</h3>
       <p class="quote-sub">El precio depende del formato, material y cantidad. Marca lo que te interesa y te enviamos una cotización a la medida, sin compromiso.</p>
       <div class="qi-list">${opciones}</div>
       <span class="olbl">Cuéntanos más detalles (opcional)</span>
-      <textarea id="qiDetalle" class="qi-detalle" rows="3" placeholder="Ej. tamaño, material, cantidad aproximada, fecha en que lo necesitas…"></textarea>
+      <textarea id="qiDetalle${catObj.id}" class="qi-detalle" rows="3" placeholder="Ej. tamaño, material, cantidad aproximada, fecha en que lo necesitas…"></textarea>
       <button class="wabtn" onclick="solicitarCotizacion(${catObj.id}, '${catObj.nombre.replace(/'/g, "\\'")}')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
@@ -212,8 +214,9 @@ function renderQuoteChecklist(catObj) {
 }
 
 function solicitarCotizacion(catId, catNombre) {
-  const checks = Array.from(document.querySelectorAll('.qi-item input:checked')).map(i => i.value);
-  const detalle = (document.getElementById('qiDetalle').value || '').trim();
+  const box = document.getElementById('quoteBox' + catId);
+  const checks = Array.from(box.querySelectorAll('.qi-item input:checked')).map(i => i.value);
+  const detalle = (document.getElementById('qiDetalle' + catId).value || '').trim();
   if (!checks.length && !detalle) {
     alert('Marca al menos una opción o cuéntanos qué necesitas para poder cotizarte 🙂');
     return;
