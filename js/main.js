@@ -35,7 +35,7 @@ const SERVICE_TILES = [
   { title: 'Libretas, Agendas y Planners', sub: '', icon: '📓', img: 'assets/images/libretas-agendas-planners.png', color: '#F6C55B', kw: ['libreta','agenda','planner'] },
   { title: 'Impresión Digital y Publicidad', sub: '', icon: '🖼️', img: 'assets/images/impresion-digital-publicidad.png', color: '#E91E8C', kw: ['impresion','digital','publicidad'] },
   { title: 'Sellos, Etiquetas y Credenciales', sub: '', icon: '🏷️', img: 'assets/images/sellos-etiquetas-credenciales.png', color: '#B4C430', kw: ['sello','etiqueta','credencial'] },
-  { title: 'Diseño Gráfico y Contenido Digital', sub: '', icon: '🎨', img: 'assets/images/diseno-grafico-contenido-digital.jpg', imgFit: 'cover', color: '#1FADA0', kw: ['diseño','grafico','contenido'] }
+  { title: 'Contenido Digital', sub: '', icon: '🎨', img: 'assets/images/diseno-grafico-contenido-digital.jpg', color: '#1FADA0', kw: ['contenido digital', 'contenido'] }
 ];
 
 const FEATURED = [
