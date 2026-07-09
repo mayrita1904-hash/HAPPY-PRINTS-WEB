@@ -82,6 +82,9 @@ input:checked+.togslide::before{transform:translateX(18px)}
 .paquete-card input,.paquete-card select{padding:9px 12px;border:1.5px solid #E0E0E8;border-radius:8px;font-family:'Nunito',sans-serif;font-size:12px;color:#1A1F4B;outline:none;transition:border-color .15s;width:100%}
 .paquete-card input:focus,.paquete-card select:focus{border-color:#FF2D78}
 .paquete-card .nivel-del{width:100%;height:100%}
+.cot-row{display:grid;grid-template-columns:1fr 1.3fr auto;gap:8px;margin-bottom:8px}
+.cot-row select,.cot-row input{padding:9px 12px;border:1.5px solid #E0E0E8;border-radius:8px;font-family:'Nunito',sans-serif;font-size:12px;color:#1A1F4B;outline:none;transition:border-color .15s;width:100%}
+.cot-row select:focus,.cot-row input:focus{border-color:#FF2D78}
 .colors{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .col-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border-color .15s;flex-shrink:0}
 .col-dot.sel{border-color:#1A1F4B}
@@ -199,6 +202,16 @@ input:checked+.togslide::before{transform:translateX(18px)}
   <div style="display:flex;gap:10px;margin-top:14px">
     <button class="btn btn-g btn-sm" onclick="agregarPaqueteVacio()">＋ Agregar paquete</button>
     <button class="btn btn-p" onclick="guardarPaquetes()">💾 Guardar cambios</button>
+  </div>
+</div>
+
+<div class="wrap" style="margin-top:10px">
+  <div class="ptitle">🖨️ Cotización personalizada — Checklist</div>
+  <div class="psub">Para Offset y Serigrafía, Impresión Digital y Grabado y Corte Láser (no tienen precio fijo). Edita las opciones que el cliente puede marcar para pedir cotización.</div>
+  <div id="cotItemsList"><div class="loading">Cargando opciones…</div></div>
+  <div style="display:flex;gap:10px;margin-top:14px">
+    <button class="btn btn-g btn-sm" onclick="agregarCotItemVacio()">＋ Agregar opción</button>
+    <button class="btn btn-p" onclick="guardarCotItems()">💾 Guardar cambios</button>
   </div>
 </div>
 
@@ -373,13 +386,14 @@ async function cambiarPassword() {
   } catch (e) { toast('Error: ' + e.message, 'err'); }
 }
 
-function mostrarApp() {
+async function mostrarApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('resetScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('nbadge').textContent = '👋 Hola, ' + ((session && session.user && session.user.email) || '');
-  cargar();
+  await cargar();
   cargarPaquetes();
+  cargarCotItems();
 }
 
 /* ── Olvidé mi contraseña ── */
@@ -910,6 +924,77 @@ async function guardarPaquetes() {
       }
     }
     toast('Paquetes guardados ✔', 'ok');
+  } catch (e) {
+    toast('Error: ' + e.message, 'err');
+  }
+}
+
+/* ── Checklist de cotización personalizada ── */
+const QUOTE_CATS = ['offset y serigrafía', 'impresión digital', 'grabado y corte láser'];
+let cotItemsActuales = [];
+
+async function cargarCotItems() {
+  try {
+    cotItemsActuales = await sbGet('cotizacion_items?select=*&order=categoria_id,orden');
+  } catch (e) {
+    document.getElementById('cotItemsList').innerHTML = '<div class="empty">⚠️ No se pudo cargar (¿ya ejecutaste supabase_cotizacion_items.sql?)</div>';
+    return;
+  }
+  renderCotItems();
+}
+
+function catsCotizacion() {
+  return cats.filter(c => QUOTE_CATS.includes((c.nombre || '').toLowerCase()));
+}
+
+function renderCotItems() {
+  const list = document.getElementById('cotItemsList');
+  const opcionesCat = catsCotizacion();
+  list.innerHTML = cotItemsActuales.map((it, idx) => `
+    <div class="cot-row">
+      <select onchange="actualizarCotItem(${idx},'categoria_id',parseInt(this.value))">
+        ${opcionesCat.map(c => `<option value="${c.id}" ${it.categoria_id===c.id?'selected':''}>${c.nombre}</option>`).join('')}
+      </select>
+      <input placeholder="Nombre de la opción (ej. Volantes / Flyers)" value="${(it.nombre ?? '').replace(/"/g,'&quot;')}" onchange="actualizarCotItem(${idx},'nombre',this.value)">
+      <button type="button" class="nivel-del" onclick="eliminarCotItem(${idx})" title="Quitar opción">✕</button>
+    </div>
+  `).join('') || '<div style="font-size:12px;color:#9090A8;padding:6px 0 10px">Todavía no hay opciones — agrega la primera.</div>';
+}
+
+function actualizarCotItem(idx, campo, valor) {
+  cotItemsActuales[idx][campo] = valor;
+}
+
+async function eliminarCotItem(idx) {
+  const it = cotItemsActuales[idx];
+  if (it.id) {
+    if (!confirm('¿Quitar esta opción? Esta acción no se puede deshacer.')) return;
+    try { await sbDelete(`cotizacion_items?id=eq.${it.id}`); } catch (e) { toast('Error: ' + e.message, 'err'); return; }
+  }
+  cotItemsActuales.splice(idx, 1);
+  renderCotItems();
+}
+
+function agregarCotItemVacio() {
+  const opcionesCat = catsCotizacion();
+  cotItemsActuales.push({ categoria_id: opcionesCat[0] ? opcionesCat[0].id : null, nombre: '', orden: cotItemsActuales.length + 1 });
+  renderCotItems();
+}
+
+async function guardarCotItems() {
+  try {
+    for (let i = 0; i < cotItemsActuales.length; i++) {
+      const it = cotItemsActuales[i];
+      if (!it.nombre || !it.categoria_id) continue;
+      const datos = { categoria_id: it.categoria_id, nombre: it.nombre, orden: i + 1 };
+      if (it.id) {
+        await sbPatch(`cotizacion_items?id=eq.${it.id}`, datos);
+      } else {
+        const [creado] = await sbPost('cotizacion_items', datos);
+        it.id = creado.id;
+      }
+    }
+    toast('Opciones guardadas ✔', 'ok');
   } catch (e) {
     toast('Error: ' + e.message, 'err');
   }
