@@ -12,7 +12,7 @@ const fmt = n => '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits
 
 const EMOJI = {
   'tazas':'☕','playeras':'👕','sudaderas':'🧥','termos':'🥤',
-  'vasos':'🧊','libretas':'📓','plumas':'🖊️','calendarios':'📅','servicios':'🖨️','stickers':'⭐','invitaciones':'💌',
+  'vasos':'🧊','libretas':'📓','plumas':'🖊️','calendarios':'📅','offset y serigrafía':'🖨️','stickers':'⭐','invitaciones':'💌',
   'promociones':'🔥','bordados':'🧵',
   'fiesta de niños':'🎈','despedida de soltera':'💃','despedida de soltero':'🕺','para mamá':'💐',
   'para papá':'👔','graduación':'🎓','día del maestro':'🍎','día del niño':'🧸','bautizo':'👶','jubilación':'🎉',
