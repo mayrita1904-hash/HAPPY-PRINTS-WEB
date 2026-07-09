@@ -131,11 +131,6 @@ function filt(cat, chipEl) {
   document.getElementById('prods').scrollIntoView({ behavior: 'smooth' });
 }
 
-function goServicios() {
-  const c = allCats.find(c => c.nombre.toLowerCase().includes('servicio'));
-  filt(c ? c.id : 'all');
-}
-
 function renderGrid(cat) {
   const list = cat === 'all' ? allProds
     : Array.isArray(cat) ? allProds.filter(p => cat.includes(p.categoria_id))
