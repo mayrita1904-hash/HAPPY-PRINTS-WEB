@@ -32,13 +32,13 @@ async function get(path) {
 
 /* ── Secciones estáticas de servicios (tipo Canva) ── */
 const SERVICE_TILES = [
-  { title: 'Offset y Serigrafía', sub: '', icon: '🖨️', img: 'assets/images/offset-serigrafia.png', color: '#7C3AED', kw: ['offset','serigraf'] },
-  { title: 'Invitaciones y Papelería Social', sub: '', icon: '💌', img: 'assets/images/invitaciones-papeleria-social.png', color: '#1FB6AE', kw: ['invitac','papeler'] },
-  { title: 'Grabado y Corte Láser', sub: '', icon: '✂️', img: 'assets/images/grabado-corte-laser.png', color: '#F5A623', kw: ['grabado','laser','corte'] },
-  { title: 'Sublimación, DTF y Vinil', sub: '', icon: '👕', img: 'assets/images/sublimacion-dtf-vinil.png', color: '#FF2D78', showAll: true },
-  { title: 'Libretas, Agendas y Planners', sub: '', icon: '📓', img: 'assets/images/libretas-agendas-planners.png', color: '#F6C55B', kw: ['libreta','agenda','planner'] },
-  { title: 'Impresión Digital y Publicidad', sub: '', icon: '🖼️', img: 'assets/images/impresion-digital-publicidad.png', color: '#E91E8C', kw: ['impresion','digital','publicidad'] },
-  { title: 'Sellos, Etiquetas y Credenciales', sub: '', icon: '🏷️', img: 'assets/images/sellos-etiquetas-credenciales.png', color: '#B4C430', kw: ['sello','etiqueta','credencial'] },
+  { title: 'Sublimación, DTF y Vinil', sub: '', icon: '👕', img: 'assets/images/sublimacion-dtf-vinil.png', color: '#7C3AED', showAll: true },
+  { title: 'Libretas, Agendas y Planners', sub: '', icon: '📓', img: 'assets/images/libretas-agendas-planners.png', color: '#1FB6AE', kw: ['libreta','agenda','planner'] },
+  { title: 'Sellos, Etiquetas y Credenciales', sub: '', icon: '🏷️', img: 'assets/images/sellos-etiquetas-credenciales.png', color: '#F5A623', kw: ['sello','etiqueta','credencial'] },
+  { title: 'Invitaciones y Papelería Social', sub: '', icon: '💌', img: 'assets/images/invitaciones-papeleria-social.png', color: '#FF2D78', kw: ['invitac','papeler'] },
+  { title: 'Impresión Digital y Publicidad', sub: '', icon: '🖼️', img: 'assets/images/impresion-digital-publicidad.png', color: '#F6C55B', kw: ['impresion','digital','publicidad'] },
+  { title: 'Offset y Serigrafía', sub: '', icon: '🖨️', img: 'assets/images/offset-serigrafia.png', color: '#E91E8C', kw: ['offset','serigraf'] },
+  { title: 'Grabado y Corte Láser', sub: '', icon: '✂️', img: 'assets/images/grabado-corte-laser.png', color: '#B4C430', kw: ['grabado','laser','corte'] },
   { title: 'Contenido Digital', sub: '', icon: '🎨', img: 'assets/images/diseno-grafico-contenido-digital.png', color: '#1FADA0', kw: ['contenido digital', 'contenido'] }
 ];
 
