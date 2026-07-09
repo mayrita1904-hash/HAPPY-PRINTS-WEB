@@ -45,8 +45,10 @@ const SERVICE_TILES = [
 const FEATURED = [
   { key: 'tazas', label: 'Tazas', icon: '☕', color: '#1FB6AE' },
   { key: 'playeras', label: 'Playeras', icon: '👕', color: '#FF2D78' },
-  { key: 'libretas', label: 'Libretas', icon: '📓', color: '#7C3AED' },
-  { key: 'stickers', label: 'Stickers', icon: '⭐', color: '#F5A623' }
+  { key: 'sudaderas', label: 'Sudaderas', icon: '🧥', color: '#7C3AED' },
+  { key: 'termos', label: 'Termos', icon: '🥤', color: '#F5A623' },
+  { key: 'vasos', label: 'Vasos', icon: '🧊', color: '#F6C55B' },
+  { key: 'libretas', label: 'Libretas', icon: '📓', color: '#1FADA0' }
 ];
 
 function matchCatIds(keywords) {
