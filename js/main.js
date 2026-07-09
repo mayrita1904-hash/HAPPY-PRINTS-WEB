@@ -3,10 +3,14 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const HDR = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
 const WA_NUMBER = '5217224616543';
 
-let allProds = [], allCats = [], allNiveles = [], allImgs = [];
+let allProds = [], allCats = [], allNiveles = [], allImgs = [], allCotItems = [];
 let cur = null, st = { qty: 1, talla: 'adulto', hojas: 50 };
 const ATTACH_MAX_BYTES = 5 * 1024 * 1024;
 let attachUrl = null, attachTooBig = false, attachName = '';
+
+/* Categorías sin costo fijo: se cotizan por checklist en vez de calculadora de precio */
+const QUOTE_CATS = ['offset y serigrafía', 'impresión digital', 'grabado y corte láser'];
+function esCategoriaCotizacion(nombre) { return QUOTE_CATS.includes((nombre || '').toLowerCase()); }
 
 const fmt = n => '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 2 });
 
@@ -101,6 +105,9 @@ async function init() {
     try {
       allImgs = await get('producto_imagenes?select=*&order=producto_id,orden');
     } catch (e) { allImgs = []; }
+    try {
+      allCotItems = await get('cotizacion_items?select=*&order=categoria_id,orden');
+    } catch (e) { allCotItems = []; }
     buildCatGrid();
     buildFeatured();
     buildChips();
@@ -112,7 +119,7 @@ async function init() {
 
 function buildChips() {
   const usedIds = new Set(allProds.map(p => p.categoria_id));
-  const cats = allCats.filter(c => usedIds.has(c.id));
+  const cats = allCats.filter(c => usedIds.has(c.id) || esCategoriaCotizacion(c.nombre));
   const chips = document.getElementById('cat-chips');
   chips.innerHTML = `<button class="chip on" data-cat="all" onclick="filt('all',this)"><span class="ci">🏷️</span><span class="cl">Todo</span></button>` +
     cats.map(c => `<button class="chip" data-cat="${c.id}" onclick="filt(${c.id},this)"><span class="ci">${catEmoji(c.emoji||c.nombre)}</span><span class="cl">${c.nombre}</span></button>`).join('');
@@ -132,6 +139,12 @@ function filt(cat, chipEl) {
 }
 
 function renderGrid(cat) {
+  const singleId = Array.isArray(cat) ? (cat.length === 1 ? cat[0] : null) : (cat === 'all' ? null : cat);
+  if (singleId != null) {
+    const catObj = allCats.find(c => c.id === singleId);
+    if (catObj && esCategoriaCotizacion(catObj.nombre)) { renderQuoteChecklist(catObj); return; }
+  }
+
   const list = cat === 'all' ? allProds
     : Array.isArray(cat) ? allProds.filter(p => cat.includes(p.categoria_id))
     : allProds.filter(p => p.categoria_id === cat);
@@ -157,6 +170,49 @@ function renderGrid(cat) {
       </div>
     </div>`;
   }).join('');
+}
+
+/* ── Checklist de cotización personalizada (categorías sin costo fijo) ── */
+function renderQuoteChecklist(catObj) {
+  const items = allCotItems.filter(i => i.categoria_id === catObj.id);
+  const opciones = items.length
+    ? items.map(i => `
+        <label class="qi-item">
+          <input type="checkbox" value="${i.nombre.replace(/"/g, '&quot;')}">
+          <span>${i.nombre}</span>
+        </label>`).join('')
+    : '<div class="empty">Muy pronto agregaremos las opciones de esta categoría. Escríbenos directo por WhatsApp.</div>';
+
+  document.getElementById('grid').innerHTML = `
+    <div class="quote-box">
+      <div class="quote-icon">${catEmoji(catObj.emoji || catObj.nombre)}</div>
+      <h3 class="quote-title">${catObj.nombre} — Cotización personalizada</h3>
+      <p class="quote-sub">El precio depende del formato, material y cantidad. Marca lo que te interesa y te enviamos una cotización a la medida, sin compromiso.</p>
+      <div class="qi-list">${opciones}</div>
+      <span class="olbl">Cuéntanos más detalles (opcional)</span>
+      <textarea id="qiDetalle" class="qi-detalle" rows="3" placeholder="Ej. tamaño, material, cantidad aproximada, fecha en que lo necesitas…"></textarea>
+      <button class="wabtn" onclick="solicitarCotizacion(${catObj.id}, '${catObj.nombre.replace(/'/g, "\\'")}')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.092.537 4.058 1.477 5.769L0 24l6.406-1.469A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.895 0-3.673-.513-5.197-1.407l-.373-.219-3.8.872.908-3.71-.242-.388A9.944 9.944 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+        </svg>
+        Solicitar cotización por WhatsApp
+      </button>
+    </div>
+  `;
+}
+
+function solicitarCotizacion(catId, catNombre) {
+  const checks = Array.from(document.querySelectorAll('.qi-item input:checked')).map(i => i.value);
+  const detalle = (document.getElementById('qiDetalle').value || '').trim();
+  if (!checks.length && !detalle) {
+    alert('Marca al menos una opción o cuéntanos qué necesitas para poder cotizarte 🙂');
+    return;
+  }
+  const listaTxt = checks.length ? checks.map(c => `☑️ ${c}`).join('\n') : '(sin opciones marcadas)';
+  const detalleTxt = detalle ? `\n\n📝 *Detalles adicionales:*\n${detalle}` : '';
+  const msg = `¡Hola! 👋 Vengo de su catálogo y me gustaría cotizar lo siguiente en *${catNombre}*:\n\n${listaTxt}${detalleTxt}\n\n¿Me podrían compartir precio, tiempos de entrega y qué información necesitan para armar mi cotización? ¡Quedo al pendiente! 😊`;
+  window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 /* ── Calculadora de precio ── */
