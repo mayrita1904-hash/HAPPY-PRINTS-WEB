@@ -330,6 +330,29 @@ img { max-width: 100%; display: block; }
 
 .empty { text-align: center; padding: 60px 20px; color: var(--ink-soft); grid-column: 1/-1; }
 
+/* ── Checklist de cotización personalizada ── */
+.quote-box {
+  grid-column: 1/-1; max-width: 520px; margin: 10px auto; background: #fff;
+  border: 2px solid var(--line); border-radius: var(--radius-lg); padding: 26px 22px; text-align: center;
+}
+.quote-icon { font-size: 40px; margin-bottom: 6px; }
+.quote-title { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 18px; color: var(--navy); margin-bottom: 8px; }
+.quote-sub { font-size: 12px; color: var(--ink-soft); line-height: 1.6; max-width: 400px; margin: 0 auto 20px; }
+.qi-list { display: flex; flex-direction: column; gap: 8px; text-align: left; margin-bottom: 6px; }
+.qi-item {
+  display: flex; align-items: center; gap: 10px; padding: 11px 14px; border: 1.5px solid #E0E0E8;
+  border-radius: var(--radius-sm); cursor: pointer; transition: border-color .15s, background .15s; font-size: 13px; font-weight: 700; color: var(--navy);
+}
+.qi-item:hover { border-color: var(--pink); }
+.qi-item input { width: 18px; height: 18px; accent-color: var(--pink); flex-shrink: 0; cursor: pointer; }
+.qi-item:has(input:checked) { border-color: var(--pink); background: #FFF0F5; }
+.qi-detalle {
+  width: 100%; padding: 10px 14px; border: 1.5px solid #E0E0E8; border-radius: var(--radius-sm);
+  font-family: 'Nunito', sans-serif; font-size: 13px; color: var(--navy); outline: none; resize: vertical;
+  transition: border-color .15s; margin-bottom: 4px;
+}
+.qi-detalle:focus { border-color: var(--pink); }
+
 /* ===== Trust bar ===== */
 .trust {
   display: flex; flex-wrap: wrap; gap: 10px; background: var(--lime-2);
