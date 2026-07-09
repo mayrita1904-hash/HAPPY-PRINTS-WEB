@@ -75,6 +75,13 @@ input:checked+.togslide::before{transform:translateX(18px)}
 .nivel-row .nivel-del{background:#FEE2E2;color:#DC2626;border:none;border-radius:8px;width:32px;height:32px;font-size:14px;font-weight:900;cursor:pointer;flex-shrink:0}
 .nivel-labels{display:grid;gap:6px;margin-bottom:4px}
 .nivel-labels span{font-size:9px;font-weight:800;color:#9090A8;text-transform:uppercase}
+.paquete-card{border:1.5px solid #E0E0E8;border-radius:14px;padding:14px;margin-bottom:14px}
+.paquete-row{display:grid;grid-template-columns:1.3fr 1fr 1.3fr auto;gap:8px;margin-bottom:8px}
+.paquete-row2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+.paquete-row3{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.paquete-card input,.paquete-card select{padding:9px 12px;border:1.5px solid #E0E0E8;border-radius:8px;font-family:'Nunito',sans-serif;font-size:12px;color:#1A1F4B;outline:none;transition:border-color .15s;width:100%}
+.paquete-card input:focus,.paquete-card select:focus{border-color:#FF2D78}
+.paquete-card .nivel-del{width:100%;height:100%}
 .colors{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .col-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border-color .15s;flex-shrink:0}
 .col-dot.sel{border-color:#1A1F4B}
@@ -182,6 +189,16 @@ input:checked+.togslide::before{transform:translateX(18px)}
       <div>Precio</div><div>Activo</div><div>Acciones</div>
     </div>
     <div id="tbody"><div class="loading">Cargando productos…</div></div>
+  </div>
+</div>
+
+<div class="wrap" style="margin-top:10px">
+  <div class="ptitle">🎉 Happy Prints Experience — Paquetes</div>
+  <div class="psub">Edita los paquetes que se muestran en la página de Experience (piezas, horas, beneficios y precio).</div>
+  <div id="expPaquetesList"><div class="loading">Cargando paquetes…</div></div>
+  <div style="display:flex;gap:10px;margin-top:14px">
+    <button class="btn btn-g btn-sm" onclick="agregarPaqueteVacio()">＋ Agregar paquete</button>
+    <button class="btn btn-p" onclick="guardarPaquetes()">💾 Guardar cambios</button>
   </div>
 </div>
 
@@ -362,6 +379,7 @@ function mostrarApp() {
   document.getElementById('app').style.display = 'block';
   document.getElementById('nbadge').textContent = '👋 Hola, ' + ((session && session.user && session.user.email) || '');
   cargar();
+  cargarPaquetes();
 }
 
 /* ── Olvidé mi contraseña ── */
@@ -803,6 +821,97 @@ async function guardarNiveles(prodId) {
       const [creado] = await sbPost('precios_niveles', datos);
       n.id = creado.id;
     }
+  }
+}
+
+/* ── Happy Prints Experience: paquetes ── */
+let paquetesActuales = [];
+
+async function cargarPaquetes() {
+  try {
+    paquetesActuales = await sbGet('experience_paquetes?select=*&order=orden');
+  } catch (e) {
+    document.getElementById('expPaquetesList').innerHTML = '<div class="empty">⚠️ No se pudo cargar (¿ya ejecutaste supabase_experience_paquetes.sql?)</div>';
+    return;
+  }
+  renderPaquetes();
+}
+
+function renderPaquetes() {
+  const list = document.getElementById('expPaquetesList');
+  list.innerHTML = paquetesActuales.map((p, idx) => `
+    <div class="paquete-card">
+      <div class="paquete-row">
+        <input placeholder="Nombre (ej. Mini)" value="${p.nombre ?? ''}" onchange="actualizarPaquete(${idx},'nombre',this.value)">
+        <select onchange="actualizarPaquete(${idx},'color_key',this.value)">
+          <option value="mini" ${p.color_key==='mini'?'selected':''}>🟢 Verde</option>
+          <option value="fiesta" ${p.color_key==='fiesta'?'selected':''}>🔵 Azul</option>
+          <option value="evento" ${p.color_key==='evento'?'selected':''}>🟣 Morado</option>
+          <option value="full" ${p.color_key==='full'?'selected':''}>🌸 Rosa</option>
+        </select>
+        <input placeholder="Badge (opcional, ej. Más popular)" value="${p.badge ?? ''}" onchange="actualizarPaquete(${idx},'badge',this.value)">
+        <button type="button" class="nivel-del" onclick="eliminarPaquete(${idx})" title="Quitar paquete">✕</button>
+      </div>
+      <div class="paquete-row2">
+        <input placeholder="Piezas (ej. 10 piezas)" value="${p.piezas ?? ''}" onchange="actualizarPaquete(${idx},'piezas',this.value)">
+        <input placeholder="Horas (ej. 2 horas de servicio)" value="${p.horas ?? ''}" onchange="actualizarPaquete(${idx},'horas',this.value)">
+        <input placeholder="Precio (ej. $2,300.00)" value="${p.precio ?? ''}" onchange="actualizarPaquete(${idx},'precio',this.value)">
+      </div>
+      <div class="paquete-row3">
+        <input placeholder="Beneficio 1" value="${p.feature_1 ?? ''}" onchange="actualizarPaquete(${idx},'feature_1',this.value)">
+        <input placeholder="Beneficio 2" value="${p.feature_2 ?? ''}" onchange="actualizarPaquete(${idx},'feature_2',this.value)">
+      </div>
+      <input placeholder="Nota (ej. Ideal para reuniones pequeñas)" value="${p.nota ?? ''}" onchange="actualizarPaquete(${idx},'nota',this.value)">
+    </div>
+  `).join('') || '<div style="font-size:12px;color:#9090A8;padding:6px 0 10px">Todavía no hay paquetes — agrega el primero.</div>';
+}
+
+function actualizarPaquete(idx, campo, valor) {
+  paquetesActuales[idx][campo] = valor;
+}
+
+async function eliminarPaquete(idx) {
+  const p = paquetesActuales[idx];
+  if (p.id) {
+    if (!confirm('¿Eliminar este paquete? Esta acción no se puede deshacer.')) return;
+    try { await sbDelete(`experience_paquetes?id=eq.${p.id}`); } catch (e) { toast('Error: ' + e.message, 'err'); return; }
+  }
+  paquetesActuales.splice(idx, 1);
+  renderPaquetes();
+}
+
+function agregarPaqueteVacio() {
+  paquetesActuales.push({ orden: paquetesActuales.length + 1, nombre: '', color_key: 'mini', piezas: '', horas: '', feature_1: '', feature_2: '', precio: '', nota: '', badge: '' });
+  renderPaquetes();
+}
+
+async function guardarPaquetes() {
+  try {
+    for (let i = 0; i < paquetesActuales.length; i++) {
+      const p = paquetesActuales[i];
+      if (!p.nombre || !p.precio) continue;
+      const datos = {
+        orden: i + 1,
+        nombre: p.nombre,
+        color_key: p.color_key || 'mini',
+        piezas: p.piezas || '',
+        horas: p.horas || '',
+        feature_1: p.feature_1 || null,
+        feature_2: p.feature_2 || null,
+        precio: p.precio,
+        nota: p.nota || null,
+        badge: p.badge || null
+      };
+      if (p.id) {
+        await sbPatch(`experience_paquetes?id=eq.${p.id}`, datos);
+      } else {
+        const [creado] = await sbPost('experience_paquetes', datos);
+        p.id = creado.id;
+      }
+    }
+    toast('Paquetes guardados ✔', 'ok');
+  } catch (e) {
+    toast('Error: ' + e.message, 'err');
   }
 }
 
