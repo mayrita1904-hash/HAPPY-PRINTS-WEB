@@ -98,32 +98,6 @@ function buildFeatured() {
   wrap.innerHTML = cards || '<p style="text-align:center;color:var(--ink-soft);grid-column:1/-1">Cargando productos destacados…</p>';
 }
 
-const MORE_PRODUCTS = [
-  { label: 'Sudaderas', icon: '🧥', catName: 'sudaderas' },
-  { label: 'Vasos', icon: '🧊', catName: 'vasos' },
-  { label: 'Termos', icon: '🥤', catName: 'termos' },
-  { label: 'Agendas', icon: '📓', catName: 'libretas' },
-  { label: 'Sellos', icon: '🏷️', catName: 'sellos' },
-  { label: 'Invitaciones', icon: '💌', catName: 'invitaciones' },
-  { label: 'Volantes', icon: '📄', catName: 'offset y serigrafía' },
-  { label: 'Lonas', icon: '🖼️', catName: 'impresión digital' },
-  { label: 'Acrílicos', icon: '✂️', catName: 'grabado y corte láser' },
-  { label: 'Tarjetas de presentación', icon: '📇', catName: 'publicidad' }
-];
-
-function buildMoreProducts() {
-  const wrap = document.getElementById('more-grid');
-  if (!wrap) return;
-  wrap.innerHTML = MORE_PRODUCTS.map(m => {
-    const cat = allCats.find(c => c.nombre.toLowerCase() === m.catName);
-    if (!cat) return '';
-    return `<button class="more-card" onclick="filt(${cat.id})">
-      <span class="more-icon">${m.icon}</span>
-      <span class="more-label">${m.label}</span>
-    </button>`;
-  }).join('');
-}
-
 async function init() {
   try {
     [allCats, allProds, allNiveles] = await Promise.all([
@@ -139,7 +113,6 @@ async function init() {
     } catch (e) { allCotItems = []; }
     buildCatGrid();
     buildFeatured();
-    buildMoreProducts();
     buildChips();
     renderGrid('all');
   } catch (e) {
@@ -172,6 +145,7 @@ function renderGrid(cat) {
   const ids = cat === 'all' ? null : Array.isArray(cat) ? cat : [cat];
   const quoteCats = ids ? ids.map(id => allCats.find(c => c.id === id)).filter(c => c && esCategoriaCotizacion(c.nombre)) : [];
   const quoteHtml = quoteCats.map(quoteChecklistHtml).join('');
+  const persCats = ids ? ids.map(id => allCats.find(c => c.id === id)).filter(c => c && esCategoriaPersonalizable(c.nombre)) : [];
 
   const list = cat === 'all' ? allProds
     : Array.isArray(cat) ? allProds.filter(p => cat.includes(p.categoria_id))
@@ -181,6 +155,12 @@ function renderGrid(cat) {
     document.getElementById('grid').innerHTML = '<div class="empty">No hay productos en esta categoría todavía.</div>';
     return;
   }
+
+  const persHtml = (persCats.length && list.length) ? `
+    <div class="pers-banner">
+      🎨 DISEÑA TU PROPIO PRODUCTO EN TIEMPO REAL
+      <span>Sube tu diseño y velo al instante antes de pedir</span>
+    </div>` : '';
 
   const cardsHtml = list.map(p => {
     const c = p.categorias || {};
@@ -201,7 +181,7 @@ function renderGrid(cat) {
     </div>`;
   }).join('');
 
-  document.getElementById('grid').innerHTML = cardsHtml + quoteHtml;
+  document.getElementById('grid').innerHTML = persHtml + cardsHtml + quoteHtml;
 }
 
 /* ── Checklist de cotización personalizada (categorías sin costo fijo) ── */
@@ -556,6 +536,11 @@ function renderAttachZone(html) {
 function esPersonalizable(p) {
   const catNombre = ((p && p.categorias && p.categorias.nombre) || '').toLowerCase();
   return catNombre.includes('playera') || catNombre.includes('sudadera');
+}
+
+function esCategoriaPersonalizable(nombre) {
+  const n = (nombre || '').toLowerCase();
+  return n.includes('playera') || n.includes('sudadera');
 }
 
 let design = null; // { x, y, w, h, angle } — x,y = centro en px relativos a #mip
