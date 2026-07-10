@@ -3,6 +3,17 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const HDR = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
 const WA_NUMBER = '5217224616543';
 
+const PROMO_KEY = 'hp_promo_dismissed';
+function cerrarPromoBanner() {
+  const b = document.getElementById('promoBanner');
+  if (b) b.style.display = 'none';
+  localStorage.setItem(PROMO_KEY, '1');
+}
+if (localStorage.getItem(PROMO_KEY)) {
+  const promoBanner = document.getElementById('promoBanner');
+  if (promoBanner) promoBanner.style.display = 'none';
+}
+
 let allProds = [], allCats = [], allNiveles = [], allImgs = [], allCotItems = [];
 let cur = null, st = { qty: 1, talla: 'adulto', hojas: 50 };
 const ATTACH_MAX_BYTES = 5 * 1024 * 1024;
