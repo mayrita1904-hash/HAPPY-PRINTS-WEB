@@ -180,19 +180,42 @@ img { max-width: 100%; display: block; }
 /* ===== Featured ===== */
 .featured { background: #fff; }
 .featured-wrap { background: var(--cream); border-radius: var(--radius-lg); margin: 0 16px 28px; padding: 22px 16px; }
+.featured-carousel { position: relative; padding: 0 30px; }
+.featured-viewport { overflow: hidden; padding: 10px 0 4px; }
 .featured-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  will-change: transform;
+  transition: transform .5s cubic-bezier(.22,1,.36,1);
 }
-@media (min-width: 720px) { .featured-grid { grid-template-columns: repeat(3, 1fr); } }
-.feat-card { text-align: center; }
+.feat-card {
+  text-align: center;
+  flex: 0 0 148px;
+  cursor: pointer;
+  opacity: .38;
+  filter: grayscale(1) brightness(.9);
+  transform: scale(.8);
+  transition: transform .5s cubic-bezier(.22,1,.36,1), opacity .5s ease, filter .5s ease;
+}
+@media (min-width: 480px) { .feat-card { flex-basis: 168px; } }
+@media (min-width: 720px) { .feat-card { flex-basis: 190px; } }
+@media (min-width: 1000px) { .feat-card { flex-basis: 210px; } }
+.feat-card.is-near { opacity: .65; filter: grayscale(.55) brightness(.95); transform: scale(.9); }
+.feat-card.is-active {
+  opacity: 1;
+  filter: grayscale(0) brightness(1);
+  transform: scale(1.08);
+  cursor: default;
+  z-index: 2;
+}
 .feat-media {
   border-radius: var(--radius-md);
   aspect-ratio: 1/1;
   overflow: hidden;
   display: flex; align-items: center; justify-content: center;
   margin-bottom: 10px;
+  box-shadow: 0 8px 20px rgba(26,31,75,.12);
 }
 .feat-media img { width: 100%; height: 100%; object-fit: cover; }
 .feat-ph { font-size: 48px; }
@@ -220,6 +243,26 @@ img { max-width: 100%; display: block; }
   transition: all .15s;
 }
 .feat-btn:hover { background: var(--navy); color: #fff; }
+
+.feat-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  color: var(--navy);
+  font-size: 20px;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 10px rgba(26,31,75,.2);
+  cursor: pointer;
+  z-index: 3;
+}
+.feat-nav--prev { left: 0; }
+.feat-nav--next { right: 0; }
+.feat-nav:hover { background: var(--pink); color: #fff; }
 
 /* ===== More products banner ===== */
 .more-products { background: #fff; padding-bottom: 8px; }
