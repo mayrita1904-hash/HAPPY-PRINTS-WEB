@@ -85,28 +85,78 @@ function buildCatGrid() {
   }).join('');
 }
 
+let featuredIndex = 0;
+
 function buildFeatured() {
   const wrap = document.getElementById('featured-grid');
   if (!wrap) return;
-  const cards = FEATURED.map(f => {
+  const items = FEATURED.map(f => {
     const cat = allCats.find(c => c.nombre.toLowerCase().includes(f.key));
-    if (!cat) return '';
+    if (!cat) return null;
     const prods = allProds.filter(p => p.categoria_id === cat.id);
-    if (!prods.length) return '';
+    if (!prods.length) return null;
     const minPrice = Math.min(...prods.map(p => Number(p.precio_base)));
     const withImg = prods.find(p => p.imagen_url);
     const media = withImg
       ? `<img src="${withImg.imagen_url}" alt="${f.label} personalizados - Happy Prints" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;feat-ph&quot;>${f.icon}</div>'">`
       : `<div class="feat-ph">${f.icon}</div>`;
-    return `<div class="feat-card">
-      <div class="feat-media" style="background:${f.color}22">${media}</div>
-      <div class="feat-name">${f.label}</div>
-      <div class="feat-desc">${f.desc}</div>
-      <div class="feat-price">Desde ${fmt(minPrice)}</div>
-      <button class="feat-btn" onclick="filt(${cat.id})">Ver catálogo</button>
-    </div>`;
-  }).join('');
-  wrap.innerHTML = cards || '<p style="text-align:center;color:var(--ink-soft);grid-column:1/-1">Cargando productos destacados…</p>';
+    return { catId: cat.id, media, f, minPrice };
+  }).filter(Boolean);
+
+  const cards = items.map((it, i) => `<div class="feat-card" onclick="focusFeatured(${i})">
+      <div class="feat-media" style="background:${it.f.color}22">${it.media}</div>
+      <div class="feat-name">${it.f.label}</div>
+      <div class="feat-desc">${it.f.desc}</div>
+      <div class="feat-price">Desde ${fmt(it.minPrice)}</div>
+      <button class="feat-btn" onclick="event.stopPropagation();filt(${it.catId})">Ver catálogo</button>
+    </div>`).join('');
+  wrap.innerHTML = cards || '<p style="text-align:center;color:var(--ink-soft)">Cargando productos destacados…</p>';
+  featuredIndex = Math.min(featuredIndex, Math.max(items.length - 1, 0));
+  updateFeaturedCarousel();
+  setupFeaturedSwipe();
+}
+
+function updateFeaturedCarousel() {
+  const track = document.getElementById('featured-grid');
+  const viewport = track && track.parentElement;
+  if (!track || !viewport) return;
+  const cards = [...track.children];
+  if (!cards.length) return;
+  featuredIndex = Math.max(0, Math.min(featuredIndex, cards.length - 1));
+  cards.forEach((card, i) => {
+    const dist = Math.abs(i - featuredIndex);
+    card.classList.toggle('is-active', dist === 0);
+    card.classList.toggle('is-near', dist === 1);
+  });
+  const active = cards[featuredIndex];
+  const offset = viewport.clientWidth / 2 - (active.offsetLeft + active.offsetWidth / 2);
+  track.style.transform = `translateX(${offset}px)`;
+}
+
+function moveFeatured(dir) {
+  featuredIndex += dir;
+  updateFeaturedCarousel();
+}
+
+function focusFeatured(i) {
+  featuredIndex = i;
+  updateFeaturedCarousel();
+}
+
+function setupFeaturedSwipe() {
+  const viewport = document.querySelector('.featured-viewport');
+  if (!viewport || viewport.dataset.swipeBound) return;
+  viewport.dataset.swipeBound = '1';
+  let startX = 0, dragging = false;
+  viewport.addEventListener('pointerdown', e => { dragging = true; startX = e.clientX; });
+  viewport.addEventListener('pointerup', e => {
+    if (!dragging) return;
+    dragging = false;
+    const diff = e.clientX - startX;
+    if (Math.abs(diff) > 40) moveFeatured(diff < 0 ? 1 : -1);
+  });
+  viewport.addEventListener('pointercancel', () => { dragging = false; });
+  window.addEventListener('resize', () => updateFeaturedCarousel());
 }
 
 async function init() {
