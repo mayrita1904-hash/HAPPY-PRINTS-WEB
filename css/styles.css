@@ -30,6 +30,25 @@ img { max-width: 100%; display: block; }
 /* ===== Header ===== */
 .top-accent { height: 10px; background: var(--pink); }
 
+/* ===== Banner de promoción ===== */
+.promo-banner {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(100deg, var(--pink) 0%, var(--pink) 45%, var(--orange) 100%);
+  padding: 10px 42px;
+}
+.promo-banner-link {
+  color: #fff; text-decoration: none; text-align: center; font-family: 'Fredoka', sans-serif;
+  font-weight: 600; font-size: clamp(11px, 3.2vw, 13px); line-height: 1.4;
+}
+.promo-banner-link b { font-weight: 800; }
+.promo-banner-link:hover { text-decoration: underline; }
+.promo-banner-close {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: #fff; font-size: 15px; line-height: 1; opacity: .8;
+  cursor: pointer; padding: 4px;
+}
+.promo-banner-close:hover { opacity: 1; }
+
 .site-header { background: #fff; }
 .hero-banner { width: 100%; display: block; }
 /* ===== Nav ===== */
