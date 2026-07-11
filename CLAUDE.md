@@ -65,6 +65,12 @@ Página web de venta de productos (e-commerce) construida con HTML, CSS y JavaSc
 - Cuando se pida crear o modificar una automatización (workflow, webhook, integración con WhatsApp/Supabase, etc.), usar estas skills y las herramientas MCP de n8n en vez de improvisar JSON de workflow a mano.
 - NUNCA poner la API key de n8n directamente en este repo ni en código subido a GitHub — solo en `.mcp.json` (no versionar ese archivo con la key real).
 
+## Analíticas propias (Vercel + Upstash Redis)
+- `/api/track.js` y `/api/stats.js` son funciones serverless de Vercel (Node, `require`, sin build step) — únicas excepciones a "sitio 100% estático". Usan `@upstash/redis` (declarado en `package.json`) para guardar/leer eventos.
+- `js/analytics.js` (cargado en `index.html` y `pages/experience.html`) manda vistas, clics, scroll y tiempo en página a `/api/track` vía `sendBeacon`.
+- `dashboard.html` (en `/dashboard.html`, no enlazado en el menú) muestra las estadísticas, protegido con la variable de entorno `DASHBOARD_KEY` en Vercel.
+- Ver `GUIA-INSTALACION.md` para conectar la base de datos y configurar la clave (ese archivo no se despliega, está en `.vercelignore`).
+
 ## Notas
 - Este archivo debe actualizarse conforme el proyecto evolucione (por ejemplo, si se agrega un backend, un framework, o un sistema de pagos real).
 - Si se decide más adelante migrar a un framework (React, Vue, etc.) o agregar backend, documentar aquí el cambio de stack y las nuevas convenciones.

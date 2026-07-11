@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Dashboard | Happy Prints</title>
+<style>
+  :root { --pink:#FF2D78; --navy:#1A1F4B; --lime:#C8E63A; --orange:#F5A623; --ink-soft:#6B6F8C; --bg:#F1F3D6; --line:#E7E5DC; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:-apple-system,'Segoe UI',sans-serif; background:var(--bg); color:var(--navy); }
+
+  .login-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; background:var(--navy); }
+  .login-card { background:#fff; border-radius:20px; padding:32px 28px; width:100%; max-width:360px; box-shadow:0 20px 50px rgba(0,0,0,.25); }
+  .login-title { font-size:18px; font-weight:900; color:var(--navy); }
+  .login-sub { font-size:12px; color:var(--ink-soft); margin-top:2px; margin-bottom:20px; }
+  .login-err { background:#FEE2E2; color:#DC2626; border-radius:10px; padding:10px 14px; font-size:12px; font-weight:700; margin-bottom:14px; display:none; }
+  .login-card input { width:100%; padding:12px 14px; border:2px solid var(--line); border-radius:10px; font-size:14px; margin-bottom:14px; }
+  .login-card button { width:100%; padding:12px; border:none; border-radius:10px; background:var(--pink); color:#fff; font-weight:700; font-size:14px; cursor:pointer; }
+  .login-card button:hover { background:var(--navy); }
+
+  .wrap { display:none; max-width:1100px; margin:0 auto; padding:28px 18px 60px; }
+  .wrap.show { display:block; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  .sub { color:var(--ink-soft); font-size:13px; margin:0 0 24px; }
+
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:24px; }
+  .card { background:#fff; border-radius:14px; padding:18px; border:1px solid var(--line); }
+  .card .n { font-size:26px; font-weight:800; color:var(--pink); }
+  .card .l { font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.3px; margin-top:4px; }
+
+  .panel { background:#fff; border-radius:14px; padding:20px; border:1px solid var(--line); margin-bottom:20px; }
+  .panel h2 { font-size:14px; margin:0 0 14px; text-transform:uppercase; letter-spacing:.3px; color:var(--navy); }
+  canvas { width:100%; height:160px; display:block; }
+
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); }
+  th { color:var(--ink-soft); font-weight:700; font-size:11px; text-transform:uppercase; }
+  .bar-wrap { display:flex; align-items:center; gap:8px; }
+  .bar { height:8px; background:var(--lime); border-radius:4px; }
+
+  .grid2 { display:grid; grid-template-columns:1fr; gap:20px; }
+  @media (min-width:800px) { .grid2 { grid-template-columns:1fr 1fr; } }
+
+  .reload { float:right; background:none; border:2px solid var(--navy); color:var(--navy); border-radius:999px; padding:6px 14px; font-size:12px; font-weight:700; cursor:pointer; }
+  .reload:hover { background:var(--navy); color:#fff; }
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-title">Happy Prints</div>
+    <div class="login-sub">Dashboard de estadísticas</div>
+    <div class="login-err" id="loginErr">Clave incorrecta.</div>
+    <input type="password" id="loginKey" placeholder="Clave de acceso" onkeydown="if(event.key==='Enter') doLogin()">
+    <button onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<div class="wrap" id="wrap">
+  <button class="reload" onclick="load()">↻ Actualizar</button>
+  <h1>Estadísticas del sitio</h1>
+  <p class="sub">Últimos 14 días</p>
+
+  <div class="cards">
+    <div class="card"><div class="n" id="stTotal">–</div><div class="l">Vistas totales</div></div>
+    <div class="card"><div class="n" id="stAvg">–</div><div class="l">Seg. promedio en página</div></div>
+    <div class="card"><div class="n" id="stMobile">–</div><div class="l">% desde móvil</div></div>
+    <div class="card"><div class="n" id="stClicks">–</div><div class="l">Clics registrados</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Vistas por día</h2>
+    <canvas id="chart"></canvas>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h2>Páginas más vistas</h2>
+      <table id="tblPaths"><thead><tr><th>Página</th><th>Vistas</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="panel">
+      <h2>Clics más frecuentes</h2>
+      <table id="tblClicks"><thead><tr><th>Elemento</th><th>Clics</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY_STORAGE = 'hp_dashboard_key';
+
+function doLogin() {
+  const key = document.getElementById('loginKey').value.trim();
+  if (!key) return;
+  sessionStorage.setItem(KEY_STORAGE, key);
+  load();
+}
+
+async function load() {
+  const key = sessionStorage.getItem(KEY_STORAGE);
+  if (!key) return;
+  const r = await fetch('/api/stats?key=' + encodeURIComponent(key));
+  if (r.status === 401) {
+    sessionStorage.removeItem(KEY_STORAGE);
+    document.getElementById('loginErr').style.display = 'block';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('wrap').classList.remove('show');
+    return;
+  }
+  const data = await r.json();
+  render(data);
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('wrap').classList.add('show');
+}
+
+function render(data) {
+  document.getElementById('stTotal').textContent = data.totalViews;
+  document.getElementById('stAvg').textContent = data.avgSeconds + 's';
+
+  const devices = data.devices || {};
+  const totalDev = Object.values(devices).reduce((a, b) => a + Number(b), 0);
+  const mobilePct = totalDev ? Math.round((Number(devices.movil || 0) / totalDev) * 100) : 0;
+  document.getElementById('stMobile').textContent = mobilePct + '%';
+
+  const clicks = data.clicks || {};
+  const totalClicks = Object.values(clicks).reduce((a, b) => a + Number(b), 0);
+  document.getElementById('stClicks').textContent = totalClicks;
+
+  drawChart(data.viewsByDay || []);
+  renderTable('tblPaths', data.paths || {});
+  renderTable('tblClicks', data.clicks || {});
+}
+
+function renderTable(id, obj) {
+  const rows = Object.entries(obj).map(([k, v]) => [k, Number(v)]).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const max = rows.length ? rows[0][1] : 1;
+  const tbody = document.querySelector('#' + id + ' tbody');
+  tbody.innerHTML = rows.map(([label, count]) => `
+    <tr><td>${label}</td><td>
+      <div class="bar-wrap">
+        <div class="bar" style="width:${Math.max(4, (count / max) * 60)}px"></div>
+        <span>${count}</span>
+      </div>
+    </td></tr>`).join('') || '<tr><td colspan="2">Sin datos todavía</td></tr>';
+}
+
+function drawChart(viewsByDay) {
+  const canvas = document.getElementById('chart');
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = 160;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, w, h);
+
+  const max = Math.max(1, ...viewsByDay.map(d => d.views));
+  const barW = w / viewsByDay.length;
+
+  viewsByDay.forEach((d, i) => {
+    const barH = (d.views / max) * (h - 30);
+    const x = i * barW + barW * 0.2;
+    ctx.fillStyle = '#FF2D78';
+    ctx.fillRect(x, h - barH - 20, barW * 0.6, barH);
+    ctx.fillStyle = '#6B6F8C';
+    ctx.font = '9px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(d.day.slice(5), x + barW * 0.3, h - 8);
+  });
+}
+
+if (sessionStorage.getItem(KEY_STORAGE)) load();
+</script>
+</body>
+</html>
