@@ -370,6 +370,23 @@ img { max-width: 100%; display: block; }
 .sdot { display: inline-block; width: 8px; height: 8px; background: var(--pink); border-radius: 50%; }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; padding: 0 14px 24px; }
+.load-more-wrap { grid-column: 1/-1; display: flex; justify-content: center; padding: 10px 0 6px; }
+.load-more-btn {
+  background: var(--pink);
+  color: #fff;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  border: none;
+  border-radius: 999px;
+  padding: 13px 30px;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(255,45,120,.25);
+  transition: background .15s;
+}
+.load-more-btn:hover { background: var(--navy); }
 .card {
   background: #fff;
   border-radius: var(--radius-md);
