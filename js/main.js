@@ -202,7 +202,12 @@ function filt(cat, chipEl) {
   document.getElementById('prods').scrollIntoView({ behavior: 'smooth' });
 }
 
+const GRID_PAGE_SIZE = 30;
+let gridState = { cat: null, visible: GRID_PAGE_SIZE };
+
 function renderGrid(cat) {
+  if (gridState.cat !== cat) gridState = { cat, visible: GRID_PAGE_SIZE };
+
   const ids = cat === 'all' ? null : Array.isArray(cat) ? cat : [cat];
   const quoteCats = ids ? ids.map(id => allCats.find(c => c.id === id)).filter(c => c && esCategoriaCotizacion(c.nombre)) : [];
   const quoteHtml = quoteCats.map(quoteChecklistHtml).join('');
@@ -223,7 +228,8 @@ function renderGrid(cat) {
       <span>Sube tu diseño y velo al instante antes de pedir</span>
     </div>` : '';
 
-  const cardsHtml = list.map(p => {
+  const visibleList = list.slice(0, gridState.visible);
+  const cardsHtml = visibleList.map(p => {
     const c = p.categorias || {};
     const imgTag = p.imagen_url
       ? `<img class="cimg" src="${p.imagen_url}" alt="${p.nombre}${c.nombre ? ' - ' + c.nombre + ' personalizado' : ''} | Happy Prints" loading="lazy"
@@ -242,7 +248,17 @@ function renderGrid(cat) {
     </div>`;
   }).join('');
 
-  document.getElementById('grid').innerHTML = persHtml + cardsHtml + quoteHtml;
+  const remaining = list.length - visibleList.length;
+  const moreHtml = remaining > 0
+    ? `<div class="load-more-wrap"><button class="load-more-btn" onclick="loadMoreGrid()">Ver más productos (${remaining})</button></div>`
+    : '';
+
+  document.getElementById('grid').innerHTML = persHtml + cardsHtml + moreHtml + quoteHtml;
+}
+
+function loadMoreGrid() {
+  gridState.visible += GRID_PAGE_SIZE;
+  renderGrid(gridState.cat);
 }
 
 /* ── Checklist de cotización personalizada (categorías sin costo fijo) ── */
