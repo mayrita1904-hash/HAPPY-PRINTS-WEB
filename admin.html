@@ -85,6 +85,16 @@ input:checked+.togslide::before{transform:translateX(18px)}
 .cot-row{display:grid;grid-template-columns:1fr 1.3fr auto;gap:8px;margin-bottom:8px}
 .cot-row select,.cot-row input{padding:9px 12px;border:1.5px solid #E0E0E8;border-radius:8px;font-family:'Nunito',sans-serif;font-size:12px;color:#1A1F4B;outline:none;transition:border-color .15s;width:100%}
 .cot-row select:focus,.cot-row input:focus{border-color:#FF2D78}
+.paquete-card textarea{width:100%;padding:9px 12px;border:1.5px solid #E0E0E8;border-radius:8px;font-family:'Nunito',sans-serif;font-size:12px;color:#1A1F4B;outline:none;resize:vertical;min-height:60px;transition:border-color .15s}
+.paquete-card textarea:focus{border-color:#FF2D78}
+.paquete-check{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#1A1F4B;cursor:pointer;white-space:nowrap}
+.paquete-check input{width:16px;height:16px;flex-shrink:0}
+.webdevextra-row{display:grid;grid-template-columns:1.2fr 1.6fr .8fr .7fr auto auto;gap:8px;margin-bottom:8px;align-items:center}
+.webdevextra-row select,.webdevextra-row input{padding:9px 12px;border:1.5px solid #E0E0E8;border-radius:8px;font-family:'Nunito',sans-serif;font-size:12px;color:#1A1F4B;outline:none;transition:border-color .15s;width:100%}
+.webdevextra-row select:focus,.webdevextra-row input:focus{border-color:#FF2D78}
+.webdevextra-check{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#1A1F4B;cursor:pointer;white-space:nowrap}
+.webdevextra-check input{width:15px;height:15px;flex-shrink:0}
+@media (max-width:800px){.webdevextra-row{grid-template-columns:1fr}}
 .colors{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .col-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border-color .15s;flex-shrink:0}
 .col-dot.sel{border-color:#1A1F4B}
@@ -108,6 +118,13 @@ input:checked+.togslide::before{transform:translateX(18px)}
 .nbadge-row{display:flex;align-items:center;gap:10px}
 .logout-btn{background:transparent;border:1.5px solid rgba(255,255,255,.3);color:#fff;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;padding:6px 12px;border-radius:999px;cursor:pointer}
 .logout-btn:hover{border-color:#fff}
+/* TABS */
+.admin-tabs{max-width:1100px;margin:20px auto 0;padding:0 20px;display:flex;gap:8px;flex-wrap:wrap}
+.atab{padding:10px 18px;border-radius:999px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;border:1.5px solid #E0E0E8;background:#fff;color:#1A1F4B;transition:all .15s}
+.atab:hover{border-color:#FF2D78}
+.atab.on{background:#1A1F4B;border-color:#1A1F4B;color:#fff}
+.admin-screen{display:none}
+.admin-screen.on{display:block}
 </style>
 </head>
 <body>
@@ -164,6 +181,14 @@ input:checked+.togslide::before{transform:translateX(18px)}
   </div>
 </nav>
 
+<div class="admin-tabs">
+  <button class="atab on" data-screen="productos" onclick="mostrarPantalla('productos')">🗂️ Productos</button>
+  <button class="atab" data-screen="cotizacion" onclick="mostrarPantalla('cotizacion')">🖨️ Impresión Digital, Grabado Láser y Offset</button>
+  <button class="atab" data-screen="experience" onclick="mostrarPantalla('experience')">🎉 Happy Prints Experience</button>
+  <button class="atab" data-screen="webdev" onclick="mostrarPantalla('webdev')">💻 Sitios Web</button>
+</div>
+
+<div class="admin-screen on" id="screen-productos">
 <div class="wrap">
   <div class="ptitle">Productos</div>
   <div class="psub">Edita precios, sube fotos y activa o desactiva productos desde aquí.</div>
@@ -194,8 +219,22 @@ input:checked+.togslide::before{transform:translateX(18px)}
     <div id="tbody"><div class="loading">Cargando productos…</div></div>
   </div>
 </div>
+</div><!-- /screen-productos -->
 
-<div class="wrap" style="margin-top:10px">
+<div class="admin-screen" id="screen-cotizacion">
+<div class="wrap">
+  <div class="ptitle">🖨️ Impresión Digital, Grabado Láser y Offset</div>
+  <div class="psub">Cotización personalizada — para Offset y Serigrafía, Impresión Digital y Grabado y Corte Láser (no tienen precio fijo). Edita las opciones que el cliente puede marcar para pedir cotización.</div>
+  <div id="cotItemsList"><div class="loading">Cargando opciones…</div></div>
+  <div style="display:flex;gap:10px;margin-top:14px">
+    <button class="btn btn-g btn-sm" onclick="agregarCotItemVacio()">＋ Agregar opción</button>
+    <button class="btn btn-p" onclick="guardarCotItems()">💾 Guardar cambios</button>
+  </div>
+</div>
+</div><!-- /screen-cotizacion -->
+
+<div class="admin-screen" id="screen-experience">
+<div class="wrap">
   <div class="ptitle">🎉 Happy Prints Experience — Paquetes</div>
   <div class="psub">Edita los paquetes que se muestran en la página de Experience (piezas, horas, beneficios y precio).</div>
   <div id="expPaquetesList"><div class="loading">Cargando paquetes…</div></div>
@@ -204,16 +243,27 @@ input:checked+.togslide::before{transform:translateX(18px)}
     <button class="btn btn-p" onclick="guardarPaquetes()">💾 Guardar cambios</button>
   </div>
 </div>
+</div><!-- /screen-experience -->
 
-<div class="wrap" style="margin-top:10px">
-  <div class="ptitle">🖨️ Cotización personalizada — Checklist</div>
-  <div class="psub">Para Offset y Serigrafía, Impresión Digital y Grabado y Corte Láser (no tienen precio fijo). Edita las opciones que el cliente puede marcar para pedir cotización.</div>
-  <div id="cotItemsList"><div class="loading">Cargando opciones…</div></div>
+<div class="admin-screen" id="screen-webdev">
+<div class="wrap">
+  <div class="ptitle">💻 Sitios Web — Paquetes</div>
+  <div class="psub">Edita los paquetes que se muestran en la página "Contenido Digital" (páginas, beneficios, precio y descripción para la calculadora).</div>
+  <div id="webdevPaquetesList"><div class="loading">Cargando paquetes…</div></div>
+  <div style="display:flex;gap:10px;margin-top:14px;margin-bottom:32px">
+    <button class="btn btn-g btn-sm" onclick="agregarWebdevPaqueteVacio()">＋ Agregar paquete</button>
+    <button class="btn btn-p" onclick="guardarWebdevPaquetes()">💾 Guardar paquetes</button>
+  </div>
+
+  <div class="ptitle" style="font-size:18px">✨ Sitios Web — Extras</div>
+  <div class="psub">Edita los extras que se pueden agregar a cualquier paquete y que aparecen en la calculadora "Arma tu sitio a la medida".</div>
+  <div id="webdevExtrasList"><div class="loading">Cargando extras…</div></div>
   <div style="display:flex;gap:10px;margin-top:14px">
-    <button class="btn btn-g btn-sm" onclick="agregarCotItemVacio()">＋ Agregar opción</button>
-    <button class="btn btn-p" onclick="guardarCotItems()">💾 Guardar cambios</button>
+    <button class="btn btn-g btn-sm" onclick="agregarWebdevExtraVacio()">＋ Agregar extra</button>
+    <button class="btn btn-p" onclick="guardarWebdevExtras()">💾 Guardar extras</button>
   </div>
 </div>
+</div><!-- /screen-webdev -->
 
 <!-- MODAL -->
 <div class="mbg" id="mbg">
@@ -371,6 +421,13 @@ function doLogout() {
   document.getElementById('loginPass').value = '';
 }
 
+function mostrarPantalla(id) {
+  document.querySelectorAll('.admin-screen').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.atab').forEach(t => t.classList.remove('on'));
+  document.getElementById('screen-' + id).classList.add('on');
+  document.querySelector(`.atab[data-screen="${id}"]`).classList.add('on');
+}
+
 async function cambiarPassword() {
   const nueva = prompt('Escribe tu nueva contraseña (mínimo 6 caracteres):');
   if (!nueva) return;
@@ -394,6 +451,8 @@ async function mostrarApp() {
   await cargar();
   cargarPaquetes();
   cargarCotItems();
+  cargarWebdevPaquetes();
+  cargarWebdevExtras();
 }
 
 /* ── Olvidé mi contraseña ── */
@@ -995,6 +1054,187 @@ async function guardarCotItems() {
       }
     }
     toast('Opciones guardadas ✔', 'ok');
+  } catch (e) {
+    toast('Error: ' + e.message, 'err');
+  }
+}
+
+/* ── Sitios Web: Paquetes ── */
+let webdevPaquetesActuales = [];
+
+async function cargarWebdevPaquetes() {
+  try {
+    webdevPaquetesActuales = await sbGet('webdev_paquetes?select=*&order=orden');
+  } catch (e) {
+    document.getElementById('webdevPaquetesList').innerHTML = '<div class="empty">⚠️ No se pudo cargar (¿ya ejecutaste supabase_webdev_paquetes.sql?)</div>';
+    return;
+  }
+  renderWebdevPaquetesAdmin();
+}
+
+function renderWebdevPaquetesAdmin() {
+  const list = document.getElementById('webdevPaquetesList');
+  list.innerHTML = webdevPaquetesActuales.map((p, idx) => `
+    <div class="paquete-card">
+      <div class="paquete-row">
+        <input placeholder="Nombre (ej. Básico)" value="${p.nombre ?? ''}" onchange="actualizarWebdevPaquete(${idx},'nombre',this.value)">
+        <select onchange="actualizarWebdevPaquete(${idx},'tier_key',this.value)">
+          <option value="basico" ${p.tier_key==='basico'?'selected':''}>🟢 Básico (verde)</option>
+          <option value="catalogo" ${p.tier_key==='catalogo'?'selected':''}>🟡 Catálogo (naranja)</option>
+          <option value="completo" ${p.tier_key==='completo'?'selected':''}>🔴 Completo (rosa)</option>
+        </select>
+        <input placeholder="Badge (opcional, ej. MÁS ELEGIDO)" value="${p.badge ?? ''}" onchange="actualizarWebdevPaquete(${idx},'badge',this.value)">
+        <button type="button" class="nivel-del" onclick="eliminarWebdevPaquete(${idx})" title="Quitar paquete">✕</button>
+      </div>
+      <div class="paquete-row2">
+        <input placeholder="Páginas (ej. 1 página)" value="${p.paginas ?? ''}" onchange="actualizarWebdevPaquete(${idx},'paginas',this.value)">
+        <input placeholder="Precio en MXN (ej. 5000)" type="number" min="0" step="1" value="${p.precio_valor ?? ''}" onchange="actualizarWebdevPaquete(${idx},'precio_valor',parseFloat(this.value)||0)">
+        <input placeholder="Entrega (ej. 5–7 días)" value="${p.entrega ?? ''}" onchange="actualizarWebdevPaquete(${idx},'entrega',this.value)">
+      </div>
+      <div class="paquete-row3">
+        <input placeholder="Para quién es (audiencia)" value="${p.audiencia ?? ''}" onchange="actualizarWebdevPaquete(${idx},'audiencia',this.value)">
+        <label class="paquete-check"><input type="checkbox" ${p.precio_plus?'checked':''} onchange="actualizarWebdevPaquete(${idx},'precio_plus',this.checked)"> Mostrar "+" después del precio</label>
+      </div>
+      <div class="paquete-row3">
+        <input placeholder="Beneficio 1" value="${p.feature_1 ?? ''}" onchange="actualizarWebdevPaquete(${idx},'feature_1',this.value)">
+        <input placeholder="Beneficio 2" value="${p.feature_2 ?? ''}" onchange="actualizarWebdevPaquete(${idx},'feature_2',this.value)">
+      </div>
+      <div class="paquete-row3">
+        <input placeholder="Beneficio 3" value="${p.feature_3 ?? ''}" onchange="actualizarWebdevPaquete(${idx},'feature_3',this.value)">
+        <input placeholder="Beneficio 4" value="${p.feature_4 ?? ''}" onchange="actualizarWebdevPaquete(${idx},'feature_4',this.value)">
+      </div>
+      <input placeholder="Beneficio 5 (opcional)" value="${p.feature_5 ?? ''}" onchange="actualizarWebdevPaquete(${idx},'feature_5',this.value)" style="margin-bottom:8px">
+      <textarea placeholder="Descripción para la calculadora 'Arma tu sitio a la medida'" onchange="actualizarWebdevPaquete(${idx},'descripcion',this.value)">${p.descripcion ?? ''}</textarea>
+    </div>
+  `).join('') || '<div style="font-size:12px;color:#9090A8;padding:6px 0 10px">Todavía no hay paquetes — agrega el primero.</div>';
+}
+
+function actualizarWebdevPaquete(idx, campo, valor) {
+  webdevPaquetesActuales[idx][campo] = valor;
+}
+
+async function eliminarWebdevPaquete(idx) {
+  const p = webdevPaquetesActuales[idx];
+  if (p.id) {
+    if (!confirm('¿Eliminar este paquete? Esta acción no se puede deshacer.')) return;
+    try { await sbDelete(`webdev_paquetes?id=eq.${p.id}`); } catch (e) { toast('Error: ' + e.message, 'err'); return; }
+  }
+  webdevPaquetesActuales.splice(idx, 1);
+  renderWebdevPaquetesAdmin();
+}
+
+function agregarWebdevPaqueteVacio() {
+  webdevPaquetesActuales.push({ orden: webdevPaquetesActuales.length + 1, nombre: '', tier_key: 'basico', paginas: '', audiencia: '', feature_1: '', feature_2: '', feature_3: '', feature_4: '', feature_5: '', precio_valor: 0, precio_plus: false, entrega: '', badge: '', descripcion: '' });
+  renderWebdevPaquetesAdmin();
+}
+
+async function guardarWebdevPaquetes() {
+  try {
+    for (let i = 0; i < webdevPaquetesActuales.length; i++) {
+      const p = webdevPaquetesActuales[i];
+      if (!p.nombre || !p.precio_valor) continue;
+      const datos = {
+        orden: i + 1,
+        nombre: p.nombre,
+        tier_key: p.tier_key || 'basico',
+        paginas: p.paginas || '',
+        audiencia: p.audiencia || null,
+        feature_1: p.feature_1 || null,
+        feature_2: p.feature_2 || null,
+        feature_3: p.feature_3 || null,
+        feature_4: p.feature_4 || null,
+        feature_5: p.feature_5 || null,
+        precio_valor: p.precio_valor,
+        precio_plus: !!p.precio_plus,
+        entrega: p.entrega || null,
+        badge: p.badge || null,
+        descripcion: p.descripcion || null
+      };
+      if (p.id) {
+        await sbPatch(`webdev_paquetes?id=eq.${p.id}`, datos);
+      } else {
+        const [creado] = await sbPost('webdev_paquetes', datos);
+        p.id = creado.id;
+      }
+    }
+    toast('Paquetes guardados ✔', 'ok');
+  } catch (e) {
+    toast('Error: ' + e.message, 'err');
+  }
+}
+
+/* ── Sitios Web: Extras ── */
+const WEBDEV_CATEGORIAS = ['Contenido y marca', 'Funcionalidad', 'Datos y crecimiento', 'Automatización', 'Después de la entrega'];
+let webdevExtrasActuales = [];
+
+async function cargarWebdevExtras() {
+  try {
+    webdevExtrasActuales = await sbGet('webdev_extras?select=*&order=categoria,orden');
+  } catch (e) {
+    document.getElementById('webdevExtrasList').innerHTML = '<div class="empty">⚠️ No se pudo cargar (¿ya ejecutaste supabase_webdev_extras.sql?)</div>';
+    return;
+  }
+  renderWebdevExtrasAdmin();
+}
+
+function renderWebdevExtrasAdmin() {
+  const list = document.getElementById('webdevExtrasList');
+  list.innerHTML = webdevExtrasActuales.map((it, idx) => `
+    <div class="webdevextra-row">
+      <select onchange="actualizarWebdevExtra(${idx},'categoria',this.value)">
+        ${WEBDEV_CATEGORIAS.map(c => `<option value="${c}" ${it.categoria===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+      <input placeholder="Nombre (ej. Diseño de logo)" value="${(it.nombre ?? '').replace(/"/g,'&quot;')}" onchange="actualizarWebdevExtra(${idx},'nombre',this.value)">
+      <input placeholder="Precio MXN" type="number" min="0" step="1" value="${it.precio ?? ''}" onchange="actualizarWebdevExtra(${idx},'precio',parseFloat(this.value)||0)">
+      <input placeholder="Unidad (ej. /año)" value="${it.unidad ?? ''}" onchange="actualizarWebdevExtra(${idx},'unidad',this.value)">
+      <label class="webdevextra-check"><input type="checkbox" ${it.recurrente?'checked':''} onchange="actualizarWebdevExtra(${idx},'recurrente',this.checked)"> Recurrente</label>
+      <button type="button" class="nivel-del" onclick="eliminarWebdevExtra(${idx})" title="Quitar extra">✕</button>
+    </div>
+  `).join('') || '<div style="font-size:12px;color:#9090A8;padding:6px 0 10px">Todavía no hay extras — agrega el primero.</div>';
+}
+
+function actualizarWebdevExtra(idx, campo, valor) {
+  webdevExtrasActuales[idx][campo] = valor;
+}
+
+async function eliminarWebdevExtra(idx) {
+  const it = webdevExtrasActuales[idx];
+  if (it.id) {
+    if (!confirm('¿Quitar este extra? Esta acción no se puede deshacer.')) return;
+    try { await sbDelete(`webdev_extras?id=eq.${it.id}`); } catch (e) { toast('Error: ' + e.message, 'err'); return; }
+  }
+  webdevExtrasActuales.splice(idx, 1);
+  renderWebdevExtrasAdmin();
+}
+
+function agregarWebdevExtraVacio() {
+  webdevExtrasActuales.push({ categoria: WEBDEV_CATEGORIAS[0], nombre: '', precio: 0, recurrente: false, unidad: '', orden: webdevExtrasActuales.length + 1 });
+  renderWebdevExtrasAdmin();
+}
+
+async function guardarWebdevExtras() {
+  try {
+    const ordenPorCategoria = {};
+    for (let i = 0; i < webdevExtrasActuales.length; i++) {
+      const it = webdevExtrasActuales[i];
+      if (!it.nombre || !it.categoria) continue;
+      ordenPorCategoria[it.categoria] = (ordenPorCategoria[it.categoria] || 0) + 1;
+      const datos = {
+        categoria: it.categoria,
+        nombre: it.nombre,
+        precio: it.precio || 0,
+        recurrente: !!it.recurrente,
+        unidad: it.unidad || null,
+        orden: ordenPorCategoria[it.categoria]
+      };
+      if (it.id) {
+        await sbPatch(`webdev_extras?id=eq.${it.id}`, datos);
+      } else {
+        const [creado] = await sbPost('webdev_extras', datos);
+        it.id = creado.id;
+      }
+    }
+    toast('Extras guardados ✔', 'ok');
   } catch (e) {
     toast('Error: ' + e.message, 'err');
   }
