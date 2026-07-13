@@ -733,6 +733,7 @@ footer p { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 4px; }
 .exp-pricing-foot { text-align: center; font-size: 11px; color: var(--ink-soft); margin: 34px auto 0; max-width: 520px; }
 .exp-cta-2 { margin-top: 22px; background: var(--pink); }
 .exp-cta-2:hover { background: #E0206A; }
+
 @media (min-width: 900px) {
   .exp-tiers { grid-template-columns: repeat(4, 1fr); align-items: start; }
   .exp-tier-highlight { transform: scale(1.05); }
@@ -782,6 +783,9 @@ footer p { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 4px; }
 .webdev-extras-price { flex-shrink: 0; text-align: right; white-space: nowrap; font-size: 12px; color: var(--ink-soft); font-weight: 700; margin-top: 1px; }
 
 /* ===== Arma tu sitio a la medida (calculadora) ===== */
+.webdev-builder-intro { background: #fff; padding: 34px 20px 10px; text-align: center; }
+.webdev-back-link { display: inline-block; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 12px; color: var(--ink-soft); text-decoration: none; margin-bottom: 14px; }
+.webdev-back-link:hover { color: var(--pink); }
 .webdev-builder { background: var(--bg); padding: 44px 16px; }
 .webdev-builder-h { text-align: center; font-family: 'Fredoka', sans-serif; font-weight: 800; font-size: clamp(20px, 4.4vw, 28px); color: var(--navy); }
 .webdev-builder-sub { text-align: center; font-family: 'Nunito', sans-serif; font-size: 13px; color: var(--ink-soft); margin: 12px auto 28px; max-width: 480px; line-height: 1.5; }
