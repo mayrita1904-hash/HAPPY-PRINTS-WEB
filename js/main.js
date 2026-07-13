@@ -50,7 +50,7 @@ const SERVICE_TILES = [
   { title: 'Impresión Digital y Publicidad', sub: '', icon: '🖼️', img: 'assets/images/impresion-digital-publicidad.png', color: '#F6C55B', kw: ['impresion','digital','publicidad'] },
   { title: 'Offset y Serigrafía', sub: '', icon: '🖨️', img: 'assets/images/offset-serigrafia.png', color: '#E91E8C', kw: ['offset','serigraf'] },
   { title: 'Grabado y Corte Láser', sub: '', icon: '✂️', img: 'assets/images/grabado-corte-laser.png', color: '#B4C430', kw: ['grabado','laser','corte'] },
-  { title: 'Contenido Digital', sub: '', icon: '🎨', img: 'assets/images/diseno-grafico-contenido-digital.png', color: '#1FADA0', kw: ['contenido digital', 'contenido'] }
+  { title: 'Contenido Digital', sub: '', icon: '🎨', img: 'assets/images/diseno-grafico-contenido-digital.png', color: '#1FADA0', link: '/pages/contenido-digital' }
 ];
 
 const FEATURED = [
@@ -73,12 +73,14 @@ function buildCatGrid() {
   const grid = document.getElementById('cat-grid-visual');
   if (!grid) return;
   grid.innerHTML = SERVICE_TILES.map(t => {
-    const arg = t.showAll ? `'all'` : (() => { const ids = matchCatIds(t.kw); return ids.length ? JSON.stringify(ids) : `'all'`; })();
     const fitClass = t.imgFit === 'cover' ? ' cover' : '';
     const media = t.img
       ? `<img class="cat-tile-img${fitClass}" src="${t.img}" alt="${t.title} - Happy Prints" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'cat-tile-icon',textContent:'${t.icon}'}))">`
       : `<div class="cat-tile-icon">${t.icon}</div>`;
-    return `<div class="cat-tile ${t.img?'has-img':''}${fitClass}" style="background:${t.color}" onclick="filt(${arg})">
+    const action = t.link
+      ? `location.href='${t.link}'`
+      : (() => { const arg = t.showAll ? `'all'` : (() => { const ids = matchCatIds(t.kw); return ids.length ? JSON.stringify(ids) : `'all'`; })(); return `filt(${arg})`; })();
+    return `<div class="cat-tile ${t.img?'has-img':''}${fitClass}" style="background:${t.color}" onclick="${action}">
       ${media}
       <div class="cat-tile-title">${t.title}</div>
     </div>`;
