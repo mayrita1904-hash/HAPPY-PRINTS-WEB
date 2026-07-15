@@ -1428,7 +1428,7 @@ async function eliminarProd(id, nombre) {
 
 /* ── Registro de cotizaciones ── */
 const CR_COLS = '110px 1fr 110px 120px 110px 190px';
-const CR_FOOTER_DEFAULT = 'El costo NO incluyen IVA. En caso de requerir factura el costo aumenta un 16%. Cualquier diseño adicional tendrá un costo de $300.⁰⁰ (trescientos pesos 00/M.N.) Una vez realizada la solicitud no habrá devolución. Para formalizar el pedido se solicita un 70% del total del trabajo. Los trabajos urgentes tendrán un costo adicional dependiendo la premura y los tipos de materiales.';
+const CR_FOOTER_DEFAULT = 'El costo NO incluyen IVA. En caso de requerir factura el costo aumenta un 16%. Cualquier diseño adicional tendrá un costo de $300.⁰⁰ (trescientos pesos 00/M.N.) Una vez realizada la solicitud no habrá devolución. Para formalizar el pedido se solicita un 70% del total del trabajo. Los trabajos urgentes tendrán un costo adicional dependiendo la premura y los tipos de materiales.\n\n¡Gracias por tu confianza! Quedamos al pendiente para apoyarte con este pedido.';
 const CR_ESTATUS_INFO = {
   pendiente: { label: 'Pendiente', bg: '#FEF3C7', color: '#B45309' },
   aceptada:  { label: 'Aceptada',  bg: '#DCFCE7', color: '#15803D' },
@@ -1678,7 +1678,7 @@ async function verCotizacion(id) {
   table.items{width:100%;border-collapse:collapse;border:2px solid #7C3AED;border-radius:10px;overflow:hidden}
   table.items thead th{background:#1A1F4B;color:#fff;font-size:12px;font-weight:800;letter-spacing:.4px;padding:12px 18px;text-align:left}
   table.items thead th:last-child{text-align:center}
-  .footer{font-size:11px;color:#1A1F4B;margin-top:22px;line-height:1.5}
+  .footer{font-size:11px;color:#1A1F4B;margin-top:22px;line-height:1.5;white-space:pre-line}
   .toolbar{max-width:820px;margin:0 auto 14px;display:flex;gap:10px;justify-content:flex-end}
   .toolbar button{font-family:'Poppins',Arial,sans-serif;font-weight:800;font-size:13px;padding:9px 18px;border-radius:999px;border:none;cursor:pointer}
   .bprint{background:#FF2D78;color:#fff}
@@ -1722,7 +1722,7 @@ async function verCotizacion(id) {
   </div>
 </body></html>`;
 
-  const w = window.open('', '_blank');
+  const w = window.open('/#top', '_blank');
   if (!w) { toast('Habilita las ventanas emergentes para ver el documento.', 'err'); return; }
   w.document.open();
   w.document.write(html);
