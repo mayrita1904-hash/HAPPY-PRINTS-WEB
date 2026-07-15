@@ -186,6 +186,7 @@ input:checked+.togslide::before{transform:translateX(18px)}
   <button class="atab" data-screen="cotizacion" onclick="mostrarPantalla('cotizacion')">🖨️ Impresión Digital, Grabado Láser y Offset</button>
   <button class="atab" data-screen="experience" onclick="mostrarPantalla('experience')">🎉 Happy Prints Experience</button>
   <button class="atab" data-screen="webdev" onclick="mostrarPantalla('webdev')">💻 Sitios Web</button>
+  <button class="atab" data-screen="cotreg" onclick="mostrarPantalla('cotreg')">🧾 Registro de Cotizaciones</button>
 </div>
 
 <div class="admin-screen on" id="screen-productos">
@@ -264,6 +265,40 @@ input:checked+.togslide::before{transform:translateX(18px)}
   </div>
 </div>
 </div><!-- /screen-webdev -->
+
+<div class="admin-screen" id="screen-cotreg">
+<div class="wrap">
+  <div class="ptitle">🧾 Registro de Cotizaciones</div>
+  <div class="psub">Registra aquí cada cotización formal que armas para un cliente (pistas, invitaciones, figuras, etc.) y da seguimiento a su estatus. El botón "Ver / Imprimir" genera el documento con el formato de Happy Prints, listo para imprimir o guardar como PDF.</div>
+
+  <div class="stats">
+    <div class="stat"><div class="sv" id="cr1">—</div><div class="sl">Total cotizaciones</div></div>
+    <div class="stat"><div class="sv" id="cr2">—</div><div class="sl">Pendientes</div></div>
+    <div class="stat"><div class="sv" id="cr3">—</div><div class="sl">Aceptadas</div></div>
+    <div class="stat"><div class="sv" id="cr4">—</div><div class="sl">Rechazadas</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input class="sinput" type="text" id="crq" placeholder="🔍  Buscar por cliente o No. de orden..." oninput="filtrarCotizaciones()">
+    <select class="sinput" style="flex:0;width:auto" id="crestatus" onchange="filtrarCotizaciones()">
+      <option value="">Todos los estatus</option>
+      <option value="pendiente">Pendiente</option>
+      <option value="aceptada">Aceptada</option>
+      <option value="rechazada">Rechazada</option>
+    </select>
+    <button class="btn btn-p" onclick="abrirCotModal()">＋ Nueva cotización</button>
+    <button class="btn btn-g btn-sm" onclick="cargarCotizaciones()">↻ Actualizar</button>
+  </div>
+
+  <div class="tbl">
+    <div class="th" style="grid-template-columns:110px 1fr 110px 120px 110px 190px">
+      <div>Orden No.</div><div>Cliente</div><div>Fecha</div>
+      <div>Estatus</div><div>Productos</div><div>Acciones</div>
+    </div>
+    <div id="crtbody"><div class="loading">Cargando cotizaciones…</div></div>
+  </div>
+</div>
+</div><!-- /screen-cotreg -->
 
 <!-- MODAL -->
 <div class="mbg" id="mbg">
@@ -367,6 +402,74 @@ input:checked+.togslide::before{transform:translateX(18px)}
     </div>
   </div>
 </div>
+
+<!-- MODAL COTIZACIÓN -->
+<div class="mbg" id="cotMbg">
+  <div class="mbox" style="max-width:640px">
+    <h2 id="cotMtitle">Nueva cotización</h2>
+
+    <div class="frow">
+      <div class="field">
+        <label>No. de orden (automático)</label>
+        <input type="text" id="crNumOrden" readonly style="background:#F5F5F8;color:#9090A8;cursor:not-allowed">
+      </div>
+      <div class="field">
+        <label>Fecha *</label>
+        <input type="date" id="crFecha">
+      </div>
+    </div>
+    <div class="frow">
+      <div class="field">
+        <label>Cliente *</label>
+        <input type="text" id="crCliente" placeholder="Nombre del cliente">
+      </div>
+      <div class="field">
+        <label>No. de cliente</label>
+        <input type="text" id="crClienteNum" placeholder="Ej: MLR01">
+      </div>
+    </div>
+    <div class="frow">
+      <div class="field">
+        <label>Enviar a</label>
+        <input type="text" id="crEnviarA" placeholder="Sin especificar">
+      </div>
+      <div class="field">
+        <label>Condiciones</label>
+        <input type="text" id="crCondiciones" placeholder="Sin especificar">
+      </div>
+    </div>
+    <div class="field">
+      <label>Estatus</label>
+      <select id="crEstatus">
+        <option value="pendiente">Pendiente</option>
+        <option value="aceptada">Aceptada</option>
+        <option value="rechazada">Rechazada</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Productos / conceptos *</label>
+      <datalist id="crProductosDatalist"></datalist>
+      <div id="crRenglonesList"></div>
+      <button type="button" class="btn btn-g btn-sm" onclick="agregarRenglonVacio()">＋ Agregar producto</button>
+    </div>
+
+    <div class="field">
+      <label>Notas internas</label>
+      <textarea id="crNotas" placeholder="Notas de seguimiento (no aparecen en el documento)"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Nota al pie del documento</label>
+      <textarea id="crFooterNota" style="min-height:90px"></textarea>
+    </div>
+
+    <div class="mfooter">
+      <button class="btn btn-g" onclick="cerrarCotModal()">Cancelar</button>
+      <button class="btn btn-p" id="crSbtn" onclick="guardarCotizacion()">Guardar cotización</button>
+    </div>
+  </div>
+</div>
 </div><!-- /#app -->
 
 <div class="toast" id="toast"></div>
@@ -453,6 +556,7 @@ async function mostrarApp() {
   cargarCotItems();
   cargarWebdevPaquetes();
   cargarWebdevExtras();
+  cargarCotizaciones();
 }
 
 /* ── Olvidé mi contraseña ── */
@@ -1322,6 +1426,323 @@ async function eliminarProd(id, nombre) {
   } catch(e) { toast('Error: ' + e.message, 'err'); }
 }
 
+/* ── Registro de cotizaciones ── */
+const CR_COLS = '110px 1fr 110px 120px 110px 190px';
+const CR_FOOTER_DEFAULT = 'El costo NO incluyen IVA. En caso de requerir factura el costo aumenta un 16%. Cualquier diseño adicional tendrá un costo de $300.⁰⁰ (trescientos pesos 00/M.N.) Una vez realizada la solicitud no habrá devolución. Para formalizar el pedido se solicita un 70% del total del trabajo. Los trabajos urgentes tendrán un costo adicional dependiendo la premura y los tipos de materiales.';
+const CR_ESTATUS_INFO = {
+  pendiente: { label: 'Pendiente', bg: '#FEF3C7', color: '#B45309' },
+  aceptada:  { label: 'Aceptada',  bg: '#DCFCE7', color: '#15803D' },
+  rechazada: { label: 'Rechazada', bg: '#FEE2E2', color: '#DC2626' }
+};
+
+let cotizaciones = [], crRenglonesEdit = [], crEditId = null;
+
+function siguienteNumeroOrden() {
+  const nums = cotizaciones.map(c => parseInt(c.numero_orden, 10)).filter(n => !isNaN(n));
+  return String((nums.length ? Math.max(...nums) : 0) + 1);
+}
+
+async function cargarCotizaciones() {
+  document.getElementById('crtbody').innerHTML = '<div class="loading">Cargando cotizaciones…</div>';
+  try {
+    cotizaciones = await sbGet('cotizaciones?select=*,renglones:cotizacion_renglones(count)&order=creado_en.desc');
+  } catch (e) {
+    document.getElementById('crtbody').innerHTML = '<div class="empty">⚠️ No se pudo cargar (¿ya ejecutaste supabase_cotizaciones.sql?)</div>';
+    return;
+  }
+  filtrarCotizaciones();
+}
+
+function actualizarStatsCotizaciones(list) {
+  document.getElementById('cr1').textContent = list.length;
+  document.getElementById('cr2').textContent = list.filter(c => c.estatus === 'pendiente').length;
+  document.getElementById('cr3').textContent = list.filter(c => c.estatus === 'aceptada').length;
+  document.getElementById('cr4').textContent = list.filter(c => c.estatus === 'rechazada').length;
+}
+
+function filtrarCotizaciones() {
+  const q = document.getElementById('crq').value.toLowerCase();
+  const estatus = document.getElementById('crestatus').value;
+  const filtradas = cotizaciones.filter(c =>
+    (!q || c.cliente_nombre.toLowerCase().includes(q) || c.numero_orden.toLowerCase().includes(q)) &&
+    (!estatus || c.estatus === estatus)
+  );
+  renderCotizacionesTabla(filtradas);
+  actualizarStatsCotizaciones(cotizaciones);
+}
+
+function renderCotizacionesTabla(list) {
+  const tbody = document.getElementById('crtbody');
+  if (!list.length) {
+    tbody.innerHTML = '<div class="empty">No hay cotizaciones registradas. ¡Agrega la primera!</div>';
+    return;
+  }
+  tbody.innerHTML = list.map(c => {
+    const info = CR_ESTATUS_INFO[c.estatus] || CR_ESTATUS_INFO.pendiente;
+    const numProds = (c.renglones && c.renglones[0] && c.renglones[0].count) || 0;
+    return `<div class="tr" style="grid-template-columns:${CR_COLS}">
+      <div style="font-weight:800">${c.numero_orden}</div>
+      <div>${c.cliente_nombre}</div>
+      <div>${c.fecha}</div>
+      <div><span class="cbadge" style="background:${info.bg};color:${info.color}">${info.label}</span></div>
+      <div>${numProds} ${numProds === 1 ? 'producto' : 'productos'}</div>
+      <div class="actions">
+        <button class="btn btn-g btn-sm" onclick="verCotizacion(${c.id})">👁️ Ver</button>
+        <button class="btn btn-g btn-sm" onclick="editarCotizacion(${c.id})">✏️</button>
+        <button class="btn btn-del btn-sm" onclick="eliminarCotizacion(${c.id},'${c.numero_orden.replace(/'/g,"\\'")}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirCotModal(cot = null) {
+  crEditId = cot ? cot.id : null;
+  document.getElementById('cotMtitle').textContent = cot ? 'Editar cotización' : 'Nueva cotización';
+  document.getElementById('crNumOrden').value    = cot?.numero_orden || siguienteNumeroOrden();
+  document.getElementById('crFecha').value       = cot?.fecha || new Date().toISOString().slice(0, 10);
+  document.getElementById('crCliente').value     = cot?.cliente_nombre || '';
+  document.getElementById('crClienteNum').value  = cot?.cliente_numero || '';
+  document.getElementById('crEnviarA').value     = cot?.enviar_a || '';
+  document.getElementById('crCondiciones').value = cot?.condiciones ?? 'Sin especificar';
+  document.getElementById('crEstatus').value     = cot?.estatus || 'pendiente';
+  document.getElementById('crNotas').value       = cot?.notas || '';
+  document.getElementById('crFooterNota').value  = cot?.footer_nota ?? CR_FOOTER_DEFAULT;
+  poblarDatalistProductos();
+  crRenglonesEdit = [];
+  renderRenglones();
+  if (crEditId) cargarRenglonesEdit(crEditId);
+  document.getElementById('cotMbg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarCotModal() {
+  document.getElementById('cotMbg').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function editarCotizacion(id) {
+  const cot = cotizaciones.find(c => c.id === id);
+  if (cot) abrirCotModal(cot);
+}
+
+async function cargarRenglonesEdit(id) {
+  try {
+    crRenglonesEdit = await sbGet(`cotizacion_renglones?cotizacion_id=eq.${id}&order=orden`);
+  } catch (e) { crRenglonesEdit = []; }
+  renderRenglones();
+}
+
+function poblarDatalistProductos() {
+  document.getElementById('crProductosDatalist').innerHTML =
+    prods.map(p => `<option value="${escapeHtml(p.nombre)}">`).join('');
+}
+
+function renderRenglones() {
+  const list = document.getElementById('crRenglonesList');
+  list.innerHTML = crRenglonesEdit.map((r, idx) => `
+    <div class="cot-row" style="grid-template-columns:1.6fr 1fr auto">
+      <input list="crProductosDatalist" placeholder="Escribe o busca un producto del catálogo…" value="${escapeHtml(r.descripcion)}" oninput="onEscribirDescripcion(${idx},this.value)">
+      <input id="crPrecio-${idx}" placeholder="Precio (ej. $350 - $400, $57.00 c/u)" value="${escapeHtml(r.precio_texto)}" onchange="actualizarRenglon(${idx},'precio_texto',this.value)">
+      <button type="button" class="nivel-del" onclick="eliminarRenglon(${idx})" title="Quitar producto">✕</button>
+    </div>
+  `).join('') || '<div style="font-size:12px;color:#9090A8;padding:6px 0 10px">Todavía no hay productos — agrega el primero.</div>';
+}
+
+/* Autocompleta el precio con el del catálogo si el texto coincide con un producto,
+   sin re-renderizar la lista completa (para no perder el foco mientras se escribe). */
+function onEscribirDescripcion(idx, valor) {
+  const r = crRenglonesEdit[idx];
+  r.descripcion = valor;
+  const match = prods.find(p => p.nombre.toLowerCase() === valor.trim().toLowerCase());
+  if (match && !r.precio_texto) {
+    r.precio_texto = '$' + Number(match.precio_base).toFixed(2);
+    const precioInput = document.getElementById('crPrecio-' + idx);
+    if (precioInput) precioInput.value = r.precio_texto;
+  }
+}
+
+function agregarRenglonVacio() {
+  crRenglonesEdit.push({ id: null, descripcion: '', precio_texto: '' });
+  renderRenglones();
+}
+
+function actualizarRenglon(idx, campo, valor) {
+  crRenglonesEdit[idx][campo] = valor;
+}
+
+async function eliminarRenglon(idx) {
+  const r = crRenglonesEdit[idx];
+  if (r.id) {
+    if (!confirm('¿Quitar este producto de la cotización?')) return;
+    try { await sbDelete(`cotizacion_renglones?id=eq.${r.id}`); } catch (e) { toast('Error: ' + e.message, 'err'); return; }
+  }
+  crRenglonesEdit.splice(idx, 1);
+  renderRenglones();
+}
+
+async function guardarCotizacion() {
+  const numero_orden = document.getElementById('crNumOrden').value.trim();
+  const fecha = document.getElementById('crFecha').value;
+  const cliente_nombre = document.getElementById('crCliente').value.trim();
+  const validos = crRenglonesEdit.filter(r => r.descripcion && r.precio_texto);
+  if (!numero_orden || !fecha || !cliente_nombre) { toast('Completa No. de orden, fecha y cliente.', 'err'); return; }
+  if (!validos.length) { toast('Agrega al menos un producto con descripción y precio.', 'err'); return; }
+
+  const datos = {
+    numero_orden,
+    fecha,
+    cliente_nombre,
+    cliente_numero: document.getElementById('crClienteNum').value.trim() || null,
+    enviar_a: document.getElementById('crEnviarA').value.trim() || null,
+    condiciones: document.getElementById('crCondiciones').value.trim() || null,
+    estatus: document.getElementById('crEstatus').value,
+    notas: document.getElementById('crNotas').value.trim() || null,
+    footer_nota: document.getElementById('crFooterNota').value.trim() || CR_FOOTER_DEFAULT,
+    actualizado_en: new Date().toISOString()
+  };
+
+  const btn = document.getElementById('crSbtn');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  try {
+    let cotId = crEditId;
+    if (cotId) {
+      await sbPatch(`cotizaciones?id=eq.${cotId}`, datos);
+    } else {
+      const [creada] = await sbPost('cotizaciones', datos);
+      cotId = creada.id;
+    }
+    let orden = 1;
+    for (const r of crRenglonesEdit) {
+      if (!r.descripcion || !r.precio_texto) continue;
+      const renglon = { cotizacion_id: cotId, descripcion: r.descripcion, precio_texto: r.precio_texto, orden: orden++ };
+      if (r.id) {
+        await sbPatch(`cotizacion_renglones?id=eq.${r.id}`, renglon);
+      } else {
+        const [creado] = await sbPost('cotizacion_renglones', renglon);
+        r.id = creado.id;
+      }
+    }
+    toast(crEditId ? '✓ Cotización actualizada' : '✓ Cotización creada', 'ok');
+    cerrarCotModal();
+    await cargarCotizaciones();
+  } catch (e) {
+    toast('Error al guardar: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Guardar cotización';
+  }
+}
+
+async function eliminarCotizacion(id, numeroOrden) {
+  if (!confirm(`¿Eliminar la cotización "${numeroOrden}"?\nEsta acción no se puede deshacer.`)) return;
+  try {
+    await sbDelete(`cotizaciones?id=eq.${id}`);
+    toast('Cotización eliminada', 'ok');
+    await cargarCotizaciones();
+  } catch (e) { toast('Error: ' + e.message, 'err'); }
+}
+
+/* ── Documento imprimible de la cotización ── */
+async function verCotizacion(id) {
+  const cot = cotizaciones.find(c => c.id === id);
+  if (!cot) return;
+  let renglones;
+  try {
+    renglones = await sbGet(`cotizacion_renglones?cotizacion_id=eq.${id}&order=orden`);
+  } catch (e) { toast('Error: ' + e.message, 'err'); return; }
+
+  const logoUrl = location.origin + '/assets/images/logo-color.png';
+  const filas = renglones.map(r => `
+    <tr>
+      <td style="padding:14px 18px;border-top:1px solid #E0E0F0;color:#1A1F4B;font-size:13px">${escapeHtml(r.descripcion).replace(/\n/g,'<br>')}</td>
+      <td style="padding:14px 18px;border-top:1px solid #E0E0F0;border-left:1px solid #E0E0F0;color:#1A1F4B;font-size:14px;font-weight:900;text-align:center;white-space:nowrap">${escapeHtml(r.precio_texto)}</td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
+<title>Cotización ${escapeHtml(cot.numero_orden)} — Happy Prints</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
+  body{font-family:'Poppins',Arial,sans-serif;background:#EEF0F5;margin:0;padding:24px}
+  .doc{max-width:820px;margin:0 auto;background:#fff;border:2.5px solid #1A1F4B;border-radius:26px;padding:38px 42px}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px}
+  .head img{height:70px}
+  .bizinfo{margin-top:10px;font-size:12px;font-weight:600;color:#1A1F4B;line-height:1.6}
+  .head h1{color:#1A1F4B;font-size:32px;font-weight:900;margin:0}
+  .infogrid{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid #1A1F4B;border-radius:10px;overflow:hidden;margin-bottom:22px}
+  .infogrid .lbl{background:#1A1F4B;color:#fff;font-size:11px;font-weight:800;letter-spacing:.4px;padding:8px 14px}
+  .infogrid .val{padding:10px 14px;font-size:14px;color:#1A1F4B;border-bottom:1px solid #E0E0F0}
+  .clibar{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+  .clibar .lbl{background:#1A1F4B;color:#fff;font-size:11px;font-weight:800;letter-spacing:.4px;padding:8px 14px;border-radius:6px 6px 0 0}
+  .clibar .val{padding:10px 14px;font-size:14px;font-weight:800;color:#1A1F4B;border:1px solid #E0E0F0;border-top:none;border-radius:0 0 6px 6px}
+  table.items{width:100%;border-collapse:collapse;border:2px solid #7C3AED;border-radius:10px;overflow:hidden}
+  table.items thead th{background:#1A1F4B;color:#fff;font-size:12px;font-weight:800;letter-spacing:.4px;padding:12px 18px;text-align:left}
+  table.items thead th:last-child{text-align:center}
+  .footer{font-size:11px;color:#1A1F4B;margin-top:22px;line-height:1.5}
+  .toolbar{max-width:820px;margin:0 auto 14px;display:flex;gap:10px;justify-content:flex-end}
+  .toolbar button{font-family:'Poppins',Arial,sans-serif;font-weight:800;font-size:13px;padding:9px 18px;border-radius:999px;border:none;cursor:pointer}
+  .bprint{background:#FF2D78;color:#fff}
+  .bclose{background:#1A1F4B;color:#fff}
+  @media print{.toolbar{display:none}body{background:#fff;padding:0}.doc{border:2.5px solid #1A1F4B;margin:0;max-width:100%}}
+</style></head>
+<body>
+  <div class="toolbar">
+    <button class="bprint" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+    <button class="bclose" onclick="window.close()">Cerrar</button>
+  </div>
+  <div class="doc">
+    <div class="head">
+      <div>
+        <img src="${logoUrl}" alt="Happy Prints">
+        <div class="bizinfo">
+          Sandra Elisa González Cruz<br>
+          Ignacio Allende 224, Colonia Centro,<br>
+          Toluca, Estado de México<br>
+          55 7503 4580<br>
+          happyprints.contacto@gmail.com
+        </div>
+      </div>
+      <h1>COTIZACIÓN</h1>
+    </div>
+    <div class="infogrid">
+      <div class="lbl">ORDEN NO.</div><div class="lbl">FECHA</div>
+      <div class="val">${escapeHtml(cot.numero_orden)}</div><div class="val">${formatearFecha(cot.fecha)}</div>
+      <div class="lbl">CLIENTE NO.</div><div class="lbl">CONDICIONES</div>
+      <div class="val">${escapeHtml(cot.cliente_numero || 'Sin especificar')}</div><div class="val">${escapeHtml(cot.condiciones || 'Sin especificar')}</div>
+    </div>
+    <div class="clibar">
+      <div><div class="lbl">CLIENTE</div><div class="val">${escapeHtml(cot.cliente_nombre)}</div></div>
+      <div><div class="lbl">ENVIAR A:</div><div class="val">${escapeHtml(cot.enviar_a || 'Sin especificar')}</div></div>
+    </div>
+    <table class="items">
+      <thead><tr><th>PRODUCTO</th><th>PRECIO UNITARIO (MXN)</th></tr></thead>
+      <tbody>${filas}</tbody>
+    </table>
+    <div class="footer">${escapeHtml(cot.footer_nota || CR_FOOTER_DEFAULT)}</div>
+  </div>
+</body></html>`;
+
+  const w = window.open('', '_blank');
+  if (!w) { toast('Habilita las ventanas emergentes para ver el documento.', 'err'); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  const disparar = () => (w.document.fonts ? w.document.fonts.ready.then(() => w.print()) : w.print());
+  if (w.document.readyState === 'complete') disparar();
+  else w.onload = disparar;
+}
+
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+}
+
+function formatearFecha(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return `${parseInt(d)} de ${meses[parseInt(m) - 1]}, ${y}`;
+}
+
 /* ── UI helpers ── */
 function toast(msg, tipo = 'info') {
   const t = document.getElementById('toast');
@@ -1341,6 +1762,9 @@ function ocultarError() {
 
 document.getElementById('mbg').addEventListener('click', e => {
   if (e.target === document.getElementById('mbg')) cerrarModal();
+});
+document.getElementById('cotMbg').addEventListener('click', e => {
+  if (e.target === document.getElementById('cotMbg')) cerrarCotModal();
 });
 
 if (!checkRecoveryLink()) {
