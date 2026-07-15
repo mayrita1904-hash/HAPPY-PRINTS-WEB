@@ -85,6 +85,9 @@ input:checked+.togslide::before{transform:translateX(18px)}
 .cot-row{display:grid;grid-template-columns:1fr 1.3fr auto;gap:8px;margin-bottom:8px}
 .cot-row select,.cot-row input{padding:9px 12px;border:1.5px solid #E0E0E8;border-radius:8px;font-family:'Nunito',sans-serif;font-size:12px;color:#1A1F4B;outline:none;transition:border-color .15s;width:100%}
 .cot-row select:focus,.cot-row input:focus{border-color:#FF2D78}
+.cot-row-subtotal{display:flex;align-items:center;justify-content:flex-end;font-weight:800;font-size:12px;color:#1A1F4B;white-space:nowrap}
+.cot-total-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:10px 14px;background:#F5F5FA;border-radius:10px;font-weight:900;font-size:14px;color:#1A1F4B}
+.cot-total-row span:last-child{color:#FF2D78;font-size:16px}
 .paquete-card textarea{width:100%;padding:9px 12px;border:1.5px solid #E0E0E8;border-radius:8px;font-family:'Nunito',sans-serif;font-size:12px;color:#1A1F4B;outline:none;resize:vertical;min-height:60px;transition:border-color .15s}
 .paquete-card textarea:focus{border-color:#FF2D78}
 .paquete-check{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#1A1F4B;cursor:pointer;white-space:nowrap}
@@ -452,6 +455,10 @@ input:checked+.togslide::before{transform:translateX(18px)}
       <datalist id="crProductosDatalist"></datalist>
       <div id="crRenglonesList"></div>
       <button type="button" class="btn btn-g btn-sm" onclick="agregarRenglonVacio()">＋ Agregar producto</button>
+      <div class="cot-total-row">
+        <span>Total</span>
+        <span id="crTotal">$0.00</span>
+      </div>
     </div>
 
     <div class="field">
@@ -1537,37 +1544,60 @@ function poblarDatalistProductos() {
     prods.map(p => `<option value="${escapeHtml(p.nombre)}">`).join('');
 }
 
+function fmtMXN(n) {
+  return '$' + Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function subtotalRenglon(r) {
+  return Number(r.cantidad || 0) * Number(r.precio_unitario || 0);
+}
+
 function renderRenglones() {
   const list = document.getElementById('crRenglonesList');
   list.innerHTML = crRenglonesEdit.map((r, idx) => `
-    <div class="cot-row" style="grid-template-columns:1.6fr 1fr auto">
+    <div class="cot-row" style="grid-template-columns:1.7fr 65px 105px 95px auto">
       <input list="crProductosDatalist" placeholder="Escribe o busca un producto del catálogo…" value="${escapeHtml(r.descripcion)}" oninput="onEscribirDescripcion(${idx},this.value)">
-      <input id="crPrecio-${idx}" placeholder="Precio (ej. $350 - $400, $57.00 c/u)" value="${escapeHtml(r.precio_texto)}" onchange="actualizarRenglon(${idx},'precio_texto',this.value)">
+      <input type="number" min="0" step="1" title="Cantidad" value="${r.cantidad ?? 1}" oninput="actualizarRenglon(${idx},'cantidad',this.value)">
+      <input type="number" min="0" step="0.01" id="crPrecio-${idx}" title="Precio unitario" placeholder="Precio c/u" value="${r.precio_unitario ?? ''}" oninput="actualizarRenglon(${idx},'precio_unitario',this.value)">
+      <div class="cot-row-subtotal" id="crSubtotal-${idx}">${fmtMXN(subtotalRenglon(r))}</div>
       <button type="button" class="nivel-del" onclick="eliminarRenglon(${idx})" title="Quitar producto">✕</button>
     </div>
   `).join('') || '<div style="font-size:12px;color:#9090A8;padding:6px 0 10px">Todavía no hay productos — agrega el primero.</div>';
+  actualizarTotalCotizacion();
 }
 
-/* Autocompleta el precio con el del catálogo si el texto coincide con un producto,
+function actualizarTotalCotizacion() {
+  const total = crRenglonesEdit.reduce((sum, r) => sum + subtotalRenglon(r), 0);
+  const el = document.getElementById('crTotal');
+  if (el) el.textContent = fmtMXN(total);
+}
+
+/* Autocompleta el precio unitario con el del catálogo si el texto coincide con un producto,
    sin re-renderizar la lista completa (para no perder el foco mientras se escribe). */
 function onEscribirDescripcion(idx, valor) {
   const r = crRenglonesEdit[idx];
   r.descripcion = valor;
   const match = prods.find(p => p.nombre.toLowerCase() === valor.trim().toLowerCase());
-  if (match && !r.precio_texto) {
-    r.precio_texto = '$' + Number(match.precio_base).toFixed(2);
+  if (match && !r.precio_unitario) {
+    r.precio_unitario = Number(match.precio_base);
     const precioInput = document.getElementById('crPrecio-' + idx);
-    if (precioInput) precioInput.value = r.precio_texto;
+    if (precioInput) precioInput.value = r.precio_unitario;
+    const subEl = document.getElementById('crSubtotal-' + idx);
+    if (subEl) subEl.textContent = fmtMXN(subtotalRenglon(r));
+    actualizarTotalCotizacion();
   }
 }
 
 function agregarRenglonVacio() {
-  crRenglonesEdit.push({ id: null, descripcion: '', precio_texto: '' });
+  crRenglonesEdit.push({ id: null, descripcion: '', cantidad: 1, precio_unitario: 0 });
   renderRenglones();
 }
 
 function actualizarRenglon(idx, campo, valor) {
-  crRenglonesEdit[idx][campo] = valor;
+  crRenglonesEdit[idx][campo] = campo === 'descripcion' ? valor : Number(valor);
+  const subEl = document.getElementById('crSubtotal-' + idx);
+  if (subEl) subEl.textContent = fmtMXN(subtotalRenglon(crRenglonesEdit[idx]));
+  actualizarTotalCotizacion();
 }
 
 async function eliminarRenglon(idx) {
@@ -1584,7 +1614,7 @@ async function guardarCotizacion() {
   const numero_orden = document.getElementById('crNumOrden').value.trim();
   const fecha = document.getElementById('crFecha').value;
   const cliente_nombre = document.getElementById('crCliente').value.trim();
-  const validos = crRenglonesEdit.filter(r => r.descripcion && r.precio_texto);
+  const validos = crRenglonesEdit.filter(r => r.descripcion && Number(r.cantidad) > 0 && Number(r.precio_unitario) > 0);
   if (!numero_orden || !fecha || !cliente_nombre) { toast('Completa No. de orden, fecha y cliente.', 'err'); return; }
   if (!validos.length) { toast('Agrega al menos un producto con descripción y precio.', 'err'); return; }
 
@@ -1613,8 +1643,8 @@ async function guardarCotizacion() {
     }
     let orden = 1;
     for (const r of crRenglonesEdit) {
-      if (!r.descripcion || !r.precio_texto) continue;
-      const renglon = { cotizacion_id: cotId, descripcion: r.descripcion, precio_texto: r.precio_texto, orden: orden++ };
+      if (!r.descripcion || !(Number(r.cantidad) > 0) || !(Number(r.precio_unitario) > 0)) continue;
+      const renglon = { cotizacion_id: cotId, descripcion: r.descripcion, cantidad: Number(r.cantidad), precio_unitario: Number(r.precio_unitario), orden: orden++ };
       if (r.id) {
         await sbPatch(`cotizacion_renglones?id=eq.${r.id}`, renglon);
       } else {
@@ -1651,10 +1681,13 @@ async function verCotizacion(id) {
   } catch (e) { toast('Error: ' + e.message, 'err'); return; }
 
   const logoUrl = location.origin + '/assets/images/logo-color.png';
+  const total = renglones.reduce((sum, r) => sum + Number(r.cantidad || 0) * Number(r.precio_unitario || 0), 0);
   const filas = renglones.map(r => `
     <tr>
       <td style="padding:14px 18px;border-top:1px solid #E0E0F0;color:#1A1F4B;font-size:13px">${escapeHtml(r.descripcion).replace(/\n/g,'<br>')}</td>
-      <td style="padding:14px 18px;border-top:1px solid #E0E0F0;border-left:1px solid #E0E0F0;color:#1A1F4B;font-size:14px;font-weight:900;text-align:center;white-space:nowrap">${escapeHtml(r.precio_texto)}</td>
+      <td style="padding:14px 18px;border-top:1px solid #E0E0F0;border-left:1px solid #E0E0F0;color:#1A1F4B;font-size:13px;text-align:center;white-space:nowrap">${r.cantidad}</td>
+      <td style="padding:14px 18px;border-top:1px solid #E0E0F0;border-left:1px solid #E0E0F0;color:#1A1F4B;font-size:13px;text-align:center;white-space:nowrap">${fmtMXN(r.precio_unitario)}</td>
+      <td style="padding:14px 18px;border-top:1px solid #E0E0F0;border-left:1px solid #E0E0F0;color:#1A1F4B;font-size:14px;font-weight:900;text-align:center;white-space:nowrap">${fmtMXN(r.cantidad * r.precio_unitario)}</td>
     </tr>`).join('');
 
   const html = `<!DOCTYPE html>
@@ -1677,7 +1710,10 @@ async function verCotizacion(id) {
   .clibar .val{padding:10px 14px;font-size:14px;font-weight:800;color:#1A1F4B;border:1px solid #E0E0F0;border-top:none;border-radius:0 0 6px 6px}
   table.items{width:100%;border-collapse:collapse;border:2px solid #7C3AED;border-radius:10px;overflow:hidden}
   table.items thead th{background:#1A1F4B;color:#fff;font-size:12px;font-weight:800;letter-spacing:.4px;padding:12px 18px;text-align:left}
-  table.items thead th:last-child{text-align:center}
+  table.items thead th:not(:first-child){text-align:center}
+  table.items tfoot td{padding:14px 18px;border-top:2px solid #1A1F4B;color:#1A1F4B}
+  table.items tfoot .total-lbl{font-size:13px;font-weight:800;text-align:right}
+  table.items tfoot .total-val{font-size:17px;font-weight:900;text-align:center;color:#FF2D78;white-space:nowrap}
   .footer{font-size:11px;color:#1A1F4B;margin-top:22px;line-height:1.5;white-space:pre-line}
   .toolbar{max-width:820px;margin:0 auto 14px;display:flex;gap:10px;justify-content:flex-end}
   .toolbar button{font-family:'Poppins',Arial,sans-serif;font-weight:800;font-size:13px;padding:9px 18px;border-radius:999px;border:none;cursor:pointer}
@@ -1715,8 +1751,9 @@ async function verCotizacion(id) {
       <div><div class="lbl">ENVIAR A:</div><div class="val">${escapeHtml(cot.enviar_a || 'Sin especificar')}</div></div>
     </div>
     <table class="items">
-      <thead><tr><th>PRODUCTO</th><th>PRECIO UNITARIO (MXN)</th></tr></thead>
+      <thead><tr><th>PRODUCTO</th><th>CANTIDAD</th><th>PRECIO UNITARIO</th><th>SUBTOTAL</th></tr></thead>
       <tbody>${filas}</tbody>
+      <tfoot><tr><td colspan="3" class="total-lbl">TOTAL (MXN)</td><td class="total-val">${fmtMXN(total)}</td></tr></tfoot>
     </table>
     <div class="footer">${escapeHtml(cot.footer_nota || CR_FOOTER_DEFAULT)}</div>
   </div>
