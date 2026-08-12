@@ -847,3 +847,55 @@ footer p { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 4px; }
 .webdev-builder-total { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--line); }
 .webdev-builder-total-label { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 13px; color: var(--navy); }
 .webdev-builder-total-amount { font-family: 'Fredoka', sans-serif; font-weight: 800; font-size: 26px; color: var(--pink); }
+
+/* ===== Cursos (pages/cursos.html) — acceso de clientes ===== */
+.cursos-auth { min-height: 78vh; display: flex; align-items: center; justify-content: center; padding: 48px 16px; background: var(--navy); }
+.cursos-auth-card { background: #fff; border-radius: var(--radius-lg); padding: 34px 30px; width: 100%; max-width: 380px; box-shadow: 0 20px 50px rgba(0,0,0,.28); }
+.cursos-auth-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+.cursos-auth-logo .lc { width: 40px; height: 40px; border-radius: 50%; background: var(--pink); color: #fff; font-family: 'Fredoka', sans-serif; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cursos-auth-title { font-family: 'Fredoka', sans-serif; font-weight: 800; font-size: 19px; color: var(--navy); }
+.cursos-auth-sub { font-family: 'Nunito', sans-serif; font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+.cursos-tabs { display: flex; gap: 6px; background: var(--bg); border-radius: 999px; padding: 4px; margin-bottom: 20px; }
+.cursos-tab { flex: 1; text-align: center; padding: 8px 10px; border: none; background: none; border-radius: 999px; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 12.5px; color: var(--ink-soft); cursor: pointer; transition: background .15s, color .15s; }
+.cursos-tab.on { background: var(--pink); color: #fff; }
+.cursos-field { margin-bottom: 14px; }
+.cursos-field label { display: block; font-family: 'Nunito', sans-serif; font-size: 11px; font-weight: 800; color: var(--navy); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .5px; }
+.cursos-field input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--line); border-radius: var(--radius-sm); font-family: 'Nunito', sans-serif; font-size: 13.5px; color: var(--navy); outline: none; transition: border-color .15s; }
+.cursos-field input:focus { border-color: var(--pink); }
+.cursos-auth-err { background: #FEE2E2; color: #DC2626; border-radius: var(--radius-sm); padding: 10px 14px; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 700; margin-bottom: 14px; display: none; }
+.cursos-auth-ok { background: #DCFCE7; color: #15803D; border-radius: var(--radius-sm); padding: 10px 14px; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 700; margin-bottom: 14px; display: none; }
+.cursos-auth-btn { width: 100%; text-align: center; background: var(--pink); color: #fff; font-family: 'Fredoka', sans-serif; font-weight: 700; border: none; cursor: pointer; padding: 13px 20px; border-radius: 999px; font-size: 14.5px; box-shadow: 0 6px 16px rgba(255,45,120,.3); transition: transform .15s, opacity .15s; }
+.cursos-auth-btn:hover { transform: translateY(-2px); }
+.cursos-auth-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+.cursos-auth-forgot { text-align: center; margin-top: 14px; }
+.cursos-auth-forgot a { font-family: 'Nunito', sans-serif; font-size: 12px; color: var(--ink-soft); font-weight: 700; text-decoration: underline; cursor: pointer; }
+
+/* ===== Cursos — catálogo tras iniciar sesión ===== */
+.cursos-catalogo { padding: 44px 16px 60px; max-width: 1100px; margin: 0 auto; }
+.cursos-catalogo-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 30px; }
+.cursos-catalogo-h { font-family: 'Fredoka', sans-serif; font-weight: 800; font-size: clamp(20px, 4.4vw, 28px); color: var(--navy); }
+.cursos-catalogo-sub { font-family: 'Nunito', sans-serif; font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
+.cursos-logout { background: none; border: 2px solid var(--navy); color: var(--navy); border-radius: 999px; padding: 8px 16px; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 12px; cursor: pointer; transition: background .15s, color .15s; }
+.cursos-logout:hover { background: var(--navy); color: #fff; }
+.curso-grid { display: grid; grid-template-columns: 1fr; gap: 22px; }
+@media (min-width: 860px) { .curso-grid { grid-template-columns: repeat(3, 1fr); } }
+.curso-card { border-radius: var(--radius-lg); overflow: visible; background: #fff; box-shadow: 0 4px 16px rgba(26,31,75,.07); display: flex; flex-direction: column; transition: transform .18s, box-shadow .18s; }
+.curso-card:hover { transform: translateY(-4px); box-shadow: 0 10px 26px rgba(26,31,75,.12); }
+.curso-card-head { font-family: 'Fredoka', sans-serif; font-weight: 700; color: #fff; text-align: center; padding: 18px 16px; font-size: 17px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.curso-card:nth-child(3n+1) .curso-card-head { background: linear-gradient(120deg, var(--teal), #17948C); }
+.curso-card:nth-child(3n+2) .curso-card-head { background: linear-gradient(120deg, var(--orange), #D6860F); }
+.curso-card:nth-child(3n+3) .curso-card-head { background: linear-gradient(120deg, var(--pink), #E11D48); }
+.curso-card-body { padding: 20px 18px; display: flex; flex-direction: column; flex: 1; }
+.curso-card-desc { font-family: 'Nunito', sans-serif; font-size: 12.5px; color: var(--navy); line-height: 1.5; margin-bottom: 18px; }
+.curso-card-price { font-family: 'Fredoka', sans-serif; font-weight: 800; font-size: 24px; color: var(--navy); text-align: center; border-top: 1px dashed var(--line); padding-top: 14px; margin-top: auto; margin-bottom: 14px; }
+.curso-card-btn { display: block; width: 100%; text-align: center; background: var(--pink); color: #fff; font-family: 'Fredoka', sans-serif; font-weight: 700; border: none; cursor: pointer; padding: 12px 16px; border-radius: 999px; font-size: 13.5px; transition: transform .15s, opacity .15s; }
+.curso-card-btn:hover { transform: translateY(-2px); }
+.curso-card-btn:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+.curso-card-btn.is-ok { background: var(--lime-2); color: var(--navy); cursor: default; }
+.curso-card-btn.is-ok:hover { transform: none; }
+.curso-card-note { font-family: 'Nunito', sans-serif; font-size: 11px; color: var(--ink-soft); text-align: center; margin-top: 8px; }
+.cursos-empty-msg { font-family: 'Nunito', sans-serif; font-size: 13px; color: var(--ink-soft); text-align: center; padding: 30px; grid-column: 1/-1; }
+.cursos-banner { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 13px; padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 22px; text-align: center; }
+.cursos-banner.ok { background: #DCFCE7; color: #15803D; }
+.cursos-banner.wait { background: #FEF3C7; color: #B45309; }
+.cursos-banner.err { background: #FEE2E2; color: #DC2626; }
