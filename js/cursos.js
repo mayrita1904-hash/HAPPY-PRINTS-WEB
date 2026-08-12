@@ -184,7 +184,10 @@ async function get(path, extraHeaders) {
 function estadoCurso(curso, inscripciones) {
   const propias = inscripciones.filter(i => i.curso_id === curso.id);
   if (propias.some(i => i.estatus === 'pagado')) return 'pagado';
-  if (propias.some(i => i.estatus === 'pendiente')) return 'pendiente';
+  // Solo cuenta como "pendiente" si Mercado Pago ya registró un intento de pago real
+  // (mp_payment_id presente, ej. pago en OXXO esperando depósito). Si el cliente nunca
+  // completó nada en Mercado Pago, no debe quedar atorado — puede intentar comprar de nuevo.
+  if (propias.some(i => i.estatus === 'pendiente' && i.mp_payment_id)) return 'pendiente';
   return 'ninguno';
 }
 
