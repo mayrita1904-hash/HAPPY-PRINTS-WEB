@@ -1461,35 +1461,60 @@ async function cambiarContrasenaCuenta() {
   } catch (e) { alert('Error: ' + e.message); }
 }
 
-async function agregarDireccion() {
-  const etiqueta = prompt('¿Cómo quieres llamar a esta dirección? (ej. Casa, Oficina)', 'Casa');
-  if (!etiqueta) return;
-  const calle = prompt('Calle:'); if (!calle) return;
-  const numero = prompt('Número:'); if (!numero) return;
-  const colonia = prompt('Colonia:'); if (!colonia) return;
-  const cp = prompt('Código postal:'); if (!cp) return;
-  const ciudad = prompt('Ciudad:'); if (!ciudad) return;
-  const entre_calles = prompt('Entre calles (opcional):') || null;
-  try {
-    const esPrimera = direcciones.length === 0;
-    await sbAuthWrite('POST', 'direcciones', { user_id: session.user.id, etiqueta, calle, numero, colonia, cp, ciudad, entre_calles, predeterminada: esPrimera });
-    await cargarDirecciones();
-    renderPerfilPanel();
-  } catch (e) { alert('Error: ' + e.message); }
+let direccionFormAbierto = null; // null | 'nueva' | <id de la dirección que se está editando>
+
+function mostrarFormDireccion(id) {
+  direccionFormAbierto = id || 'nueva';
+  renderPerfilPanel();
+}
+function cancelarFormDireccion() {
+  direccionFormAbierto = null;
+  renderPerfilPanel();
 }
 
-async function editarDireccion(id) {
-  const d = direcciones.find(x => x.id === id);
-  if (!d) return;
-  const etiqueta = prompt('Etiqueta:', d.etiqueta); if (!etiqueta) return;
-  const calle = prompt('Calle:', d.calle); if (!calle) return;
-  const numero = prompt('Número:', d.numero); if (!numero) return;
-  const colonia = prompt('Colonia:', d.colonia); if (!colonia) return;
-  const cp = prompt('Código postal:', d.cp); if (!cp) return;
-  const ciudad = prompt('Ciudad:', d.ciudad); if (!ciudad) return;
-  const entre_calles = prompt('Entre calles (opcional):', d.entre_calles || '') || null;
+function direccionFormHtml() {
+  const editando = direccionFormAbierto !== 'nueva';
+  const d = editando ? (direcciones.find(x => x.id === direccionFormAbierto) || {}) : {};
+  return `
+    <div class="addr-card">
+      <div class="cart-field"><label>Etiqueta</label><input type="text" id="dfEtiqueta" placeholder="Casa, Oficina..." value="${escapeHtmlMain(d.etiqueta || 'Casa')}"></div>
+      <div class="cart-form-row">
+        <div class="cart-field"><label>Calle *</label><input type="text" id="dfCalle" autocomplete="address-line1" value="${escapeHtmlMain(d.calle || '')}"></div>
+        <div class="cart-field"><label>Número *</label><input type="text" id="dfNumero" autocomplete="off" value="${escapeHtmlMain(d.numero || '')}"></div>
+      </div>
+      <div class="cart-form-row">
+        <div class="cart-field"><label>Colonia *</label><input type="text" id="dfColonia" autocomplete="address-line2" value="${escapeHtmlMain(d.colonia || '')}"></div>
+        <div class="cart-field"><label>C.P. *</label><input type="text" inputmode="numeric" id="dfCp" autocomplete="postal-code" value="${escapeHtmlMain(d.cp || '')}"></div>
+      </div>
+      <div class="cart-form-row">
+        <div class="cart-field"><label>Ciudad *</label><input type="text" id="dfCiudad" autocomplete="address-level2" value="${escapeHtmlMain(d.ciudad || '')}"></div>
+        <div class="cart-field" style="margin-bottom:0"><label>Entre calles (opcional)</label><input type="text" id="dfEntreCalles" autocomplete="off" value="${escapeHtmlMain(d.entre_calles || '')}"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="login-popup-btn" style="margin:0" onclick="guardarDireccionForm()">Guardar dirección</button>
+        <button class="thanks-btn-g" style="width:auto;padding:12px 20px;border-radius:999px;cursor:pointer;font-family:'Fredoka',sans-serif;font-weight:700;background:none;border:1.5px solid var(--line);color:var(--navy)" onclick="cancelarFormDireccion()">Cancelar</button>
+      </div>
+    </div>`;
+}
+
+async function guardarDireccionForm() {
+  const etiqueta = document.getElementById('dfEtiqueta').value.trim() || 'Casa';
+  const calle = document.getElementById('dfCalle').value.trim();
+  const numero = document.getElementById('dfNumero').value.trim();
+  const colonia = document.getElementById('dfColonia').value.trim();
+  const cp = document.getElementById('dfCp').value.trim();
+  const ciudad = document.getElementById('dfCiudad').value.trim();
+  const entre_calles = document.getElementById('dfEntreCalles').value.trim() || null;
+  if (!calle || !numero || !colonia || !cp || !ciudad) { alert('Completa calle, número, colonia, C.P. y ciudad.'); return; }
+
   try {
-    await sbAuthWrite('PATCH', `direcciones?id=eq.${id}`, { etiqueta, calle, numero, colonia, cp, ciudad, entre_calles });
+    if (direccionFormAbierto === 'nueva') {
+      const esPrimera = direcciones.length === 0;
+      await sbAuthWrite('POST', 'direcciones', { user_id: session.user.id, etiqueta, calle, numero, colonia, cp, ciudad, entre_calles, predeterminada: esPrimera });
+    } else {
+      await sbAuthWrite('PATCH', `direcciones?id=eq.${direccionFormAbierto}`, { etiqueta, calle, numero, colonia, cp, ciudad, entre_calles });
+    }
+    direccionFormAbierto = null;
     await cargarDirecciones();
     renderPerfilPanel();
   } catch (e) { alert('Error: ' + e.message); }
@@ -1535,7 +1560,7 @@ function renderPerfilPanel() {
       </div>
       <div class="addr-text">${escapeHtmlMain(d.calle)} ${escapeHtmlMain(d.numero)}, ${escapeHtmlMain(d.colonia)}, ${escapeHtmlMain(d.ciudad)}, ${escapeHtmlMain(d.cp)}</div>
       <div class="addr-actions">
-        <button class="edit" onclick="editarDireccion(${d.id})">✏️ Editar</button>
+        <button class="edit" onclick="mostrarFormDireccion(${d.id})">✏️ Editar</button>
         <button class="del" onclick="eliminarDireccion(${d.id})">🗑 Eliminar</button>
         ${!d.predeterminada ? `<button class="set-default" onclick="marcarDireccionPredeterminada(${d.id})">Usar como predeterminada</button>` : ''}
       </div>
@@ -1567,8 +1592,8 @@ function renderPerfilPanel() {
     </div>
 
     <div class="profile-block-head"><div class="profile-block-title">📍 Mis direcciones</div></div>
-    ${direccionesHtml}
-    <button class="add-addr-btn" onclick="agregarDireccion()">➕ Agregar nueva dirección</button>
+    ${direccionFormAbierto ? direccionFormHtml() : direccionesHtml}
+    ${direccionFormAbierto ? '' : '<button class="add-addr-btn" onclick="mostrarFormDireccion(null)">➕ Agregar nueva dirección</button>'}
 
     <div class="profile-block-head"><div class="profile-block-title">📦 Mis pedidos</div></div>
     ${pedidosHtml}
