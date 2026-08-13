@@ -240,6 +240,7 @@ function renderGrid(cat) {
     const ph = `<div class="cph" style="${p.imagen_url ? 'display:none' : ''}">${catEmoji(c.emoji||c.nombre)}</div>`;
     return `<div class="card" onclick="openM(${p.id})">
       <div class="cst" style="background:${p.color_marca || '#FF2D78'}"></div>
+      <button class="card-heart ${favoritos.includes(p.id) ? 'on' : ''}" data-pid="${p.id}" onclick="event.stopPropagation();toggleFavorito(${p.id})" aria-label="Marcar como favorito">♥</button>
       ${imgTag}${ph}
       <div class="cbody">
         <div class="cname">${p.nombre}</div>
@@ -321,21 +322,21 @@ function nivelesDe(id) {
   return allNiveles.filter(n => n.producto_id === id);
 }
 
-function calcT() {
-  if (!cur) return 0;
-  const q = st.qty, p = cur;
-  const nivs = nivelesDe(p.id);
+/* Función pura, sin depender del modal abierto — la usan tanto el modal (cur/st)
+   como el carrito (una línea por producto agregado). */
+function calcLineTotal(p, state, nivs) {
+  const q = state.qty;
 
   if (p.tipo === 'simple') return p.precio_base * q;
 
   if (p.tipo === 'talla')
-    return (st.talla === 'infantil' && p.precio_infantil ? p.precio_infantil : p.precio_base) * q;
+    return (state.talla === 'infantil' && p.precio_infantil ? p.precio_infantil : p.precio_base) * q;
 
   if (p.tipo === 'cantidad') {
     const niv = nivs.find(n => q >= n.cantidad_min && (n.cantidad_max == null || q <= n.cantidad_max))
       || nivs[nivs.length - 1];
     if (!niv) return p.precio_base * q;
-    return (st.hojas === 100 && niv.precio_100_hojas ? niv.precio_100_hojas : niv.precio) * q;
+    return (state.hojas === 100 && niv.precio_100_hojas ? niv.precio_100_hojas : niv.precio) * q;
   }
 
   if (p.tipo === 'escalonado') {
@@ -345,6 +346,11 @@ function calcT() {
   }
 
   return p.precio_base * q;
+}
+
+function calcT() {
+  if (!cur) return 0;
+  return calcLineTotal(cur, st, nivelesDe(cur.id));
 }
 
 function openM(id) {
@@ -574,6 +580,8 @@ function renderMB() {
     </div>
     <div class="tamt" id="ta">${fmt(total)}</div>
   </div>
+
+  <button class="cartaddbtn" onclick="agregarAlCarritoDesdeModal()">🛒 Agregar al carrito</button>
 
   <button class="wabtn" onclick="pedirWA()">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
@@ -864,8 +872,779 @@ function pedirWA() {
   window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   CUENTA DE CLIENTE — Mi Perfil / Mis Favoritos / Mi Carrito
+   Sesión compartida con /pages/cursos (misma llave de localStorage).
+   ══════════════════════════════════════════════════════════════════════ */
+const SESSION_KEY = 'hp_cursos_session';
+const CART_KEY = 'hp_carrito';
+const ENVIO_FIJO = 185;
+
+let session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+let recoverySession = null;
+let accionPendiente = null; // 'carrito' | 'perfil' | 'favoritos', para reanudar tras el login
+let carrito = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+let favoritos = []; // ids de producto_id que el cliente marcó como favorito
+let direcciones = [];
+let perfilData = null;
+let misPedidos = [];
+
+function fmtMoney(n) { return fmt(n); }
+
+/* ── Helpers autenticados a Supabase (a diferencia de get(), mandan el token del cliente) ── */
+async function sbAuthGet(path) {
+  const r = await fetch(SB_URL + '/rest/v1/' + path, {
+    headers: { apikey: SB_KEY, Authorization: 'Bearer ' + (session ? session.access_token : SB_KEY) }
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbAuthWrite(method, path, body) {
+  const r = await fetch(SB_URL + '/rest/v1/' + path, {
+    method,
+    headers: {
+      apikey: SB_KEY, Authorization: 'Bearer ' + session.access_token,
+      'Content-Type': 'application/json', Prefer: 'return=representation'
+    },
+    body: body != null ? JSON.stringify(body) : undefined
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.status === 204 ? null : r.json();
+}
+
+function guardarSesion(data) {
+  session = data;
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+function cerrarSesionCuenta() {
+  session = null;
+  localStorage.removeItem(SESSION_KEY);
+  favoritos = []; direcciones = []; perfilData = null; misPedidos = [];
+  actualizarBadges();
+  ['cartOv', 'perfilOv', 'favOv'].forEach(id => cerrarPanel(id));
+}
+
+function guardarCarrito() {
+  localStorage.setItem(CART_KEY, JSON.stringify(carrito));
+  actualizarBadges();
+}
+function actualizarBadges() {
+  const cb = document.getElementById('cartBadge');
+  const fb = document.getElementById('favBadge');
+  if (cb) { cb.textContent = carrito.length; cb.style.display = carrito.length ? 'flex' : 'none'; }
+  if (fb) { fb.textContent = favoritos.length; fb.style.display = favoritos.length ? 'flex' : 'none'; }
+}
+
+/* ── Popup de iniciar sesión / crear cuenta ── */
+function mostrarLoginTab(tab) {
+  document.getElementById('ltabLogin').classList.toggle('on', tab === 'login');
+  document.getElementById('ltabReg').classList.toggle('on', tab === 'registro');
+  document.getElementById('lpanelLogin').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('lpanelReg').style.display = tab === 'registro' ? 'block' : 'none';
+  document.getElementById('loginPopupSub').textContent = tab === 'login' ? 'Inicia sesión para continuar' : 'Crea tu cuenta para continuar';
+}
+
+function abrirLoginPopup(accion) {
+  accionPendiente = accion;
+  document.getElementById('loginPopupOv').classList.add('open');
+}
+function cerrarLoginPopup() {
+  document.getElementById('loginPopupOv').classList.remove('open');
+}
+
+async function doLoginPopup() {
+  const email = document.getElementById('lpLoginEmail').value.trim();
+  const pass = document.getElementById('lpLoginPass').value;
+  const err = document.getElementById('lpLoginErr');
+  const btn = document.getElementById('lpLoginBtn');
+  err.style.display = 'none';
+  if (!email || !pass) { err.textContent = 'Ingresa tu correo y contraseña.'; err.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Entrando…';
+  try {
+    const r = await fetch(SB_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      const msg = data.error_code === 'email_not_confirmed'
+        ? 'Debes confirmar tu correo primero (revisa tu bandeja de entrada).'
+        : (data.msg || data.error_description || 'Correo o contraseña incorrectos.');
+      throw new Error(msg);
+    }
+    guardarSesion(data);
+    cerrarLoginPopup();
+    await ejecutarAccionPendiente();
+  } catch (e) {
+    err.textContent = e.message;
+    err.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Iniciar sesión';
+  }
+}
+
+async function doRegistroPopup() {
+  const nombre = document.getElementById('lpRegNombre').value.trim();
+  const email = document.getElementById('lpRegEmail').value.trim();
+  const pass = document.getElementById('lpRegPass').value;
+  const err = document.getElementById('lpRegErr');
+  const ok = document.getElementById('lpRegOk');
+  const btn = document.getElementById('lpRegBtn');
+  err.style.display = 'none'; ok.style.display = 'none';
+  if (!nombre || !email || !pass) { err.textContent = 'Completa nombre, correo y contraseña.'; err.style.display = 'block'; return; }
+  if (pass.length < 6) { err.textContent = 'La contraseña debe tener al menos 6 caracteres.'; err.style.display = 'block'; return; }
+
+  btn.disabled = true; btn.textContent = 'Creando cuenta…';
+  try {
+    const r = await fetch(SB_URL + '/auth/v1/signup', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass, data: { nombre } })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.msg || data.error_description || data.error || 'No se pudo crear la cuenta.');
+
+    if (data.access_token) {
+      guardarSesion(data);
+      cerrarLoginPopup();
+      await ejecutarAccionPendiente();
+    } else {
+      ok.textContent = 'Cuenta creada ✔ Revisa tu correo para confirmarla y luego inicia sesión.';
+      ok.style.display = 'block';
+      document.getElementById('lpRegPass').value = '';
+      mostrarLoginTab('login');
+      document.getElementById('lpLoginEmail').value = email;
+    }
+  } catch (e) {
+    err.textContent = e.message;
+    err.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Crear cuenta';
+  }
+}
+
+async function forgotPasswordPopup() {
+  const email = document.getElementById('lpLoginEmail').value.trim();
+  const err = document.getElementById('lpLoginErr');
+  if (!email) { err.textContent = 'Escribe tu correo arriba primero.'; err.style.display = 'block'; return; }
+  try {
+    const r = await fetch(SB_URL + '/auth/v1/recover', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, options: { redirect_to: location.origin + '/' } })
+    });
+    if (!r.ok) throw new Error((await r.json()).msg || 'No se pudo enviar el correo.');
+    err.style.display = 'none';
+    alert('Te enviamos un correo con un enlace para elegir una nueva contraseña ✔');
+  } catch (e) {
+    err.textContent = e.message;
+    err.style.display = 'block';
+  }
+}
+
+/* ── Enlace de recuperación de contraseña (vuelve del correo) ── */
+function checkRecoveryLink() {
+  const hash = location.hash;
+  if (!hash) return false;
+  const params = new URLSearchParams(hash.slice(1));
+
+  if (params.get('error_code') === 'otp_expired') {
+    history.replaceState(null, '', location.pathname);
+    alert('Ese enlace ya venció. Pide uno nuevo con "¿Olvidaste tu contraseña?" y ábrelo apenas te llegue.');
+    return false;
+  }
+  const access_token = params.get('access_token');
+  if (params.get('type') !== 'recovery' || !access_token) return false;
+
+  recoverySession = { access_token };
+  document.getElementById('resetPopupOv').classList.add('open');
+  return true;
+}
+
+async function confirmarResetPopup() {
+  const nueva = document.getElementById('resetPopupPass').value;
+  const err = document.getElementById('resetPopupErr');
+  err.style.display = 'none';
+  if (!nueva || nueva.length < 6) { err.textContent = 'La contraseña debe tener al menos 6 caracteres.'; err.style.display = 'block'; return; }
+  try {
+    const r = await fetch(SB_URL + '/auth/v1/user', {
+      method: 'PUT',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + recoverySession.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: nueva })
+    });
+    if (!r.ok) throw new Error((await r.json()).msg || 'No se pudo actualizar la contraseña.');
+    guardarSesion(recoverySession);
+    history.replaceState(null, '', location.pathname);
+    document.getElementById('resetPopupOv').classList.remove('open');
+    alert('Contraseña actualizada, ¡bienvenida! 👋');
+  } catch (e) {
+    err.textContent = e.message;
+    err.style.display = 'block';
+  }
+}
+
+async function ejecutarAccionPendiente() {
+  const accion = accionPendiente;
+  accionPendiente = null;
+  if (accion === 'carrito') await abrirCarrito();
+  else if (accion === 'perfil') await abrirPerfil();
+  else if (accion === 'favoritos') await abrirFavoritos();
+}
+
+/* ── Abrir / cerrar paneles ── */
+function cerrarPanel(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+function abrirPanelOv(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+async function abrirCarrito() {
+  if (!session) { abrirLoginPopup('carrito'); return; }
+  abrirPanelOv('cartOv');
+  renderCarritoPanel();
+  try {
+    if (!perfilData) await cargarPerfil();
+    if (!direcciones.length) await cargarDirecciones();
+    renderCarritoPanel();
+  } catch (e) { /* el checkout sigue usable, solo no viene prellenado */ }
+}
+
+async function abrirPerfil() {
+  if (!session) { abrirLoginPopup('perfil'); return; }
+  document.getElementById('perfilBody').innerHTML = '<div class="cart-empty-hint">Cargando…</div>';
+  abrirPanelOv('perfilOv');
+  try {
+    await Promise.all([cargarPerfil(), cargarDirecciones(), cargarMisPedidos()]);
+    renderPerfilPanel();
+  } catch (e) {
+    document.getElementById('perfilBody').innerHTML = '<div class="cart-empty-hint">No se pudo cargar tu perfil. Intenta de nuevo más tarde.</div>';
+  }
+}
+
+async function abrirFavoritos() {
+  if (!session) { abrirLoginPopup('favoritos'); return; }
+  document.getElementById('favBody').innerHTML = '<div class="cart-empty-hint">Cargando…</div>';
+  abrirPanelOv('favOv');
+  try {
+    await cargarFavoritosCompletos();
+    renderFavoritosPanel();
+  } catch (e) {
+    document.getElementById('favBody').innerHTML = '<div class="cart-empty-hint">No se pudieron cargar tus favoritos.</div>';
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MI CARRITO
+   ══════════════════════════════════════════════════════════════════════ */
+const CHEVRON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+
+function varianteTexto(p, state) {
+  if (!p) return '';
+  if (p.tipo === 'talla') return 'Talla: ' + (state.talla === 'infantil' ? 'Infantil' : 'Adulto');
+  if (p.tipo === 'cantidad') return state.hojas + ' hojas';
+  return '';
+}
+
+function agregarAlCarritoDesdeModal() {
+  if (!session) { abrirLoginPopup('carrito'); return; }
+  carrito.push({
+    producto_id: cur.id, nombre: cur.nombre, tipo: cur.tipo, imagen_url: cur.imagen_url || '',
+    qty: st.qty, talla: st.talla, hojas: st.hojas, attachUrl: attachUrl, combinedUrl: combinedUrl
+  });
+  guardarCarrito();
+  const btn = document.querySelector('.cartaddbtn');
+  if (btn) {
+    const original = btn.textContent;
+    btn.textContent = '✔ Agregado al carrito';
+    setTimeout(() => { if (btn.isConnected) btn.textContent = original; }, 1400);
+  }
+}
+
+function cambiarCantidadCarrito(idx, delta) {
+  carrito[idx].qty = Math.max(1, carrito[idx].qty + delta);
+  guardarCarrito();
+  renderCarritoPanel();
+}
+function quitarDelCarrito(idx) {
+  carrito.splice(idx, 1);
+  guardarCarrito();
+  renderCarritoPanel();
+}
+function toggleAccordionCarrito(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+function aplicarDireccionSeleccionada(val) {
+  const campos = ['ckCalle', 'ckNumero', 'ckColonia', 'ckCp', 'ckCiudad', 'ckEntreCalles'];
+  if (val === 'nueva') { campos.forEach(id => document.getElementById(id).value = ''); return; }
+  const d = direcciones.find(x => String(x.id) === String(val));
+  if (!d) return;
+  document.getElementById('ckCalle').value = d.calle;
+  document.getElementById('ckNumero').value = d.numero;
+  document.getElementById('ckColonia').value = d.colonia;
+  document.getElementById('ckCp').value = d.cp;
+  document.getElementById('ckCiudad').value = d.ciudad;
+  document.getElementById('ckEntreCalles').value = d.entre_calles || '';
+}
+
+function direccionCheckoutHtml() {
+  const d = direcciones.find(x => x.predeterminada) || direcciones[0] || {};
+  const selector = direcciones.length > 1 ? `<div class="cart-field"><label>Dirección guardada</label>
+      <select id="ckDireccionSel" onchange="aplicarDireccionSeleccionada(this.value)">
+        ${direcciones.map(x => `<option value="${x.id}" ${x.predeterminada ? 'selected' : ''}>${escapeHtmlMain(x.etiqueta)} — ${escapeHtmlMain(x.calle)} ${escapeHtmlMain(x.numero)}</option>`).join('')}
+        <option value="nueva">+ Nueva dirección</option>
+      </select>
+    </div>` : '';
+  return `
+    ${selector}
+    <div class="cart-form-row">
+      <div class="cart-field"><label>Calle *</label><input id="ckCalle" value="${escapeHtmlMain(d.calle || '')}"></div>
+      <div class="cart-field"><label>Número *</label><input id="ckNumero" value="${escapeHtmlMain(d.numero || '')}"></div>
+    </div>
+    <div class="cart-form-row">
+      <div class="cart-field"><label>Colonia *</label><input id="ckColonia" value="${escapeHtmlMain(d.colonia || '')}"></div>
+      <div class="cart-field"><label>C.P. *</label><input id="ckCp" value="${escapeHtmlMain(d.cp || '')}"></div>
+    </div>
+    <div class="cart-form-row">
+      <div class="cart-field"><label>Ciudad *</label><input id="ckCiudad" value="${escapeHtmlMain(d.ciudad || '')}"></div>
+      <div class="cart-field"><label>Entre calles (opcional)</label><input id="ckEntreCalles" value="${escapeHtmlMain(d.entre_calles || '')}"></div>
+    </div>
+    <div class="cart-field" style="margin-bottom:0"><label>Notas (opcional)</label><textarea id="ckNotas"></textarea></div>`;
+}
+
+function escapeHtmlMain(str) {
+  return String(str ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+}
+
+function renderCarritoPanel() {
+  const body = document.getElementById('cartBody');
+  if (!carrito.length) {
+    body.innerHTML = '<div class="cart-empty-hint">Tu carrito está vacío todavía.<br>Ve al catálogo y agrega tus productos favoritos 🛍️</div>';
+    return;
+  }
+
+  let subtotal = 0;
+  const lineasHtml = carrito.map((linea, idx) => {
+    const p = allProds.find(pr => pr.id === linea.producto_id);
+    const state = { qty: linea.qty, talla: linea.talla, hojas: linea.hojas };
+    const total = p ? calcLineTotal(p, state, nivelesDe(linea.producto_id)) : 0;
+    subtotal += total;
+    const variante = varianteTexto(p, state);
+    const img = linea.combinedUrl || linea.imagen_url;
+    return `
+      <div class="cart-line">
+        ${img ? `<img class="cart-thumb" src="${img}" alt="">` : `<div class="cart-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px">📦</div>`}
+        <div class="cart-line-info">
+          <div class="cart-line-name">${escapeHtmlMain(linea.nombre)}</div>
+          ${variante ? `<div class="cart-line-variant">${variante}</div>` : ''}
+          ${linea.combinedUrl ? `<div class="cart-line-tag">🎨 Con tu diseño</div>` : ''}
+          <div class="cart-line-bottom">
+            <div class="qty-stepper">
+              <button class="qty-btn" onclick="cambiarCantidadCarrito(${idx},-1)">−</button>
+              <span class="qty-val">${linea.qty}</span>
+              <button class="qty-btn" onclick="cambiarCantidadCarrito(${idx},1)">+</button>
+            </div>
+            <div class="cart-line-price">${fmtMoney(total)}</div>
+          </div>
+        </div>
+        <button class="cart-line-remove" onclick="quitarDelCarrito(${idx})" aria-label="Quitar">✕</button>
+      </div>`;
+  }).join('');
+
+  const total = subtotal + ENVIO_FIJO;
+  const correoActual = (session.user && session.user.email) || '';
+  const nombreActual = (perfilData && perfilData.nombre) || (session.user && session.user.user_metadata && session.user.user_metadata.nombre) || '';
+
+  body.innerHTML = `
+    ${lineasHtml}
+    <div class="cart-summary">
+      <div class="cart-summary-row"><span>Subtotal</span><span>${fmtMoney(subtotal)}</span></div>
+      <div class="cart-summary-row envio"><span>Gastos de envío<span class="lock-tag">🔒 fijo</span></span><span>${fmtMoney(ENVIO_FIJO)}</span></div>
+    </div>
+    <div class="cart-total">
+      <div class="cart-total-lbl">TOTAL</div>
+      <div class="cart-total-amt">${fmtMoney(total)}</div>
+    </div>
+
+    <div class="accordion open" id="accDatos">
+      <button type="button" class="accordion-head" onclick="toggleAccordionCarrito('accDatos')">
+        <span class="accordion-head-lbl">🙋 Tus datos</span>
+        <span class="accordion-chevron">${CHEVRON_SVG}</span>
+      </button>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <div class="cart-form-row">
+          <div class="cart-field"><label>Nombre completo *</label><input id="ckNombre" value="${escapeHtmlMain(nombreActual)}"></div>
+          <div class="cart-field"><label>Teléfono *</label><input id="ckTelefono" value="${escapeHtmlMain((perfilData && perfilData.telefono) || '')}"></div>
+        </div>
+        <div class="cart-field" style="margin-bottom:0"><label>Correo *</label><input id="ckCorreo" value="${escapeHtmlMain(correoActual)}"></div>
+      </div></div>
+    </div>
+
+    <div class="accordion" id="accDireccion">
+      <button type="button" class="accordion-head" onclick="toggleAccordionCarrito('accDireccion')">
+        <span class="accordion-head-lbl">📦 Dirección de entrega</span>
+        <span class="accordion-chevron">${CHEVRON_SVG}</span>
+      </button>
+      <div class="accordion-body"><div class="accordion-body-inner">${direccionCheckoutHtml()}</div></div>
+    </div>
+
+    <button class="pay-btn" id="payBtn" onclick="pagarConMercadoPago()">💳 Pagar con Mercado Pago — ${fmtMoney(total)}</button>
+    <div class="pay-note">Se abrirá la página segura de Mercado Pago para completar tu pago (tarjeta u OXXO).</div>`;
+}
+
+async function pagarConMercadoPago() {
+  const nombre = document.getElementById('ckNombre').value.trim();
+  const telefono = document.getElementById('ckTelefono').value.trim();
+  const correo = document.getElementById('ckCorreo').value.trim();
+  const calle = document.getElementById('ckCalle').value.trim();
+  const numero = document.getElementById('ckNumero').value.trim();
+  const colonia = document.getElementById('ckColonia').value.trim();
+  const cp = document.getElementById('ckCp').value.trim();
+  const ciudad = document.getElementById('ckCiudad').value.trim();
+  const entre_calles = document.getElementById('ckEntreCalles').value.trim();
+  const notas = document.getElementById('ckNotas').value.trim();
+
+  if (!nombre || !telefono || !correo) { alert('Completa tu nombre, teléfono y correo — son obligatorios.'); return; }
+  if (!calle || !numero || !colonia || !cp || !ciudad) { alert('Completa tu dirección de entrega — son obligatorios.'); return; }
+  if (!carrito.length) { alert('Tu carrito está vacío.'); return; }
+
+  const btn = document.getElementById('payBtn');
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Preparando pago…';
+
+  try {
+    const items = carrito.map(l => ({
+      producto_id: l.producto_id, cantidad: l.qty, talla: l.talla, hojas: l.hojas,
+      attach_url: l.attachUrl || null, combined_url: l.combinedUrl || null
+    }));
+    const r = await fetch('/api/mp-crear-preferencia-pedido', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ items, cliente: { nombre, telefono, correo, calle, numero, colonia, cp, ciudad, entre_calles, notas } })
+    });
+    const data = await r.json();
+    if (!r.ok || !data.init_point) throw new Error(data.error || 'No se pudo iniciar el pago.');
+    location.href = data.init_point;
+  } catch (e) {
+    alert('Error: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MIS FAVORITOS
+   ══════════════════════════════════════════════════════════════════════ */
+async function cargarFavoritosIds() {
+  try {
+    const rows = await sbAuthGet(`favoritos?select=producto_id&user_id=eq.${session.user.id}`);
+    favoritos = rows.map(r => r.producto_id);
+  } catch (e) { favoritos = []; }
+  actualizarBadges();
+  actualizarCorazonesTarjetas();
+}
+async function cargarFavoritosCompletos() {
+  await cargarFavoritosIds();
+}
+
+function actualizarCorazonesTarjetas() {
+  document.querySelectorAll('.card-heart').forEach(el => {
+    el.classList.toggle('on', favoritos.includes(Number(el.dataset.pid)));
+  });
+}
+
+async function toggleFavorito(pid) {
+  if (!session) { abrirLoginPopup('favoritos'); return; }
+  const idx = favoritos.indexOf(pid);
+  try {
+    if (idx === -1) {
+      await sbAuthWrite('POST', 'favoritos', { user_id: session.user.id, producto_id: pid });
+      favoritos.push(pid);
+    } else {
+      await sbAuthWrite('DELETE', `favoritos?user_id=eq.${session.user.id}&producto_id=eq.${pid}`, null);
+      favoritos.splice(idx, 1);
+    }
+  } catch (e) { return; }
+  actualizarBadges();
+  actualizarCorazonesTarjetas();
+  if (document.getElementById('favOv').classList.contains('open')) renderFavoritosPanel();
+}
+
+function agregarFavoritoAlCarrito(pid) {
+  const p = allProds.find(pr => pr.id === pid);
+  if (!p) return;
+  const tallaInicial = p.talla_adulto_activo === false && p.precio_infantil && p.talla_infantil_activo !== false ? 'infantil' : 'adulto';
+  carrito.push({ producto_id: p.id, nombre: p.nombre, tipo: p.tipo, imagen_url: p.imagen_url || '', qty: 1, talla: tallaInicial, hojas: 50, attachUrl: null, combinedUrl: null });
+  guardarCarrito();
+  alert(`Se agregó "${p.nombre}" a tu carrito ✓`);
+}
+
+function renderFavoritosPanel() {
+  const body = document.getElementById('favBody');
+  if (!favoritos.length) {
+    body.innerHTML = '<div class="cart-empty-hint">Todavía no tienes favoritos.<br>Da clic en el corazón de cualquier producto del catálogo para guardarlo aquí ♥</div>';
+    return;
+  }
+  const rowsHtml = favoritos.map(pid => {
+    const p = allProds.find(pr => pr.id === pid);
+    if (!p) return '';
+    return `
+      <div class="fav-row">
+        <div class="fav-thumb-wrap">
+          ${p.imagen_url ? `<img class="fav-thumb" src="${p.imagen_url}" alt="">` : `<div class="fav-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px">📦</div>`}
+          <button class="fav-heart" onclick="toggleFavorito(${p.id})" title="Quitar de favoritos">♥</button>
+        </div>
+        <div class="fav-info">
+          <div class="fav-name">${escapeHtmlMain(p.nombre)}</div>
+          <div class="fav-price">${p.tipo === 'simple' ? '' : 'Desde '}${fmtMoney(p.precio_base)}</div>
+        </div>
+        <button class="fav-add-btn" onclick="agregarFavoritoAlCarrito(${p.id})">🛒 Agregar</button>
+      </div>`;
+  }).join('');
+  body.innerHTML = rowsHtml || '<div class="cart-empty-hint">Todavía no tienes favoritos.</div>';
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MI PERFIL — datos personales, direcciones, historial de pedidos
+   ══════════════════════════════════════════════════════════════════════ */
+async function cargarPerfil() {
+  try {
+    const rows = await sbAuthGet(`perfiles?select=*&id=eq.${session.user.id}`);
+    if (rows.length) {
+      perfilData = rows[0];
+    } else {
+      const nombreInicial = (session.user.user_metadata && session.user.user_metadata.nombre) || '';
+      const [creado] = await sbAuthWrite('POST', 'perfiles', { id: session.user.id, nombre: nombreInicial });
+      perfilData = creado;
+    }
+  } catch (e) {
+    perfilData = perfilData || { nombre: '', telefono: '' };
+  }
+}
+async function cargarDirecciones() {
+  try {
+    direcciones = await sbAuthGet(`direcciones?select=*&user_id=eq.${session.user.id}&order=predeterminada.desc,creado_en.desc`);
+  } catch (e) { direcciones = []; }
+}
+async function cargarMisPedidos() {
+  try {
+    misPedidos = await sbAuthGet(`pedidos?select=*,pedido_items(*)&user_id=eq.${session.user.id}&order=creado_en.desc`);
+  } catch (e) { misPedidos = []; }
+}
+
+async function guardarDatosPersonales() {
+  const nombre = document.getElementById('pfNombre').value.trim();
+  const telefono = document.getElementById('pfTelefono').value.trim();
+  try {
+    await sbAuthWrite('PATCH', `perfiles?id=eq.${session.user.id}`, { nombre, telefono });
+    perfilData.nombre = nombre; perfilData.telefono = telefono;
+    alert('Datos actualizados ✔');
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function cambiarContrasenaCuenta() {
+  const nueva = prompt('Escribe tu nueva contraseña (mínimo 6 caracteres):');
+  if (!nueva) return;
+  if (nueva.length < 6) { alert('La contraseña debe tener al menos 6 caracteres.'); return; }
+  try {
+    const r = await fetch(SB_URL + '/auth/v1/user', {
+      method: 'PUT',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: nueva })
+    });
+    if (!r.ok) throw new Error((await r.json()).msg || 'No se pudo actualizar.');
+    alert('Contraseña actualizada ✔');
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function agregarDireccion() {
+  const etiqueta = prompt('¿Cómo quieres llamar a esta dirección? (ej. Casa, Oficina)', 'Casa');
+  if (!etiqueta) return;
+  const calle = prompt('Calle:'); if (!calle) return;
+  const numero = prompt('Número:'); if (!numero) return;
+  const colonia = prompt('Colonia:'); if (!colonia) return;
+  const cp = prompt('Código postal:'); if (!cp) return;
+  const ciudad = prompt('Ciudad:'); if (!ciudad) return;
+  const entre_calles = prompt('Entre calles (opcional):') || null;
+  try {
+    const esPrimera = direcciones.length === 0;
+    await sbAuthWrite('POST', 'direcciones', { user_id: session.user.id, etiqueta, calle, numero, colonia, cp, ciudad, entre_calles, predeterminada: esPrimera });
+    await cargarDirecciones();
+    renderPerfilPanel();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function editarDireccion(id) {
+  const d = direcciones.find(x => x.id === id);
+  if (!d) return;
+  const etiqueta = prompt('Etiqueta:', d.etiqueta); if (!etiqueta) return;
+  const calle = prompt('Calle:', d.calle); if (!calle) return;
+  const numero = prompt('Número:', d.numero); if (!numero) return;
+  const colonia = prompt('Colonia:', d.colonia); if (!colonia) return;
+  const cp = prompt('Código postal:', d.cp); if (!cp) return;
+  const ciudad = prompt('Ciudad:', d.ciudad); if (!ciudad) return;
+  const entre_calles = prompt('Entre calles (opcional):', d.entre_calles || '') || null;
+  try {
+    await sbAuthWrite('PATCH', `direcciones?id=eq.${id}`, { etiqueta, calle, numero, colonia, cp, ciudad, entre_calles });
+    await cargarDirecciones();
+    renderPerfilPanel();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function eliminarDireccion(id) {
+  if (!confirm('¿Eliminar esta dirección?')) return;
+  try {
+    await sbAuthWrite('DELETE', `direcciones?id=eq.${id}`, null);
+    await cargarDirecciones();
+    renderPerfilPanel();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function marcarDireccionPredeterminada(id) {
+  try {
+    await sbAuthWrite('PATCH', `direcciones?user_id=eq.${session.user.id}`, { predeterminada: false });
+    await sbAuthWrite('PATCH', `direcciones?id=eq.${id}`, { predeterminada: true });
+    await cargarDirecciones();
+    renderPerfilPanel();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+const ESTATUS_ENVIO_INFO = {
+  confirmado:  ['status-confirmado', '💳 Pago confirmado'],
+  preparacion: ['status-preparacion', '🎨 En preparación'],
+  transito:    ['status-transito', '🚚 En tránsito'],
+  entregado:   ['status-entregado', '✅ Entregado'],
+  cancelado:   ['status-cancelado', '✕ Cancelado']
+};
+
+function renderPerfilPanel() {
+  const body = document.getElementById('perfilBody');
+  const nombre = (perfilData && perfilData.nombre) || '';
+  const telefono = (perfilData && perfilData.telefono) || '';
+  const correo = (session.user && session.user.email) || '';
+
+  const direccionesHtml = direcciones.length ? direcciones.map(d => `
+    <div class="addr-card">
+      <div class="addr-card-top">
+        <span class="addr-label">${escapeHtmlMain(d.etiqueta)}</span>
+        ${d.predeterminada ? '<span class="addr-default-tag">Predeterminada</span>' : ''}
+      </div>
+      <div class="addr-text">${escapeHtmlMain(d.calle)} ${escapeHtmlMain(d.numero)}, ${escapeHtmlMain(d.colonia)}, ${escapeHtmlMain(d.ciudad)}, ${escapeHtmlMain(d.cp)}</div>
+      <div class="addr-actions">
+        <button class="edit" onclick="editarDireccion(${d.id})">✏️ Editar</button>
+        <button class="del" onclick="eliminarDireccion(${d.id})">🗑 Eliminar</button>
+        ${!d.predeterminada ? `<button class="set-default" onclick="marcarDireccionPredeterminada(${d.id})">Usar como predeterminada</button>` : ''}
+      </div>
+    </div>`).join('') : '<div class="cart-empty-hint">Todavía no tienes direcciones guardadas.</div>';
+
+  const pedidosHtml = misPedidos.length ? misPedidos.map(ped => {
+    const items = (ped.pedido_items || []).map(it => `${it.producto_nombre} x${it.cantidad}`).join(', ');
+    const [cls, lbl] = ESTATUS_ENVIO_INFO[ped.estatus_envio] || ESTATUS_ENVIO_INFO.confirmado;
+    const fecha = new Date(ped.creado_en).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+    return `
+      <div class="order-row">
+        <div class="order-row-top"><span class="order-num">Pedido #${ped.id}</span><span class="order-date">${fecha}</span></div>
+        <div class="order-items">${escapeHtmlMain(items)}</div>
+        <div class="order-row-bottom"><span class="order-total">${fmtMoney(ped.total)}</span><span class="status-badge ${cls}">${lbl}</span></div>
+      </div>`;
+  }).join('') : '<div class="cart-empty-hint">Todavía no tienes pedidos.</div>';
+
+  body.innerHTML = `
+    <div class="profile-block-head"><div class="profile-block-title">🙋 Datos personales</div></div>
+    <div class="cart-form-row">
+      <div class="cart-field"><label>Nombre completo</label><input id="pfNombre" value="${escapeHtmlMain(nombre)}"></div>
+      <div class="cart-field"><label>Teléfono</label><input id="pfTelefono" value="${escapeHtmlMain(telefono)}"></div>
+    </div>
+    <div class="cart-field"><label>Correo</label><input value="${escapeHtmlMain(correo)}" disabled style="opacity:.6"></div>
+    <button class="login-popup-btn" style="margin-bottom:10px" onclick="guardarDatosPersonales()">Guardar datos</button>
+    <div class="pass-change">
+      <span>🔒 Contraseña</span>
+      <button class="profile-link-btn" onclick="cambiarContrasenaCuenta()">Cambiar contraseña</button>
+    </div>
+
+    <div class="profile-block-head"><div class="profile-block-title">📍 Mis direcciones</div></div>
+    ${direccionesHtml}
+    <button class="add-addr-btn" onclick="agregarDireccion()">➕ Agregar nueva dirección</button>
+
+    <div class="profile-block-head"><div class="profile-block-title">📦 Mis pedidos</div></div>
+    ${pedidosHtml}
+
+    <button class="logout-btn-profile" onclick="cerrarSesionCuenta()">Cerrar sesión</button>`;
+}
+
 document.getElementById('ov').addEventListener('click', e => {
   if (e.target === document.getElementById('ov')) closeM();
 });
+['cartOv', 'perfilOv', 'favOv'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    if (e.target.id === id) cerrarPanel(id);
+  });
+});
+document.getElementById('loginPopupOv').addEventListener('click', e => {
+  if (e.target.id === 'loginPopupOv') cerrarLoginPopup();
+});
+
+/* ══════════════════════════════════════════════════════════════════════
+   Pantalla de retorno de Mercado Pago (?pedido=approved|pending|failure)
+   ══════════════════════════════════════════════════════════════════════ */
+function mostrarThanksSiAplica() {
+  const params = new URLSearchParams(location.search);
+  const estado = params.get('pedido');
+  if (!estado) return;
+  history.replaceState(null, '', location.pathname);
+  const wrap = document.getElementById('thanksWrap');
+
+  if (estado === 'approved') {
+    carrito = [];
+    guardarCarrito();
+    wrap.innerHTML = `
+      <div class="thanks-card">
+        <div class="thanks-icon ok">✅</div>
+        <div class="thanks-title">¡Gracias por tu compra!</div>
+        <div class="thanks-sub">Tu pago fue confirmado y ya empezamos a preparar tu pedido. Te avisaremos por correo cuando cambie de estatus.</div>
+        <div class="tracker">
+          <div class="tracker-step done"><div class="tracker-line"></div><div class="tracker-dot">✓</div><div class="tracker-lbl">Pago<br>confirmado</div></div>
+          <div class="tracker-step"><div class="tracker-line"></div><div class="tracker-dot">2</div><div class="tracker-lbl">En<br>preparación</div></div>
+          <div class="tracker-step"><div class="tracker-line"></div><div class="tracker-dot">3</div><div class="tracker-lbl">En<br>tránsito</div></div>
+          <div class="tracker-step"><div class="tracker-line"></div><div class="tracker-dot">4</div><div class="tracker-lbl">Entregado</div></div>
+        </div>
+        <button class="thanks-btn" onclick="document.getElementById('thanksWrap').style.display='none';abrirPerfil()">📦 Ver mis pedidos</button>
+      </div>`;
+  } else if (estado === 'pending') {
+    wrap.innerHTML = `
+      <div class="thanks-card">
+        <div class="thanks-icon wait">⏳</div>
+        <div class="thanks-title">Tu pago está en proceso</div>
+        <div class="thanks-sub">Si elegiste pagar en OXXO, en cuanto se confirme el depósito activamos tu pedido y te avisamos por correo.</div>
+        <button class="thanks-btn" onclick="document.getElementById('thanksWrap').style.display='none';abrirPerfil()">📦 Ver estatus de mi pedido</button>
+      </div>`;
+  } else if (estado === 'failure') {
+    wrap.innerHTML = `
+      <div class="thanks-card">
+        <div class="thanks-icon fail">❌</div>
+        <div class="thanks-title">No se pudo completar el pago</div>
+        <div class="thanks-sub">Tu carrito sigue intacto — puedes intentarlo de nuevo con otra tarjeta o método de pago cuando quieras.</div>
+        <button class="thanks-btn" onclick="document.getElementById('thanksWrap').style.display='none';abrirCarrito()">🛒 Volver a mi carrito</button>
+      </div>`;
+  } else {
+    return;
+  }
+  wrap.style.display = 'block';
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function initCuenta() {
+  if (checkRecoveryLink()) return;
+  mostrarThanksSiAplica();
+  actualizarBadges();
+  if (session) {
+    try { await cargarFavoritosIds(); } catch (e) {}
+  }
+}
 
 init();
+initCuenta();
