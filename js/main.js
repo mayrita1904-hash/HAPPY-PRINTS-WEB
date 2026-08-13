@@ -1202,16 +1202,16 @@ function direccionCheckoutHtml() {
   return `
     ${selector}
     <div class="cart-form-row">
-      <div class="cart-field"><label>Calle *</label><input id="ckCalle" value="${escapeHtmlMain(d.calle || '')}"></div>
-      <div class="cart-field"><label>Número *</label><input id="ckNumero" value="${escapeHtmlMain(d.numero || '')}"></div>
+      <div class="cart-field"><label>Calle *</label><input type="text" id="ckCalle" autocomplete="address-line1" value="${escapeHtmlMain(d.calle || '')}"></div>
+      <div class="cart-field"><label>Número *</label><input type="text" id="ckNumero" autocomplete="off" value="${escapeHtmlMain(d.numero || '')}"></div>
     </div>
     <div class="cart-form-row">
-      <div class="cart-field"><label>Colonia *</label><input id="ckColonia" value="${escapeHtmlMain(d.colonia || '')}"></div>
-      <div class="cart-field"><label>C.P. *</label><input id="ckCp" value="${escapeHtmlMain(d.cp || '')}"></div>
+      <div class="cart-field"><label>Colonia *</label><input type="text" id="ckColonia" autocomplete="address-line2" value="${escapeHtmlMain(d.colonia || '')}"></div>
+      <div class="cart-field"><label>C.P. *</label><input type="text" inputmode="numeric" id="ckCp" autocomplete="postal-code" value="${escapeHtmlMain(d.cp || '')}"></div>
     </div>
     <div class="cart-form-row">
-      <div class="cart-field"><label>Ciudad *</label><input id="ckCiudad" value="${escapeHtmlMain(d.ciudad || '')}"></div>
-      <div class="cart-field"><label>Entre calles (opcional)</label><input id="ckEntreCalles" value="${escapeHtmlMain(d.entre_calles || '')}"></div>
+      <div class="cart-field"><label>Ciudad *</label><input type="text" id="ckCiudad" autocomplete="address-level2" value="${escapeHtmlMain(d.ciudad || '')}"></div>
+      <div class="cart-field"><label>Entre calles (opcional)</label><input type="text" id="ckEntreCalles" autocomplete="off" value="${escapeHtmlMain(d.entre_calles || '')}"></div>
     </div>
     <div class="cart-field" style="margin-bottom:0"><label>Notas (opcional)</label><textarea id="ckNotas"></textarea></div>`;
 }
@@ -1277,10 +1277,10 @@ function renderCarritoPanel() {
       </button>
       <div class="accordion-body"><div class="accordion-body-inner">
         <div class="cart-form-row">
-          <div class="cart-field"><label>Nombre completo *</label><input id="ckNombre" value="${escapeHtmlMain(nombreActual)}"></div>
-          <div class="cart-field"><label>Teléfono *</label><input id="ckTelefono" value="${escapeHtmlMain((perfilData && perfilData.telefono) || '')}"></div>
+          <div class="cart-field"><label>Nombre completo *</label><input type="text" id="ckNombre" autocomplete="name" value="${escapeHtmlMain(nombreActual)}"></div>
+          <div class="cart-field"><label>Teléfono *</label><input type="tel" inputmode="tel" id="ckTelefono" autocomplete="tel" value="${escapeHtmlMain((perfilData && perfilData.telefono) || '')}"></div>
         </div>
-        <div class="cart-field" style="margin-bottom:0"><label>Correo *</label><input id="ckCorreo" value="${escapeHtmlMain(correoActual)}"></div>
+        <div class="cart-field" style="margin-bottom:0"><label>Correo *</label><input type="email" id="ckCorreo" autocomplete="email" value="${escapeHtmlMain(correoActual)}"></div>
       </div></div>
     </div>
 
@@ -1556,8 +1556,8 @@ function renderPerfilPanel() {
   body.innerHTML = `
     <div class="profile-block-head"><div class="profile-block-title">🙋 Datos personales</div></div>
     <div class="cart-form-row">
-      <div class="cart-field"><label>Nombre completo</label><input id="pfNombre" value="${escapeHtmlMain(nombre)}"></div>
-      <div class="cart-field"><label>Teléfono</label><input id="pfTelefono" value="${escapeHtmlMain(telefono)}"></div>
+      <div class="cart-field"><label>Nombre completo</label><input type="text" id="pfNombre" autocomplete="name" value="${escapeHtmlMain(nombre)}"></div>
+      <div class="cart-field"><label>Teléfono</label><input type="tel" inputmode="tel" id="pfTelefono" autocomplete="tel" value="${escapeHtmlMain(telefono)}"></div>
     </div>
     <div class="cart-field"><label>Correo</label><input value="${escapeHtmlMain(correo)}" disabled style="opacity:.6"></div>
     <button class="login-popup-btn" style="margin-bottom:10px" onclick="guardarDatosPersonales()">Guardar datos</button>
