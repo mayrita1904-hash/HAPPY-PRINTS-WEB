@@ -4,9 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Descripción del proyecto
 
-Sitio web de **Happy Prints** (Toluca, México) — catálogo y venta de productos personalizados (sublimación, DTF, playeras, tazas, sellos, offset/serigrafía, grabado láser, etc.). No es un e-commerce con carrito/checkout propio: cada pedido se arma en el navegador y se envía como mensaje pre-llenado de **WhatsApp** (`wa.me`).
-
-**Excepción:** la sección `/pages/cursos` (cursos en línea) sí tiene cuentas de cliente reales y pago en línea con Mercado Pago — ver "Cursos en línea" más abajo.
+Sitio web de **Happy Prints** (Toluca, México) — catálogo y venta de productos personalizados (sublimación, DTF, playeras, tazas, sellos, offset/serigrafía, grabado láser, etc.). Cada producto se puede pedir de dos formas que **conviven**: el flujo clásico de siempre (se arma en el navegador y se envía como mensaje pre-llenado de **WhatsApp** vía `wa.me`) o, desde que se agregó el carrito de compras, pagando en línea con **Mercado Pago** a través de una cuenta de cliente (Mi Perfil / Mis Favoritos / Mi Carrito) — ver "Cuenta de cliente y carrito de compras" más abajo. Las categorías "de cotización" (sin precio fijo) solo tienen el flujo de WhatsApp.
 
 - Tipo de proyecto: sitio estático (HTML/CSS/JS vanilla, sin frameworks ni build tools) + un puñado de funciones serverless de Vercel para analíticas propias y para el pago de cursos.
 - Base de datos: **Supabase** (Postgres + Storage + Auth), consumida directo desde el cliente vía REST (`/rest/v1/...`), sin backend intermedio.
@@ -34,13 +32,16 @@ Sitio web de **Happy Prints** (Toluca, México) — catálogo y venta de product
 │   ├── track.js              # Función serverless Vercel: recibe eventos de analytics.js, escribe en Redis
 │   ├── stats.js               # Función serverless Vercel: agrega y expone las estadísticas (protegida por clave)
 │   ├── mp-crear-preferencia.js # Crea la preferencia de pago de Mercado Pago para un curso (requiere sesión)
-│   └── mp-webhook.js           # Recibe la confirmación de pago de Mercado Pago y activa el acceso al curso
+│   ├── mp-webhook.js           # Recibe la confirmación de pago de un curso y activa el acceso
+│   ├── mp-crear-preferencia-pedido.js # Crea la preferencia de pago de Mercado Pago para un pedido del carrito
+│   └── mp-webhook-pedido.js     # Recibe la confirmación de pago de un pedido y actualiza su estatus
 ├── /assets/images
 ├── supabase_*.sql             # Scripts SQL sueltos para correr manualmente en el editor SQL de Supabase
 │                                # (RLS, tablas de galería, paquetes de experiencia, ítems de cotización, tallas,
-│                                #  registro de cotizaciones, catálogo de cursos, inscripciones de cursos)
+│                                #  registro de cotizaciones, catálogo de cursos, inscripciones de cursos,
+│                                #  perfiles/direcciones/favoritos/pedidos del carrito)
 ├── vercel.json                 # Headers de seguridad (CSP, HSTS, etc.) y config de rutas de Vercel
-├── package.json                 # Declara @upstash/redis (para /api de analíticas) y mercadopago (para /api de cursos)
+├── package.json                 # Declara @upstash/redis (para /api de analíticas) y mercadopago (para /api de cursos y pedidos)
 └── GUIA-INSTALACION.md          # Guía paso a paso (no técnica) para conectar Redis/dashboard — no se despliega
 ```
 *(Actualizar esta sección conforme el proyecto crezca y la estructura real cambie.)*
@@ -81,6 +82,18 @@ Tablas principales usadas por el frontend: `categorias`, `productos`, `precios_n
   3. Tras pagar, Mercado Pago llama a `api/mp-webhook.js`, que vuelve a consultar el pago directo en la API de Mercado Pago (nunca confía en el cuerpo del webhook) y actualiza la fila `inscripciones` (`pagado`/`rechazado`) con la `service_role key`.
 - Variables de entorno de Vercel necesarias (secretas, nunca en el repo): `MERCADOPAGO_ACCESS_TOKEN` (credenciales de producción de Mercado Pago) y `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Settings → API).
 - El acceso al contenido real de las lecciones (video, etc.) todavía no está construido — un curso "pagado" hoy solo muestra "✅ Acceso activo" como marcador de posición.
+
+**Cuenta de cliente y carrito de compras** (`index.html` + `js/main.js`) — cubre todo el catálogo público (no solo Cursos):
+- **Reutiliza la misma cuenta/sesión que `/pages/cursos`**: ambos guardan la sesión en `localStorage` bajo la llave `hp_cursos_session`, así que iniciar sesión en un lado sirve en el otro. El popup de login/registro/recuperar contraseña de `index.html` es una versión compacta (modal, no pantalla completa) del mismo flujo de `js/cursos.js`.
+- Tres íconos en el menú de **todas** las páginas del sitio (donde antes vivían los íconos de redes sociales, que se movieron al `<footer>`): **Mi Perfil**, **Mis Favoritos**, **Mi Carrito**. Solo `index.html` tiene la funcionalidad real (abre los paneles); en el resto de las páginas son enlaces a `/`, ya que ahí es donde vive todo el catálogo/`allProds`.
+- Navegar el catálogo **no** requiere cuenta — solo se pide al dar clic en Carrito/Favoritos/Perfil, o al intentar "Agregar al carrito" desde el modal de un producto (botón nuevo junto a "Pedir por WhatsApp", que sigue intacto).
+- El carrito vive en `localStorage` (`hp_carrito`) — no se sincroniza entre dispositivos, a diferencia de Mis Favoritos/Mi Perfil/Mis Pedidos que sí están en Supabase.
+- `calcLineTotal(producto, state, niveles)` en `js/main.js` es la misma lógica de precios que antes solo existía como `calcT()` (ligada al modal abierto), ahora extraída para que el carrito pueda calcular el total de cada línea sin depender de qué producto esté abierto en el modal.
+- Tablas nuevas (`supabase_pedidos.sql`): `perfiles` (nombre/teléfono/rol), `direcciones` (múltiples por cliente, estilo Amazon, con una marcada `predeterminada`), `favoritos`, `pedidos`/`pedido_items`.
+- **`perfiles.rol`** (`cliente` por default, `admin` para la cuenta de Sandra) es la pieza clave que distingue clientes de la dueña ahora que ambos comparten el mismo `auth.users` — antes de esto, `admin.html` era la única cuenta y `auth.role() = 'authenticated'` bastaba para decir "es la dueña"; ya no. Las políticas RLS de `pedidos`/`pedido_items` usan `auth.uid() = user_id or exists (select 1 from perfiles where id = auth.uid() and rol = 'admin')` para que cada cliente vea solo sus pedidos y la admin los vea todos desde `admin.html`.
+- El pago usa el mismo patrón Checkout Pro que Cursos, con sus propias funciones dedicadas para no mezclar los dos flujos: `api/mp-crear-preferencia-pedido.js` (verifica sesión, **recalcula los precios en el servidor con la misma lógica de `calcLineTotal` portada a Node** — nunca confía en lo que manda el navegador —, fija el envío en $185 sin importar lo que mande el cliente, crea `pedidos`/`pedido_items` con la `service_role key`, crea la preferencia) y `api/mp-webhook-pedido.js` (confirma el pago directo contra la API de Mercado Pago y actualiza `estatus_pago`).
+- `pedidos.estatus_pago` (`pendiente`/`pagado`/`rechazado`) solo lo cambia el webhook. `pedidos.estatus_envio` (`confirmado`/`preparacion`/`transito`/`entregado`/`cancelado`) lo cambia la admin desde la pestaña "📦 Pedidos en línea" de `admin.html`, que también muestra un distintivo junto al nombre del cliente según cuántos pedidos pagados lleva: ⭐ "Frecuente" (2+) y 👑 "Premium" (10+).
+- Al volver de Mercado Pago, `index.html` recibe `?pedido=approved|pending|failure` y muestra una pantalla de agradecimiento/estatus (`mostrarThanksSiAplica()` en `js/main.js`) — si fue aprobado, además vacía el carrito.
 
 ## Convenciones de código
 - HTML semántico: `<header>`, `<main>`, `<section>`, `<footer>`, `<nav>` en vez de `<div>` genéricos donde aplique.

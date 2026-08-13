@@ -44,6 +44,16 @@ nav{background:#1A1F4B;padding:0 24px;display:flex;align-items:center;justify-co
 .pcat{font-size:10px;color:#9090A8}
 .price{font-size:15px;font-weight:900;color:#FF2D78}
 .cbadge{display:inline-block;border-radius:6px;font-size:10px;font-weight:800;padding:3px 8px;background:#F0F0F5;color:#1A1F4B}
+.badge-pagado{background:#DBEAFE;color:#1D4ED8}
+.badge-pendiente{background:#FEF3C7;color:#B45309}
+.badge-rechazado{background:#FEE2E2;color:#DC2626}
+.badge-confirmado{background:#DBEAFE;color:#1D4ED8}
+.badge-preparacion{background:#FEF3C7;color:#B45309}
+.badge-transito{background:#E0E7FF;color:#4338CA}
+.badge-entregado{background:#DCFCE7;color:#15803D}
+.badge-cancelado{background:#FEE2E2;color:#DC2626}
+.freq-badge{display:inline-flex;align-items:center;gap:3px;background:#FEF9C3;color:#A16207;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:middle}
+.premium-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(100deg,#7C3AED,#DB2777);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:middle}
 .tog{position:relative;width:40px;height:22px;cursor:pointer;display:inline-block}
 .tog input{opacity:0;width:0;height:0;position:absolute}
 .togslide{position:absolute;inset:0;background:#E0E0E8;border-radius:999px;transition:.2s}
@@ -190,6 +200,7 @@ input:checked+.togslide::before{transform:translateX(18px)}
   <button class="atab" data-screen="experience" onclick="mostrarPantalla('experience')">🎉 Happy Prints Experience</button>
   <button class="atab" data-screen="webdev" onclick="mostrarPantalla('webdev')">💻 Sitios Web</button>
   <button class="atab" data-screen="cotreg" onclick="mostrarPantalla('cotreg')">🧾 Registro de Cotizaciones</button>
+  <button class="atab" data-screen="pedidos" onclick="mostrarPantalla('pedidos')">📦 Pedidos en línea</button>
 </div>
 
 <div class="admin-screen on" id="screen-productos">
@@ -302,6 +313,79 @@ input:checked+.togslide::before{transform:translateX(18px)}
   </div>
 </div>
 </div><!-- /screen-cotreg -->
+
+<div class="admin-screen" id="screen-pedidos">
+<div class="wrap">
+  <div class="ptitle">📦 Pedidos en línea</div>
+  <div class="psub">Pedidos pagados desde el carrito de la tienda — dales seguimiento hasta la entrega. El estatus de pago lo controla Mercado Pago automáticamente; el de envío lo actualizas tú aquí.</div>
+
+  <div class="stats">
+    <div class="stat"><div class="sv" id="pd1">—</div><div class="sl">Total pedidos</div></div>
+    <div class="stat"><div class="sv" id="pd2">—</div><div class="sl">En preparación</div></div>
+    <div class="stat"><div class="sv" id="pd3">—</div><div class="sl">En tránsito</div></div>
+    <div class="stat"><div class="sv" id="pd4">—</div><div class="sl">Entregados</div></div>
+    <div class="stat"><div class="sv" id="pd5">—</div><div class="sl">Pago pendiente</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input class="sinput" type="text" id="pdq" placeholder="🔍  Buscar por cliente o No. de pedido..." oninput="filtrarPedidos()">
+    <select class="sinput" style="flex:0;width:auto" id="pdestatus" onchange="filtrarPedidos()">
+      <option value="">Todos los estatus de envío</option>
+      <option value="confirmado">Pago confirmado</option>
+      <option value="preparacion">En preparación</option>
+      <option value="transito">En tránsito</option>
+      <option value="entregado">Entregado</option>
+      <option value="cancelado">Cancelado</option>
+    </select>
+    <button class="btn btn-g btn-sm" onclick="cargarPedidos()">↻ Actualizar</button>
+  </div>
+
+  <div class="tbl">
+    <div class="th" style="grid-template-columns:80px 1fr 100px 120px 150px 90px 70px">
+      <div>No.</div><div>Cliente</div><div>Total</div><div>Pago</div><div>Envío</div><div>Fecha</div><div></div>
+    </div>
+    <div id="pdtbody"><div class="loading">Cargando pedidos…</div></div>
+  </div>
+</div>
+</div><!-- /screen-pedidos -->
+
+<!-- MODAL DETALLE DE PEDIDO -->
+<div class="mbg" id="pedidoMbg">
+  <div class="mbox" style="max-width:560px">
+    <h2 id="pdTitulo">Pedido</h2>
+    <div class="psub" id="pdSub" style="margin-bottom:20px"></div>
+
+    <div class="olbl">🙋 Cliente</div>
+    <div id="pdCliente"></div>
+
+    <div class="olbl" style="margin-top:16px">📍 Dirección de entrega</div>
+    <div id="pdDireccion" style="background:#F5F5F8;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.6"></div>
+
+    <div class="olbl" style="margin-top:16px">🛍️ Productos</div>
+    <div id="pdItems"></div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;background:#1A1F4B;border-radius:10px;padding:12px 16px;margin-top:14px">
+      <span style="font-size:11px;color:rgba(255,255,255,.6);font-weight:700">TOTAL (incluye envío)</span>
+      <span id="pdTotal" style="font-size:18px;color:#C8E63A;font-weight:900"></span>
+    </div>
+
+    <div class="field" style="margin-top:18px">
+      <label>Actualizar estatus de envío</label>
+      <select id="pdSelEstatus">
+        <option value="confirmado">Pago confirmado</option>
+        <option value="preparacion">En preparación</option>
+        <option value="transito">En tránsito</option>
+        <option value="entregado">Entregado</option>
+        <option value="cancelado">Cancelado</option>
+      </select>
+    </div>
+
+    <div class="mfooter">
+      <button class="btn btn-g" onclick="cerrarPedidoModal()">Cerrar</button>
+      <button class="btn btn-p" id="pdGuardarBtn" onclick="guardarEstatusPedido()">Guardar estatus</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL -->
 <div class="mbg" id="mbg">
@@ -564,6 +648,7 @@ async function mostrarApp() {
   cargarWebdevPaquetes();
   cargarWebdevExtras();
   cargarCotizaciones();
+  cargarPedidos();
 }
 
 /* ── Olvidé mi contraseña ── */
@@ -1820,6 +1905,145 @@ document.getElementById('mbg').addEventListener('click', e => {
 document.getElementById('cotMbg').addEventListener('click', e => {
   if (e.target === document.getElementById('cotMbg')) cerrarCotModal();
 });
+document.getElementById('pedidoMbg').addEventListener('click', e => {
+  if (e.target === document.getElementById('pedidoMbg')) cerrarPedidoModal();
+});
+
+/* ── Pedidos en línea ── */
+const PD_ESTATUS_ENVIO_INFO = {
+  confirmado:  { label: '💳 Pago confirmado', cls: 'badge-confirmado' },
+  preparacion: { label: '🎨 En preparación',  cls: 'badge-preparacion' },
+  transito:    { label: '🚚 En tránsito',     cls: 'badge-transito' },
+  entregado:   { label: '✅ Entregado',       cls: 'badge-entregado' },
+  cancelado:   { label: '✕ Cancelado',        cls: 'badge-cancelado' }
+};
+const PD_ESTATUS_PAGO_INFO = {
+  pendiente: { label: 'Pendiente', cls: 'badge-pendiente' },
+  pagado:    { label: 'Pagado',    cls: 'badge-pagado' },
+  rechazado: { label: 'Rechazado', cls: 'badge-rechazado' }
+};
+
+let pedidos = [], pedidoActual = null;
+
+async function cargarPedidos() {
+  document.getElementById('pdtbody').innerHTML = '<div class="loading">Cargando pedidos…</div>';
+  try {
+    pedidos = await sbGet('pedidos?select=*,pedido_items(*)&order=creado_en.desc');
+  } catch (e) {
+    document.getElementById('pdtbody').innerHTML = '<div class="empty">⚠️ No se pudo cargar (¿ya ejecutaste supabase_pedidos.sql?)</div>';
+    return;
+  }
+  filtrarPedidos();
+}
+
+function pedidosPagadosDe(userId) {
+  return pedidos.filter(p => p.user_id === userId && p.estatus_pago === 'pagado').length;
+}
+
+function distintivoCliente(userId) {
+  const n = pedidosPagadosDe(userId);
+  if (n >= 10) return '<span class="premium-badge" title="10 o más pedidos pagados">👑 Premium</span>';
+  if (n >= 2) return '<span class="freq-badge" title="2 o más pedidos pagados">⭐ Frecuente</span>';
+  return '';
+}
+
+function actualizarStatsPedidos(list) {
+  document.getElementById('pd1').textContent = list.length;
+  document.getElementById('pd2').textContent = list.filter(p => p.estatus_envio === 'preparacion').length;
+  document.getElementById('pd3').textContent = list.filter(p => p.estatus_envio === 'transito').length;
+  document.getElementById('pd4').textContent = list.filter(p => p.estatus_envio === 'entregado').length;
+  document.getElementById('pd5').textContent = list.filter(p => p.estatus_pago === 'pendiente').length;
+}
+
+function filtrarPedidos() {
+  const q = document.getElementById('pdq').value.toLowerCase();
+  const estatus = document.getElementById('pdestatus').value;
+  const filtrados = pedidos.filter(p =>
+    (!q || p.cliente_nombre.toLowerCase().includes(q) || String(p.id).includes(q)) &&
+    (!estatus || p.estatus_envio === estatus)
+  );
+  renderPedidosTabla(filtrados);
+  actualizarStatsPedidos(pedidos);
+}
+
+function renderPedidosTabla(list) {
+  const tbody = document.getElementById('pdtbody');
+  if (!list.length) {
+    tbody.innerHTML = '<div class="empty">No hay pedidos todavía.</div>';
+    return;
+  }
+  tbody.innerHTML = list.map(p => {
+    const pagoInfo = PD_ESTATUS_PAGO_INFO[p.estatus_pago] || PD_ESTATUS_PAGO_INFO.pendiente;
+    const envioInfo = PD_ESTATUS_ENVIO_INFO[p.estatus_envio] || PD_ESTATUS_ENVIO_INFO.confirmado;
+    const fecha = new Date(p.creado_en).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+    return `<div class="tr" style="grid-template-columns:80px 1fr 100px 120px 150px 90px 70px">
+      <div><b>#${p.id}</b></div>
+      <div>${escapeHtml(p.cliente_nombre)} ${distintivoCliente(p.user_id)}</div>
+      <div>${fmtMXNAdmin(p.total)}</div>
+      <div><span class="cbadge ${pagoInfo.cls}">${pagoInfo.label}</span></div>
+      <div><span class="cbadge ${envioInfo.cls}">${envioInfo.label}</span></div>
+      <div>${fecha}</div>
+      <div class="actions"><button class="btn btn-g btn-sm" onclick="verPedidoAdmin(${p.id})">👁️ Ver</button></div>
+    </div>`;
+  }).join('');
+}
+
+function fmtMXNAdmin(n) {
+  return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+}
+
+function verPedidoAdmin(id) {
+  const p = pedidos.find(x => x.id === id);
+  if (!p) return;
+  pedidoActual = p;
+  const fecha = new Date(p.creado_en).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  document.getElementById('pdTitulo').textContent = `Pedido #${p.id}`;
+  document.getElementById('pdSub').textContent = `Creado el ${fecha} · Estatus de pago: ${(PD_ESTATUS_PAGO_INFO[p.estatus_pago]||{}).label || p.estatus_pago}`;
+  document.getElementById('pdCliente').innerHTML = `
+    <div style="font-size:13px;padding:4px 0"><b>${escapeHtml(p.cliente_nombre)}</b> ${distintivoCliente(p.user_id)}</div>
+    <div style="font-size:12px;color:#9090A8">${escapeHtml(p.cliente_telefono)} · ${escapeHtml(p.cliente_email)}</div>`;
+  document.getElementById('pdDireccion').innerHTML =
+    `${escapeHtml(p.calle)} ${escapeHtml(p.numero)}, ${escapeHtml(p.colonia)}, ${escapeHtml(p.ciudad)}, ${escapeHtml(p.cp)}` +
+    (p.entre_calles ? `<br>Entre calles: ${escapeHtml(p.entre_calles)}` : '') +
+    (p.notas ? `<br><i>Notas: ${escapeHtml(p.notas)}</i>` : '');
+
+  const items = p.pedido_items || [];
+  document.getElementById('pdItems').innerHTML = items.map(it => `
+    <div style="display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #F2F2F2;font-size:12.5px">
+      <div>
+        <div style="font-weight:700">${escapeHtml(it.producto_nombre)}</div>
+        <div style="color:#9090A8;font-size:11px">${it.variante ? escapeHtml(it.variante) + ' · ' : ''}x${it.cantidad}${it.combined_url ? ' · 🎨 con diseño' : ''}</div>
+      </div>
+      <div style="font-weight:800;white-space:nowrap">${fmtMXNAdmin(it.precio_unitario * it.cantidad)}</div>
+    </div>`).join('') || '<div class="empty">Sin productos</div>';
+
+  document.getElementById('pdTotal').textContent = fmtMXNAdmin(p.total);
+  document.getElementById('pdSelEstatus').value = p.estatus_envio;
+  document.getElementById('pedidoMbg').style.display = 'flex';
+}
+
+function cerrarPedidoModal() {
+  document.getElementById('pedidoMbg').style.display = 'none';
+}
+
+async function guardarEstatusPedido() {
+  if (!pedidoActual) return;
+  const nuevoEstatus = document.getElementById('pdSelEstatus').value;
+  const btn = document.getElementById('pdGuardarBtn');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  try {
+    await sbPatch(`pedidos?id=eq.${pedidoActual.id}`, { estatus_envio: nuevoEstatus, actualizado_en: new Date().toISOString() });
+    pedidoActual.estatus_envio = nuevoEstatus;
+    toast('✓ Estatus actualizado', 'ok');
+    filtrarPedidos();
+    cerrarPedidoModal();
+  } catch (e) {
+    toast('Error: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Guardar estatus';
+  }
+}
 
 if (!checkRecoveryLink()) {
   if (session && session.access_token) {
