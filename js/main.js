@@ -1207,8 +1207,9 @@ function direccionCheckoutHtml() {
     </div>
     <div class="cart-form-row">
       <div class="cart-field"><label>Colonia *</label><input type="text" id="ckColonia" autocomplete="address-line2" value="${escapeHtmlMain(d.colonia || '')}"></div>
-      <div class="cart-field"><label>C.P. *</label><input type="text" inputmode="numeric" id="ckCp" autocomplete="postal-code" value="${escapeHtmlMain(d.cp || '')}"></div>
+      <div class="cart-field"><label>C.P. *</label><input type="text" inputmode="numeric" id="ckCp" autocomplete="postal-code" value="${escapeHtmlMain(d.cp || '')}" oninput="onCpInput('ck')"></div>
     </div>
+    <div class="colonia-suggestions" id="ckColoniaSugerencias"></div>
     <div class="cart-form-row">
       <div class="cart-field"><label>Ciudad *</label><input type="text" id="ckCiudad" autocomplete="address-level2" value="${escapeHtmlMain(d.ciudad || '')}"></div>
       <div class="cart-field"><label>Entre calles (opcional)</label><input type="text" id="ckEntreCalles" autocomplete="off" value="${escapeHtmlMain(d.entre_calles || '')}"></div>
@@ -1218,6 +1219,42 @@ function direccionCheckoutHtml() {
 
 function escapeHtmlMain(str) {
   return String(str ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+}
+
+let cpLookupTimer = null;
+let ultimasColoniasCp = {}; // prefix ('ck'|'df') -> { colonias: [...], ciudad }
+
+function onCpInput(prefix) {
+  const cont = document.getElementById(prefix + 'ColoniaSugerencias');
+  if (cpLookupTimer) clearTimeout(cpLookupTimer);
+  const cp = document.getElementById(prefix + 'Cp').value.trim();
+  if (!/^\d{5}$/.test(cp)) { if (cont) cont.innerHTML = ''; return; }
+  cpLookupTimer = setTimeout(() => buscarColoniasPorCp(prefix, cp), 400);
+}
+
+async function buscarColoniasPorCp(prefix, cp) {
+  const cont = document.getElementById(prefix + 'ColoniaSugerencias');
+  if (!cont) return;
+  cont.innerHTML = '<div class="colonia-loading">Buscando colonias…</div>';
+  try {
+    const r = await fetch(`/api/cp-colonias?cp=${cp}`);
+    const data = await r.json();
+    if (!r.ok || !data.colonias || !data.colonias.length) { cont.innerHTML = ''; return; }
+    ultimasColoniasCp[prefix] = data;
+    cont.innerHTML = `<div class="colonia-suggestions-lbl">Selecciona tu colonia:</div>
+      <div class="colonia-chips">
+        ${data.colonias.map((c, i) => `<button type="button" class="colonia-chip" onclick="elegirColonia('${prefix}',${i})">${escapeHtmlMain(c)}</button>`).join('')}
+      </div>`;
+  } catch (e) { cont.innerHTML = ''; }
+}
+
+function elegirColonia(prefix, idx) {
+  const data = ultimasColoniasCp[prefix];
+  if (!data) return;
+  document.getElementById(prefix + 'Colonia').value = data.colonias[idx];
+  const ciudadEl = document.getElementById(prefix + 'Ciudad');
+  if (ciudadEl && !ciudadEl.value.trim()) ciudadEl.value = data.ciudad;
+  document.getElementById(prefix + 'ColoniaSugerencias').innerHTML = '';
 }
 
 function renderCarritoPanel() {
@@ -1484,8 +1521,9 @@ function direccionFormHtml() {
       </div>
       <div class="cart-form-row">
         <div class="cart-field"><label>Colonia *</label><input type="text" id="dfColonia" autocomplete="address-line2" value="${escapeHtmlMain(d.colonia || '')}"></div>
-        <div class="cart-field"><label>C.P. *</label><input type="text" inputmode="numeric" id="dfCp" autocomplete="postal-code" value="${escapeHtmlMain(d.cp || '')}"></div>
+        <div class="cart-field"><label>C.P. *</label><input type="text" inputmode="numeric" id="dfCp" autocomplete="postal-code" value="${escapeHtmlMain(d.cp || '')}" oninput="onCpInput('df')"></div>
       </div>
+      <div class="colonia-suggestions" id="dfColoniaSugerencias"></div>
       <div class="cart-form-row">
         <div class="cart-field"><label>Ciudad *</label><input type="text" id="dfCiudad" autocomplete="address-level2" value="${escapeHtmlMain(d.ciudad || '')}"></div>
         <div class="cart-field" style="margin-bottom:0"><label>Entre calles (opcional)</label><input type="text" id="dfEntreCalles" autocomplete="off" value="${escapeHtmlMain(d.entre_calles || '')}"></div>
