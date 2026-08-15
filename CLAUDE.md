@@ -34,7 +34,8 @@ Sitio web de **Happy Prints** (Toluca, México) — catálogo y venta de product
 │   ├── mp-crear-preferencia.js # Crea la preferencia de pago de Mercado Pago para un curso (requiere sesión)
 │   ├── mp-webhook.js           # Recibe la confirmación de pago de un curso y activa el acceso
 │   ├── mp-crear-preferencia-pedido.js # Crea la preferencia de pago de Mercado Pago para un pedido del carrito
-│   └── mp-webhook-pedido.js     # Recibe la confirmación de pago de un pedido y actualiza su estatus
+│   ├── mp-webhook-pedido.js     # Recibe la confirmación de pago de un pedido y actualiza su estatus
+│   └── cp-colonias.js           # Proxy server-side a la API externa codigos.zip (colonias por C.P.)
 ├── /assets/images
 ├── supabase_*.sql             # Scripts SQL sueltos para correr manualmente en el editor SQL de Supabase
 │                                # (RLS, tablas de galería, paquetes de experiencia, ítems de cotización, tallas,
@@ -85,6 +86,7 @@ Tablas principales usadas por el frontend: `categorias`, `productos`, `precios_n
 
 **Cuenta de cliente y carrito de compras** (`index.html` + `js/main.js`) — cubre todo el catálogo público (no solo Cursos):
 - **Reutiliza la misma cuenta/sesión que `/pages/cursos`**: ambos guardan la sesión en `localStorage` bajo la llave `hp_cursos_session`, así que iniciar sesión en un lado sirve en el otro. El popup de login/registro/recuperar contraseña de `index.html` es una versión compacta (modal, no pantalla completa) del mismo flujo de `js/cursos.js`.
+- **Renovación de sesión**: el `access_token` de Supabase expira (1h por default), así que toda llamada autenticada (`sbAuthGet`/`sbAuthWrite` en `js/main.js`, `get()`/`comprarCurso()` en `js/cursos.js`) pasa primero por `ensureFreshSession()`, que si el token ya venció o está por vencer lo renueva con el `refresh_token` guardado (`/auth/v1/token?grant_type=refresh_token`) antes de seguir. Si la renovación falla (refresh_token también inválido), cierra la sesión localmente y avisa con un mensaje claro en vez de dejar pasar el error crudo de Supabase ("JWT expired"). Esta función está duplicada igual en ambos archivos (mismo patrón que el resto del sitio: sin módulos compartidos entre `<script>`).
 - Tres íconos en el menú de **todas** las páginas del sitio (donde antes vivían los íconos de redes sociales, que se movieron al `<footer>`): **Mi Perfil**, **Mis Favoritos**, **Mi Carrito**. Solo `index.html` tiene la funcionalidad real (abre los paneles); en el resto de las páginas son enlaces a `/`, ya que ahí es donde vive todo el catálogo/`allProds`.
 - Navegar el catálogo **no** requiere cuenta — solo se pide al dar clic en Carrito/Favoritos/Perfil, o al intentar "Agregar al carrito" desde el modal de un producto (botón nuevo junto a "Pedir por WhatsApp", que sigue intacto).
 - El carrito vive en `localStorage` (`hp_carrito`) — no se sincroniza entre dispositivos, a diferencia de Mis Favoritos/Mi Perfil/Mis Pedidos que sí están en Supabase.
@@ -94,6 +96,7 @@ Tablas principales usadas por el frontend: `categorias`, `productos`, `precios_n
 - El pago usa el mismo patrón Checkout Pro que Cursos, con sus propias funciones dedicadas para no mezclar los dos flujos: `api/mp-crear-preferencia-pedido.js` (verifica sesión, **recalcula los precios en el servidor con la misma lógica de `calcLineTotal` portada a Node** — nunca confía en lo que manda el navegador —, fija el envío en $185 sin importar lo que mande el cliente, crea `pedidos`/`pedido_items` con la `service_role key`, crea la preferencia) y `api/mp-webhook-pedido.js` (confirma el pago directo contra la API de Mercado Pago y actualiza `estatus_pago`).
 - `pedidos.estatus_pago` (`pendiente`/`pagado`/`rechazado`) solo lo cambia el webhook. `pedidos.estatus_envio` (`confirmado`/`preparacion`/`transito`/`entregado`/`cancelado`) lo cambia la admin desde la pestaña "📦 Pedidos en línea" de `admin.html`, que también muestra un distintivo junto al nombre del cliente según cuántos pedidos pagados lleva: ⭐ "Frecuente" (2+) y 👑 "Premium" (10+).
 - Al volver de Mercado Pago, `index.html` recibe `?pedido=approved|pending|failure` y muestra una pantalla de agradecimiento/estatus (`mostrarThanksSiAplica()` en `js/main.js`) — si fue aprobado, además vacía el carrito.
+- **Autocompletado de colonia por C.P.**: en el campo C.P. del checkout (`ckCp`) y de "Agregar/editar dirección" en Mi Perfil (`dfCp`), al teclear 5 dígitos `js/main.js` llama (con debounce) a `api/cp-colonias.js`, que consulta del lado del servidor la API externa **codigos.zip** (`https://api.codigos.zip/api/zip/{cp}?pais=MX`, autenticada con el header `X-API-Key` y la variable de entorno `CODIGOS_ZIP_API_KEY`, nunca expuesta al navegador) y devuelve `{ colonias, ciudad, estado }`. El resultado se muestra como chips debajo del campo Colonia; al elegir una se rellena el campo Colonia y, si Ciudad está vacío, también Ciudad — el campo Colonia sigue siendo de texto libre por si el C.P. no da resultados.
 
 ## Convenciones de código
 - HTML semántico: `<header>`, `<main>`, `<section>`, `<footer>`, `<nav>` en vez de `<div>` genéricos donde aplique.
@@ -110,7 +113,7 @@ Tablas principales usadas por el frontend: `categorias`, `productos`, `precios_n
 ## Reglas inmutables
 - SIEMPRE probar que el sitio funcione abriendo `index.html` directamente o con un servidor local (`npx serve .`), sin depender de un paso de compilación.
 - SIEMPRE mantener el HTML, CSS y JS del sitio público en archivos separados (no mezclar estilos o scripts inline salvo casos justificados). `admin.html` y `dashboard.html` son la excepción deliberada (paneles internos, no enlazados públicamente).
-- NUNCA incluir credenciales, claves de API o datos de pago reales en el código. La anon key de Supabase que ya está en el código es pública por diseño (protegida por RLS) — no confundir con un secreto; nunca agregar la `service_role key` de Supabase, el `DASHBOARD_KEY` ni el `MERCADOPAGO_ACCESS_TOKEN` al repo (solo como variables de entorno en Vercel).
+- NUNCA incluir credenciales, claves de API o datos de pago reales en el código. La anon key de Supabase que ya está en el código es pública por diseño (protegida por RLS) — no confundir con un secreto; nunca agregar la `service_role key` de Supabase, el `DASHBOARD_KEY`, el `MERCADOPAGO_ACCESS_TOKEN` ni el `CODIGOS_ZIP_API_KEY` al repo (solo como variables de entorno en Vercel).
 - Al agregar o modificar tablas de Supabase, siempre actualizar/crear las políticas RLS correspondientes (ver `supabase_rls.sql`) y documentar el script SQL nuevo en la raíz siguiendo el patrón `supabase_<tabla>.sql`.
 - Priorizar accesibilidad básica: atributos `alt` en imágenes, buen contraste de color, navegación por teclado.
 
