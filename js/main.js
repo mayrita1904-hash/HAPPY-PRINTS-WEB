@@ -893,6 +893,7 @@ function fmtMoney(n) { return fmt(n); }
 
 /* ── Helpers autenticados a Supabase (a diferencia de get(), mandan el token del cliente) ── */
 async function sbAuthGet(path) {
+  await ensureFreshSession();
   const r = await fetch(SB_URL + '/rest/v1/' + path, {
     headers: { apikey: SB_KEY, Authorization: 'Bearer ' + (session ? session.access_token : SB_KEY) }
   });
@@ -900,6 +901,7 @@ async function sbAuthGet(path) {
   return r.json();
 }
 async function sbAuthWrite(method, path, body) {
+  await ensureFreshSession();
   const r = await fetch(SB_URL + '/rest/v1/' + path, {
     method,
     headers: {
@@ -913,8 +915,31 @@ async function sbAuthWrite(method, path, body) {
 }
 
 function guardarSesion(data) {
+  if (data && data.expires_in && !data.expires_at) data.expires_at = Math.floor(Date.now() / 1000) + data.expires_in;
   session = data;
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+
+/* El access_token de Supabase expira (por default en 1h) — si ya venció o está por vencer,
+   lo renovamos con el refresh_token antes de usarlo, para que una sesión abierta desde hace
+   rato no truene con "JWT expired" al guardar el perfil, una dirección, etc. */
+async function ensureFreshSession() {
+  if (!session || !session.refresh_token || !session.expires_at) return;
+  if (Math.floor(Date.now() / 1000) < session.expires_at - 60) return;
+  try {
+    const r = await fetch(SB_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: session.refresh_token })
+    });
+    const data = await r.json();
+    if (r.ok && data.access_token) { guardarSesion(data); return; }
+    cerrarSesionCuenta();
+    throw new Error('Tu sesión expiró. Vuelve a iniciar sesión.');
+  } catch (e) {
+    if (e.message === 'Tu sesión expiró. Vuelve a iniciar sesión.') throw e;
+    /* error de red al renovar: dejamos pasar, la llamada siguiente fallará con su propio error */
+  }
 }
 function cerrarSesionCuenta() {
   session = null;
@@ -1109,6 +1134,7 @@ async function abrirCarrito() {
   try {
     if (!perfilData) await cargarPerfil();
     if (!direcciones.length) await cargarDirecciones();
+    if (!session) return; // la sesión pudo cerrarse a media carga (ej. token vencido sin poder renovarse)
     renderCarritoPanel();
   } catch (e) { /* el checkout sigue usable, solo no viene prellenado */ }
 }
@@ -1119,6 +1145,7 @@ async function abrirPerfil() {
   abrirPanelOv('perfilOv');
   try {
     await Promise.all([cargarPerfil(), cargarDirecciones(), cargarMisPedidos()]);
+    if (!session) return; // la sesión pudo cerrarse a media carga (ej. token vencido sin poder renovarse)
     renderPerfilPanel();
   } catch (e) {
     document.getElementById('perfilBody').innerHTML = '<div class="cart-empty-hint">No se pudo cargar tu perfil. Intenta de nuevo más tarde.</div>';
@@ -1131,6 +1158,7 @@ async function abrirFavoritos() {
   abrirPanelOv('favOv');
   try {
     await cargarFavoritosCompletos();
+    if (!session) return; // la sesión pudo cerrarse a media carga (ej. token vencido sin poder renovarse)
     renderFavoritosPanel();
   } catch (e) {
     document.getElementById('favBody').innerHTML = '<div class="cart-empty-hint">No se pudieron cargar tus favoritos.</div>';
@@ -1354,6 +1382,7 @@ async function pagarConMercadoPago() {
   btn.disabled = true; btn.textContent = 'Preparando pago…';
 
   try {
+    await ensureFreshSession();
     const items = carrito.map(l => ({
       producto_id: l.producto_id, cantidad: l.qty, talla: l.talla, hojas: l.hojas,
       attach_url: l.attachUrl || null, combined_url: l.combinedUrl || null
@@ -1488,6 +1517,7 @@ async function cambiarContrasenaCuenta() {
   if (!nueva) return;
   if (nueva.length < 6) { alert('La contraseña debe tener al menos 6 caracteres.'); return; }
   try {
+    await ensureFreshSession();
     const r = await fetch(SB_URL + '/auth/v1/user', {
       method: 'PUT',
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
