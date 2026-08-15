@@ -10,8 +10,31 @@ function fmtMoney(n) {
 }
 
 function guardarSesion(data) {
+  if (data && data.expires_in && !data.expires_at) data.expires_at = Math.floor(Date.now() / 1000) + data.expires_in;
   session = data;
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+
+/* El access_token de Supabase expira (por default en 1h) — si ya venció o está por vencer,
+   lo renovamos con el refresh_token antes de usarlo, para que una sesión abierta desde hace
+   rato no truene al cargar cursos o comprar. */
+async function ensureFreshSession() {
+  if (!session || !session.refresh_token || !session.expires_at) return;
+  if (Math.floor(Date.now() / 1000) < session.expires_at - 60) return;
+  try {
+    const r = await fetch(SB_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: session.refresh_token })
+    });
+    const data = await r.json();
+    if (r.ok && data.access_token) { guardarSesion(data); return; }
+    cerrarSesion();
+    throw new Error('Tu sesión expiró. Vuelve a iniciar sesión.');
+  } catch (e) {
+    if (e.message === 'Tu sesión expiró. Vuelve a iniciar sesión.') throw e;
+    /* error de red al renovar: dejamos pasar, la llamada siguiente fallará con su propio error */
+  }
 }
 
 function cerrarSesion() {
@@ -174,6 +197,7 @@ async function confirmarReset() {
 
 /* ── Catálogo ── */
 async function get(path, extraHeaders) {
+  await ensureFreshSession();
   const r = await fetch(SB_URL + '/rest/v1/' + path, {
     headers: Object.assign({ 'apikey': SB_KEY, 'Authorization': 'Bearer ' + (session ? session.access_token : SB_KEY) }, extraHeaders || {})
   });
@@ -243,6 +267,7 @@ async function comprarCurso(cursoId, btn) {
   const textoOriginal = btn.textContent;
   btn.textContent = 'Preparando pago…';
   try {
+    await ensureFreshSession();
     const r = await fetch('/api/mp-crear-preferencia', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
