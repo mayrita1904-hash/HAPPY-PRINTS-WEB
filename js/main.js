@@ -977,6 +977,15 @@ function cerrarLoginPopup() {
   document.getElementById('loginPopupOv').classList.remove('open');
 }
 
+/* Verificación antibots (Cloudflare Turnstile) — un solo widget arriba de las
+   pestañas de login/registro, se reutiliza para las 3 acciones de esta tarjeta. */
+let turnstileTokenPopup = null;
+function onTurnstileLoginPopup(token) { turnstileTokenPopup = token; }
+function resetTurnstilePopup() {
+  turnstileTokenPopup = null;
+  if (window.turnstile) turnstile.reset('#lpTurnstile');
+}
+
 async function doLoginPopup() {
   const email = document.getElementById('lpLoginEmail').value.trim();
   const pass = document.getElementById('lpLoginPass').value;
@@ -984,12 +993,13 @@ async function doLoginPopup() {
   const btn = document.getElementById('lpLoginBtn');
   err.style.display = 'none';
   if (!email || !pass) { err.textContent = 'Ingresa tu correo y contraseña.'; err.style.display = 'block'; return; }
+  if (!turnstileTokenPopup) { err.textContent = 'Espera un segundo, terminando de verificar que no eres un robot…'; err.style.display = 'block'; return; }
   btn.disabled = true; btn.textContent = 'Entrando…';
   try {
     const r = await fetch(SB_URL + '/auth/v1/token?grant_type=password', {
       method: 'POST',
       headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pass })
+      body: JSON.stringify({ email, password: pass, gotrue_meta_security: { captcha_token: turnstileTokenPopup } })
     });
     const data = await r.json();
     if (!r.ok) {
@@ -1006,6 +1016,7 @@ async function doLoginPopup() {
     err.style.display = 'block';
   } finally {
     btn.disabled = false; btn.textContent = 'Iniciar sesión';
+    resetTurnstilePopup();
   }
 }
 
@@ -1019,13 +1030,14 @@ async function doRegistroPopup() {
   err.style.display = 'none'; ok.style.display = 'none';
   if (!nombre || !email || !pass) { err.textContent = 'Completa nombre, correo y contraseña.'; err.style.display = 'block'; return; }
   if (pass.length < 6) { err.textContent = 'La contraseña debe tener al menos 6 caracteres.'; err.style.display = 'block'; return; }
+  if (!turnstileTokenPopup) { err.textContent = 'Espera un segundo, terminando de verificar que no eres un robot…'; err.style.display = 'block'; return; }
 
   btn.disabled = true; btn.textContent = 'Creando cuenta…';
   try {
     const r = await fetch(SB_URL + '/auth/v1/signup', {
       method: 'POST',
       headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pass, data: { nombre } })
+      body: JSON.stringify({ email, password: pass, data: { nombre }, gotrue_meta_security: { captcha_token: turnstileTokenPopup } })
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.msg || data.error_description || data.error || 'No se pudo crear la cuenta.');
@@ -1046,6 +1058,7 @@ async function doRegistroPopup() {
     err.style.display = 'block';
   } finally {
     btn.disabled = false; btn.textContent = 'Crear cuenta';
+    resetTurnstilePopup();
   }
 }
 
@@ -1053,11 +1066,12 @@ async function forgotPasswordPopup() {
   const email = document.getElementById('lpLoginEmail').value.trim();
   const err = document.getElementById('lpLoginErr');
   if (!email) { err.textContent = 'Escribe tu correo arriba primero.'; err.style.display = 'block'; return; }
+  if (!turnstileTokenPopup) { err.textContent = 'Espera un segundo, terminando de verificar que no eres un robot…'; err.style.display = 'block'; return; }
   try {
     const r = await fetch(SB_URL + '/auth/v1/recover', {
       method: 'POST',
       headers: { apikey: SB_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, options: { redirect_to: location.origin + '/' } })
+      body: JSON.stringify({ email, options: { redirect_to: location.origin + '/' }, gotrue_meta_security: { captcha_token: turnstileTokenPopup } })
     });
     if (!r.ok) throw new Error((await r.json()).msg || 'No se pudo enviar el correo.');
     err.style.display = 'none';
@@ -1065,6 +1079,8 @@ async function forgotPasswordPopup() {
   } catch (e) {
     err.textContent = e.message;
     err.style.display = 'block';
+  } finally {
+    resetTurnstilePopup();
   }
 }
 

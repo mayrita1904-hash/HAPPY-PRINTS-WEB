@@ -55,6 +55,15 @@ function mostrarTabAuth(tab) {
     : 'Crea tu cuenta para ver el catálogo';
 }
 
+/* Verificación antibots (Cloudflare Turnstile) — un solo widget arriba de las
+   pestañas de login/registro, se reutiliza para las 3 acciones de esta tarjeta. */
+let turnstileTokenCursos = null;
+function onTurnstileCursos(token) { turnstileTokenCursos = token; }
+function resetTurnstileCursos() {
+  turnstileTokenCursos = null;
+  if (window.turnstile) turnstile.reset('#cursosTurnstile');
+}
+
 /* ── Iniciar sesión ── */
 async function doLogin() {
   const email = document.getElementById('loginEmail').value.trim();
@@ -63,12 +72,13 @@ async function doLogin() {
   const btn = document.getElementById('loginBtn');
   err.style.display = 'none';
   if (!email || !pass) { err.textContent = 'Ingresa tu correo y contraseña.'; err.style.display = 'block'; return; }
+  if (!turnstileTokenCursos) { err.textContent = 'Espera un segundo, terminando de verificar que no eres un robot…'; err.style.display = 'block'; return; }
   btn.disabled = true; btn.textContent = 'Entrando…';
   try {
     const r = await fetch(SB_URL + '/auth/v1/token?grant_type=password', {
       method: 'POST',
       headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pass })
+      body: JSON.stringify({ email, password: pass, gotrue_meta_security: { captcha_token: turnstileTokenCursos } })
     });
     const data = await r.json();
     if (!r.ok) {
@@ -84,6 +94,7 @@ async function doLogin() {
     err.style.display = 'block';
   } finally {
     btn.disabled = false; btn.textContent = 'Iniciar sesión';
+    resetTurnstileCursos();
   }
 }
 
@@ -101,13 +112,14 @@ async function doRegistro() {
   if (!nombre || !email || !pass) { err.textContent = 'Completa nombre, correo y contraseña.'; err.style.display = 'block'; return; }
   if (pass.length < 6) { err.textContent = 'La contraseña debe tener al menos 6 caracteres.'; err.style.display = 'block'; return; }
   if (pass !== pass2) { err.textContent = 'Las contraseñas no coinciden.'; err.style.display = 'block'; return; }
+  if (!turnstileTokenCursos) { err.textContent = 'Espera un segundo, terminando de verificar que no eres un robot…'; err.style.display = 'block'; return; }
 
   btn.disabled = true; btn.textContent = 'Creando cuenta…';
   try {
     const r = await fetch(SB_URL + '/auth/v1/signup', {
       method: 'POST',
       headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pass, data: { nombre } })
+      body: JSON.stringify({ email, password: pass, data: { nombre }, gotrue_meta_security: { captcha_token: turnstileTokenCursos } })
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.msg || data.error_description || data.error || 'No se pudo crear la cuenta.');
@@ -129,6 +141,7 @@ async function doRegistro() {
     err.style.display = 'block';
   } finally {
     btn.disabled = false; btn.textContent = 'Crear cuenta';
+    resetTurnstileCursos();
   }
 }
 
@@ -137,11 +150,12 @@ async function forgotPassword() {
   const email = document.getElementById('loginEmail').value.trim();
   const err = document.getElementById('loginErr');
   if (!email) { err.textContent = 'Escribe tu correo arriba primero.'; err.style.display = 'block'; return; }
+  if (!turnstileTokenCursos) { err.textContent = 'Espera un segundo, terminando de verificar que no eres un robot…'; err.style.display = 'block'; return; }
   try {
     const r = await fetch(SB_URL + '/auth/v1/recover', {
       method: 'POST',
       headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, options: { redirect_to: window.location.href.split('#')[0] } })
+      body: JSON.stringify({ email, options: { redirect_to: window.location.href.split('#')[0] }, gotrue_meta_security: { captcha_token: turnstileTokenCursos } })
     });
     if (!r.ok) throw new Error((await r.json()).msg || 'No se pudo enviar el correo.');
     err.style.display = 'none';
@@ -149,6 +163,8 @@ async function forgotPassword() {
   } catch (e) {
     err.textContent = e.message;
     err.style.display = 'block';
+  } finally {
+    resetTurnstileCursos();
   }
 }
 
