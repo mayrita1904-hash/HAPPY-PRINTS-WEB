@@ -215,36 +215,57 @@ function estadoCurso(curso, inscripciones) {
   return 'ninguno';
 }
 
+const CURSO_ICONS = ['📓', '✂️', '🎨', '📐', '🧵', '🖨️'];
+let cursosCache = [];
+let inscripcionesCache = [];
+let videosPagadosMap = {};
+
 function renderCursos(cursos, inscripciones) {
   const grid = document.getElementById('cursoGrid');
   if (!cursos.length) {
     grid.innerHTML = '<div class="cursos-empty-msg">Muy pronto publicaremos los cursos disponibles.</div>';
+    actualizarContadorCursos(0);
     return;
   }
-  grid.innerHTML = cursos.map(c => {
-    const estado = estadoCurso(c, inscripciones);
-    let boton;
-    if (estado === 'pagado') {
-      boton = '<button type="button" class="curso-card-btn is-ok" disabled>✅ Acceso activo</button><div class="curso-card-note">Muy pronto subimos las lecciones aquí</div>';
-    } else if (estado === 'pendiente') {
-      boton = '<button type="button" class="curso-card-btn" disabled>⏳ Confirmando tu pago…</button>';
-    } else {
-      boton = `<button type="button" class="curso-card-btn" onclick="comprarCurso(${c.id}, this)">Comprar — ${fmtMoney(c.precio)}</button>`;
-    }
+  grid.innerHTML = cursos.map((c, i) => {
+    const img = c.imagen_url ? `<img src="${c.imagen_url}" alt="${escapeHtml(c.nombre)}">` : CURSO_ICONS[i % CURSO_ICONS.length];
     return `
-      <div class="curso-card">
-        <div class="curso-card-head">${escapeHtml(c.nombre)}</div>
+      <div class="curso-card" data-nombre="${escapeHtml((c.nombre + ' ' + (c.descripcion || '')).toLowerCase())}">
+        <div class="curso-card-img">${img}<span class="curso-card-badge">🎓 Curso online</span></div>
         <div class="curso-card-body">
+          <div class="curso-card-title">${escapeHtml(c.nombre)}</div>
           <div class="curso-card-desc">${escapeHtml(c.descripcion || '')}</div>
-          <div class="curso-card-price">${fmtMoney(c.precio)}</div>
-          ${boton}
+          <div class="curso-card-foot">
+            <div><div class="curso-card-price-lbl">Pago único</div><div class="curso-card-price">${fmtMoney(c.precio)}</div></div>
+          </div>
+          <button type="button" class="curso-card-btn" onclick="verDetalleCurso(${c.id})">Ver detalles</button>
         </div>
       </div>`;
   }).join('');
+  filtrarCursos();
 }
 
 function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+}
+
+function filtrarCursos() {
+  const input = document.getElementById('cursosBuscador');
+  const q = input ? input.value.trim().toLowerCase() : '';
+  const cards = document.querySelectorAll('#cursoGrid .curso-card');
+  let visibles = 0;
+  cards.forEach(c => {
+    const match = c.dataset.nombre.includes(q);
+    c.style.display = match ? '' : 'none';
+    if (match) visibles++;
+  });
+  actualizarContadorCursos(visibles);
+}
+
+function actualizarContadorCursos(n) {
+  const el = document.getElementById('cursosContador');
+  if (!el) return;
+  el.textContent = n === 0 ? 'Sin resultados' : (n + (n === 1 ? ' curso encontrado' : ' cursos disponibles'));
 }
 
 async function cargarCursos() {
@@ -252,13 +273,130 @@ async function cargarCursos() {
   grid.innerHTML = '<div class="cursos-empty-msg">Cargando cursos…</div>';
   try {
     const [cursos, inscripciones] = await Promise.all([
-      get('cursos?select=*&activo=eq.true&order=orden'),
+      get('cursos?select=*,curso_temas(*)&activo=eq.true&order=orden&curso_temas.order=orden'),
       get(`inscripciones?select=*&user_id=eq.${session.user.id}`)
     ]);
+    cursosCache = cursos;
+    inscripcionesCache = inscripciones;
     renderCursos(cursos, inscripciones);
   } catch (e) {
     grid.innerHTML = '<div class="cursos-empty-msg">No se pudieron cargar los cursos en este momento. Intenta de nuevo más tarde.</div>';
   }
+}
+
+/* ── Detalle del curso: para quién es / requisitos / qué aprenderás / temario ── */
+function bulletsHtml(texto, cls) {
+  const items = (texto || '').split('\n').map(s => s.trim()).filter(Boolean);
+  if (!items.length) return '<div class="cursos-empty-msg" style="padding:4px 0;text-align:left">Próximamente.</div>';
+  return `<ul class="bullets ${cls || ''}">${items.map(i => `<li>${escapeHtml(i)}</li>`).join('')}</ul>`;
+}
+
+function youtubeEmbedUrl(url) {
+  if (!url) return null;
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
+  return m ? `https://www.youtube-nocookie.com/embed/${m[1]}` : null;
+}
+
+async function verDetalleCurso(id) {
+  const c = cursosCache.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('pantallaCursosGrid').style.display = 'none';
+  const panel = document.getElementById('pantallaCursoDetalle');
+  panel.style.display = 'block';
+
+  const estado = estadoCurso(c, inscripcionesCache);
+  videosPagadosMap = {};
+  if (estado === 'pagado') {
+    const temaIds = (c.curso_temas || []).map(t => t.id);
+    if (temaIds.length) {
+      try {
+        const videos = await get(`curso_tema_videos?select=tema_id,youtube_url&tema_id=in.(${temaIds.join(',')})`);
+        videos.forEach(v => { videosPagadosMap[v.tema_id] = v.youtube_url; });
+      } catch (e) { /* si falla, el temario queda mostrando "video próximamente" */ }
+    }
+  }
+  renderDetalleCurso(c, estado);
+}
+
+function ctaDetalle(c, estado) {
+  if (estado === 'pagado') return '<div class="precio">✅ Ya tienes acceso</div>';
+  if (estado === 'pendiente') return `<div class="precio">${fmtMoney(c.precio)}</div><button type="button" class="curso-card-btn" disabled>⏳ Confirmando tu pago…</button>`;
+  return `<div class="precio">${fmtMoney(c.precio)}</div><button type="button" class="curso-card-btn" onclick="comprarCurso(${c.id}, this)">Comprar curso</button>`;
+}
+
+function temaRowHtml(cursoId, t, i, estado) {
+  const embed = estado === 'pagado' ? youtubeEmbedUrl(videosPagadosMap[t.id]) : null;
+  let videoHtml;
+  if (embed) {
+    videoHtml = `<div class="video-embed"><iframe src="${embed}" title="${escapeHtml(t.titulo)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+  } else if (estado === 'pagado') {
+    videoHtml = `<div class="video-locked"><div style="font-size:22px">🎬</div><span>El video de este tema se publicará pronto</span></div>`;
+  } else {
+    videoHtml = `<div class="video-locked"><div style="font-size:22px">🔒</div><span>Compra el curso para desbloquear este video</span></div>`;
+  }
+  return `
+    <div class="tema-row" id="tema-${cursoId}-${i}">
+      <div class="tema-head" onclick="toggleTemaCurso(${cursoId},${i})">
+        <div class="tema-num">${i + 1}</div>
+        <div class="tema-info">
+          <div class="tema-titulo">${escapeHtml(t.titulo)}</div>
+          ${t.duracion ? `<div class="tema-dur">${escapeHtml(t.duracion)}</div>` : ''}
+        </div>
+        <div class="tema-lock">${estado === 'pagado' ? '▶️' : '🔒'}</div>
+      </div>
+      <div class="tema-body">
+        ${t.descripcion ? `<div class="tema-desc">${escapeHtml(t.descripcion)}</div>` : ''}
+        ${videoHtml}
+      </div>
+    </div>`;
+}
+
+function renderDetalleCurso(c, estado) {
+  const panel = document.getElementById('pantallaCursoDetalle');
+  const temas = c.curso_temas || [];
+  const idx = cursosCache.indexOf(c);
+  const img = c.imagen_url ? `<img src="${c.imagen_url}" alt="">` : CURSO_ICONS[idx % CURSO_ICONS.length];
+  panel.innerHTML = `
+    <button class="detalle-back" onclick="volverCursosGrid()">← Volver a cursos</button>
+    <div class="detalle-card">
+      <div class="detalle-head">
+        <div class="detalle-head-icon">${img}</div>
+        <div>
+          <h2>${escapeHtml(c.nombre)}</h2>
+          <p>${escapeHtml(c.descripcion || '')}</p>
+        </div>
+        <div class="detalle-buy">${ctaDetalle(c, estado)}</div>
+      </div>
+      <div class="detalle-body">
+        <div class="detalle-section">
+          <h3>🎯 Para quién es</h3>
+          ${bulletsHtml(c.dirigido_a)}
+        </div>
+        <div class="detalle-section">
+          <h3>✅ Requisitos</h3>
+          ${bulletsHtml(c.requisitos, 'req')}
+        </div>
+        <div class="detalle-section">
+          <h3>📚 Qué vas a aprender</h3>
+          ${bulletsHtml(c.que_aprenderas, 'aprende')}
+        </div>
+        <div class="detalle-section">
+          <h3>🎬 Temario${temas.length ? ' (' + temas.length + ' temas)' : ''}</h3>
+          ${temas.length
+            ? `<div class="temario-list">${temas.map((t, i) => temaRowHtml(c.id, t, i, estado)).join('')}</div>`
+            : '<div class="cursos-empty-msg" style="padding:4px 0;text-align:left">El temario se publicará pronto.</div>'}
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleTemaCurso(cursoId, i) {
+  document.getElementById(`tema-${cursoId}-${i}`).classList.toggle('open');
+}
+
+function volverCursosGrid() {
+  document.getElementById('pantallaCursoDetalle').style.display = 'none';
+  document.getElementById('pantallaCursosGrid').style.display = 'block';
 }
 
 /* ── Comprar (Mercado Pago) ── */
