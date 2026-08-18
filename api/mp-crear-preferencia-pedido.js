@@ -63,6 +63,18 @@ module.exports = async (req, res) => {
       res.status(400).json({ error: 'Faltan datos del cliente o de la dirección' });
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cliente.correo)) {
+      res.status(400).json({ error: 'El correo no tiene un formato válido.' });
+      return;
+    }
+    if (String(cliente.telefono).replace(/\D/g, '').length !== 10) {
+      res.status(400).json({ error: 'El teléfono debe tener 10 dígitos.' });
+      return;
+    }
+    if (String(cliente.cp).replace(/\D/g, '').length !== 5) {
+      res.status(400).json({ error: 'El código postal debe tener 5 dígitos.' });
+      return;
+    }
 
     const ids = items.map(i => i.producto_id);
     const [productos, niveles] = await Promise.all([
