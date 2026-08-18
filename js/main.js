@@ -188,7 +188,7 @@ function buildChips() {
   const cats = allCats.filter(c => usedIds.has(c.id) || esCategoriaCotizacion(c.nombre));
   const chips = document.getElementById('cat-chips');
   chips.innerHTML = `<button class="chip on" data-cat="all" onclick="filt('all',this)"><span class="ci">🏷️</span><span class="cl">Todo</span></button>` +
-    cats.map(c => `<button class="chip" data-cat="${c.id}" onclick="filt(${c.id},this)"><span class="ci">${catEmoji(c.emoji||c.nombre)}</span><span class="cl">${c.nombre}</span></button>`).join('');
+    cats.map(c => `<button class="chip" data-cat="${c.id}" onclick="filt(${c.id},this)"><span class="ci">${catEmoji(c.emoji||c.nombre)}</span><span class="cl">${escapeHtmlMain(c.nombre)}</span></button>`).join('');
 }
 
 function filt(cat, chipEl) {
@@ -234,7 +234,7 @@ function renderGrid(cat) {
   const cardsHtml = visibleList.map(p => {
     const c = p.categorias || {};
     const imgTag = p.imagen_url
-      ? `<img class="cimg" src="${p.imagen_url}" alt="${p.nombre}${c.nombre ? ' - ' + c.nombre + ' personalizado' : ''} | Happy Prints" loading="lazy"
+      ? `<img class="cimg" src="${p.imagen_url}" alt="${escapeHtmlMain(p.nombre)}${c.nombre ? ' - ' + escapeHtmlMain(c.nombre) + ' personalizado' : ''} | Happy Prints" loading="lazy"
            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : '';
     const ph = `<div class="cph" style="${p.imagen_url ? 'display:none' : ''}">${catEmoji(c.emoji||c.nombre)}</div>`;
@@ -243,8 +243,8 @@ function renderGrid(cat) {
       <button class="card-heart ${favoritos.includes(p.id) ? 'on' : ''}" data-pid="${p.id}" onclick="event.stopPropagation();toggleFavorito(${p.id})" aria-label="Marcar como favorito">♥</button>
       ${imgTag}${ph}
       <div class="cbody">
-        <div class="cname">${p.nombre}</div>
-        <div class="cdesc">${(p.descripcion||'').substring(0,58)}${(p.descripcion||'').length>58?'…':''}</div>
+        <div class="cname">${escapeHtmlMain(p.nombre)}</div>
+        <div class="cdesc">${escapeHtmlMain((p.descripcion||'').substring(0,58))}${(p.descripcion||'').length>58?'…':''}</div>
         <div class="cprice">${fmt(p.precio_base)}<span class="cpsub">desde · MXN</span></div>
         <button class="cbtn">Ver y calcular precio →</button>
       </div>
@@ -274,20 +274,20 @@ function quoteChecklistHtml(catObj) {
   const opciones = items.length
     ? items.map(i => `
         <label class="qi-item">
-          <input type="checkbox" value="${i.nombre.replace(/"/g, '&quot;')}">
-          <span>${i.nombre}</span>
+          <input type="checkbox" value="${escapeHtmlMain(i.nombre)}">
+          <span>${escapeHtmlMain(i.nombre)}</span>
         </label>`).join('')
     : '<div class="empty">Muy pronto agregaremos las opciones de esta categoría. Escríbenos directo por WhatsApp.</div>';
 
   const iconImg = QUOTE_ICON_IMG[(catObj.nombre || '').toLowerCase()];
   const iconHtml = iconImg
-    ? `<img class="quote-icon-img" src="${iconImg}" alt="${catObj.nombre}">`
+    ? `<img class="quote-icon-img" src="${iconImg}" alt="${escapeHtmlMain(catObj.nombre)}">`
     : `<div class="quote-icon">${catEmoji(catObj.emoji || catObj.nombre)}</div>`;
 
   return `
     <div class="quote-box" id="quoteBox${catObj.id}">
       ${iconHtml}
-      <h3 class="quote-title">${catObj.nombre} — Cotización personalizada</h3>
+      <h3 class="quote-title">${escapeHtmlMain(catObj.nombre)} — Cotización personalizada</h3>
       <p class="quote-sub">El precio depende del formato, material y cantidad. Marca lo que te interesa y te enviamos una cotización a la medida, sin compromiso.</p>
       <div class="qi-list">${opciones}</div>
       <span class="olbl">Cuéntanos más detalles (opcional)</span>
@@ -461,7 +461,7 @@ function renderThumbs(gallery) {
   if (gallery.length < 2) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
   wrap.style.display = 'flex';
   wrap.innerHTML = gallery.map((url, i) => `
-    <img src="${url}" class="mthumb ${i === 0 ? 'on' : ''}" alt="Vista ${i + 1} de ${cur.nombre} | Happy Prints" loading="lazy" onclick="selectGalleryImg('${url}', this)">
+    <img src="${url}" class="mthumb ${i === 0 ? 'on' : ''}" alt="Vista ${i + 1} de ${escapeHtmlMain(cur.nombre)} | Happy Prints" loading="lazy" onclick="selectGalleryImg('${url}', this)">
   `).join('');
 }
 
