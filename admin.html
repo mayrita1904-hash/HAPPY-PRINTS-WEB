@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Happy Prints — Panel Admin</title>
 <meta name="robots" content="noindex, nofollow">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://ocwzwrapiqvyxdlijdoc.supabase.co; connect-src 'self' https://ocwzwrapiqvyxdlijdoc.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://ocwzwrapiqvyxdlijdoc.supabase.co; connect-src 'self' https://ocwzwrapiqvyxdlijdoc.supabase.co; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -170,6 +170,7 @@ input:checked+.togslide::before{transform:translateX(18px)}
       <label>Contraseña</label>
       <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()">
     </div>
+    <div class="cf-turnstile" id="adminTurnstile" data-sitekey="0x4AAAAAAEUJKVDyxlwggoXr" data-callback="onTurnstileAdmin" style="margin-bottom:14px"></div>
     <button class="btn btn-p" id="loginBtn" style="width:100%;justify-content:center" onclick="doLogin()">Iniciar sesión</button>
     <div style="text-align:center;margin-top:14px">
       <a href="#" style="font-size:12px;color:#9090A8;font-weight:700;text-decoration:underline" onclick="forgotPassword();return false;">¿Olvidaste tu contraseña?</a>
@@ -660,6 +661,7 @@ input:checked+.togslide::before{transform:translateX(18px)}
 
 <div class="toast" id="toast"></div>
 
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <script>
 const URL_SB  = 'https://ocwzwrapiqvyxdlijdoc.supabase.co';
 const KEY     = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jd3p3cmFwaXF2eXhkbGlqZG9jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MzA1NzgsImV4cCI6MjA5ODUwNjU3OH0._3r9pDu7Vg09o_5MZt3tcu7i2CZoWk3xKtbOMWcY_wM';
@@ -670,6 +672,14 @@ function authToken() { return (session && session.access_token) || KEY; }
 function HDR()     { return { 'apikey': KEY, 'Authorization': 'Bearer ' + authToken(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' }; }
 function HDR_GET() { return { 'apikey': KEY, 'Authorization': 'Bearer ' + authToken() }; }
 
+/* Verificación antibots (Cloudflare Turnstile) */
+let turnstileTokenAdmin = null;
+function onTurnstileAdmin(token) { turnstileTokenAdmin = token; }
+function resetTurnstileAdmin() {
+  turnstileTokenAdmin = null;
+  if (window.turnstile) turnstile.reset('#adminTurnstile');
+}
+
 async function doLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const pass  = document.getElementById('loginPass').value;
@@ -677,12 +687,13 @@ async function doLogin() {
   const btn   = document.getElementById('loginBtn');
   err.style.display = 'none';
   if (!email || !pass) { err.textContent = 'Ingresa tu correo y contraseña.'; err.style.display = 'block'; return; }
+  if (!turnstileTokenAdmin) { err.textContent = 'Espera un segundo, terminando de verificar que no eres un robot…'; err.style.display = 'block'; return; }
   btn.disabled = true; btn.textContent = 'Entrando…';
   try {
     const r = await fetch(URL_SB + '/auth/v1/token?grant_type=password', {
       method: 'POST',
       headers: { 'apikey': KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pass })
+      body: JSON.stringify({ email, password: pass, gotrue_meta_security: { captcha_token: turnstileTokenAdmin } })
     });
     const data = await r.json();
     if (!r.ok) {
@@ -699,6 +710,7 @@ async function doLogin() {
     err.style.display = 'block';
   } finally {
     btn.disabled = false; btn.textContent = 'Iniciar sesión';
+    resetTurnstileAdmin();
   }
 }
 
@@ -766,15 +778,16 @@ async function mostrarApp() {
 async function forgotPassword() {
   const email = document.getElementById('loginEmail').value.trim();
   if (!email) { toast('Escribe tu correo arriba primero.', 'err'); return; }
+  if (!turnstileTokenAdmin) { toast('Espera un segundo, terminando de verificar que no eres un robot…', 'err'); return; }
   try {
     const r = await fetch(URL_SB + '/auth/v1/recover', {
       method: 'POST',
       headers: { 'apikey': KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, options: { redirect_to: window.location.href.split('#')[0] } })
+      body: JSON.stringify({ email, options: { redirect_to: window.location.href.split('#')[0] }, gotrue_meta_security: { captcha_token: turnstileTokenAdmin } })
     });
     if (!r.ok) throw new Error((await r.json()).msg || 'No se pudo enviar el correo.');
     toast('Te enviamos un correo con un enlace para elegir una nueva contraseña ✔', 'ok');
-  } catch (e) { toast('Error: ' + e.message, 'err'); }
+  } catch (e) { toast('Error: ' + e.message, 'err'); } finally { resetTurnstileAdmin(); }
 }
 
 /* Sesión temporal de recuperación, obtenida del enlace del correo */
