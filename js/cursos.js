@@ -110,6 +110,7 @@ async function doRegistro() {
   err.style.display = 'none'; ok.style.display = 'none';
 
   if (!nombre || !email || !pass) { err.textContent = 'Completa nombre, correo y contraseña.'; err.style.display = 'block'; return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'Escribe un correo válido (ej. nombre@correo.com).'; err.style.display = 'block'; return; }
   if (pass.length < 6) { err.textContent = 'La contraseña debe tener al menos 6 caracteres.'; err.style.display = 'block'; return; }
   if (pass !== pass2) { err.textContent = 'Las contraseñas no coinciden.'; err.style.display = 'block'; return; }
   if (!turnstileTokenCursos) { err.textContent = 'Espera un segundo, terminando de verificar que no eres un robot…'; err.style.display = 'block'; return; }

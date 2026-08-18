@@ -1029,6 +1029,7 @@ async function doRegistroPopup() {
   const btn = document.getElementById('lpRegBtn');
   err.style.display = 'none'; ok.style.display = 'none';
   if (!nombre || !email || !pass) { err.textContent = 'Completa nombre, correo y contraseña.'; err.style.display = 'block'; return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'Escribe un correo válido (ej. nombre@correo.com).'; err.style.display = 'block'; return; }
   if (pass.length < 6) { err.textContent = 'La contraseña debe tener al menos 6 caracteres.'; err.style.display = 'block'; return; }
   if (!turnstileTokenPopup) { err.textContent = 'Espera un segundo, terminando de verificar que no eres un robot…'; err.style.display = 'block'; return; }
 
@@ -1390,7 +1391,10 @@ async function pagarConMercadoPago() {
   const notas = document.getElementById('ckNotas').value.trim();
 
   if (!nombre || !telefono || !correo) { alert('Completa tu nombre, teléfono y correo — son obligatorios.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { alert('Escribe un correo válido (ej. nombre@correo.com).'); return; }
+  if (telefono.replace(/\D/g, '').length !== 10) { alert('El teléfono debe tener 10 dígitos.'); return; }
   if (!calle || !numero || !colonia || !cp || !ciudad) { alert('Completa tu dirección de entrega — son obligatorios.'); return; }
+  if (cp.replace(/\D/g, '').length !== 5) { alert('El código postal debe tener 5 dígitos.'); return; }
   if (!carrito.length) { alert('Tu carrito está vacío.'); return; }
 
   const btn = document.getElementById('payBtn');
@@ -1521,6 +1525,7 @@ async function cargarMisPedidos() {
 async function guardarDatosPersonales() {
   const nombre = document.getElementById('pfNombre').value.trim();
   const telefono = document.getElementById('pfTelefono').value.trim();
+  if (telefono && telefono.replace(/\D/g, '').length !== 10) { alert('El teléfono debe tener 10 dígitos.'); return; }
   try {
     await sbAuthWrite('PATCH', `perfiles?id=eq.${session.user.id}`, { nombre, telefono });
     perfilData.nombre = nombre; perfilData.telefono = telefono;
@@ -1590,6 +1595,7 @@ async function guardarDireccionForm() {
   const ciudad = document.getElementById('dfCiudad').value.trim();
   const entre_calles = document.getElementById('dfEntreCalles').value.trim() || null;
   if (!calle || !numero || !colonia || !cp || !ciudad) { alert('Completa calle, número, colonia, C.P. y ciudad.'); return; }
+  if (cp.replace(/\D/g, '').length !== 5) { alert('El código postal debe tener 5 dígitos.'); return; }
 
   try {
     if (direccionFormAbierto === 'nueva') {
