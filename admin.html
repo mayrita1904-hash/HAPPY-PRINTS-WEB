@@ -85,6 +85,18 @@ input:checked+.togslide::before{transform:translateX(18px)}
 .nivel-row .nivel-del{background:#FEE2E2;color:#DC2626;border:none;border-radius:8px;width:32px;height:32px;font-size:14px;font-weight:900;cursor:pointer;flex-shrink:0}
 .nivel-labels{display:grid;gap:6px;margin-bottom:4px}
 .nivel-labels span{font-size:9px;font-weight:800;color:#9090A8;text-transform:uppercase}
+.cu-tema-row{display:flex;align-items:center;gap:10px;border:1.5px solid #E0E0E8;border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.cu-tema-num{width:24px;height:24px;border-radius:50%;background:#F5F5F8;color:#9090A8;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cu-tema-info{flex:1;min-width:0}
+.cu-tema-info b{font-size:12.5px;color:#1A1F4B;display:block}
+.cu-tema-info small{font-size:11px;color:#9090A8}
+.cu-tema-yt{font-size:10.5px;font-weight:700;margin-top:2px;display:flex;align-items:center;gap:4px}
+.cu-tema-yt.si{color:#1FB6AE}
+.cu-tema-yt.no{color:#9090A8;font-weight:600}
+.cu-tema-actions{display:flex;gap:4px;flex-shrink:0}
+.cu-tema-actions button{border:none;border-radius:8px;width:28px;height:28px;font-size:12px;cursor:pointer}
+.cu-tema-actions .edit{background:#EEF0FF;color:#1A1F4B}
+.cu-tema-actions .del{background:#FEE2E2;color:#DC2626}
 .paquete-card{border:1.5px solid #E0E0E8;border-radius:14px;padding:14px;margin-bottom:14px}
 .paquete-row{display:grid;grid-template-columns:1.3fr 1fr 1.3fr auto;gap:8px;margin-bottom:8px}
 .paquete-row2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
@@ -201,6 +213,7 @@ input:checked+.togslide::before{transform:translateX(18px)}
   <button class="atab" data-screen="webdev" onclick="mostrarPantalla('webdev')">💻 Sitios Web</button>
   <button class="atab" data-screen="cotreg" onclick="mostrarPantalla('cotreg')">🧾 Registro de Cotizaciones</button>
   <button class="atab" data-screen="pedidos" onclick="mostrarPantalla('pedidos')">📦 Pedidos en línea</button>
+  <button class="atab" data-screen="cursos" onclick="mostrarPantalla('cursos')">🎓 Cursos</button>
 </div>
 
 <div class="admin-screen on" id="screen-productos">
@@ -349,6 +362,25 @@ input:checked+.togslide::before{transform:translateX(18px)}
 </div>
 </div><!-- /screen-pedidos -->
 
+<div class="admin-screen" id="screen-cursos">
+<div class="wrap">
+  <div class="ptitle">🎓 Cursos</div>
+  <div class="psub">Cursos en línea que se venden en /pages/cursos. Edita la información, el temario y el video de YouTube (no listado) de cada tema.</div>
+
+  <div class="toolbar">
+    <button class="btn btn-p" onclick="abrirCursoModal()">＋ Nuevo curso</button>
+    <button class="btn btn-g btn-sm" onclick="cargarCursosAdmin()">↻ Actualizar</button>
+  </div>
+
+  <div class="tbl">
+    <div class="th" style="grid-template-columns:1fr 100px 90px 90px 90px">
+      <div>Curso</div><div>Precio</div><div>Temas</div><div>Activo</div><div>Acciones</div>
+    </div>
+    <div id="cursoTbody"><div class="loading">Cargando cursos…</div></div>
+  </div>
+</div>
+</div><!-- /screen-cursos -->
+
 <!-- MODAL DETALLE DE PEDIDO -->
 <div class="mbg" id="pedidoMbg">
   <div class="mbox" style="max-width:560px">
@@ -383,6 +415,69 @@ input:checked+.togslide::before{transform:translateX(18px)}
     <div class="mfooter">
       <button class="btn btn-g" onclick="cerrarPedidoModal()">Cerrar</button>
       <button class="btn btn-p" id="pdGuardarBtn" onclick="guardarEstatusPedido()">Guardar estatus</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CURSO -->
+<div class="mbg" id="cursoMbg">
+  <div class="mbox" style="max-width:640px">
+    <h2 id="cursoMtitle">Nuevo curso</h2>
+
+    <div class="field-row" style="display:grid;grid-template-columns:1fr 140px;gap:12px">
+      <div class="field"><label>Nombre del curso</label><input type="text" id="cuNombre" placeholder="Ej. Libretas y agendas desde cero"></div>
+      <div class="field"><label>Precio (MXN)</label><input type="number" min="0" step="0.01" id="cuPrecio" placeholder="1200"></div>
+    </div>
+    <div class="field-row" style="display:grid;grid-template-columns:1fr 140px;gap:12px">
+      <div class="field"><label>Imagen (URL, opcional)</label><input type="text" id="cuImagen" placeholder="https://..."></div>
+      <div class="field"><label>Orden en catálogo</label><input type="number" min="1" id="cuOrden" placeholder="1"></div>
+    </div>
+    <div class="field">
+      <label>Descripción corta (se ve en la tarjeta)</label>
+      <textarea id="cuDescripcion" rows="2" placeholder="Una o dos líneas que resuman el curso"></textarea>
+    </div>
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#1A1F4B;cursor:pointer;margin-bottom:16px">
+      <input type="checkbox" id="cuActivo" checked style="width:16px;height:16px"> Curso activo (visible en el catálogo)
+    </label>
+
+    <div class="field">
+      <label>🎯 Para quién es <span style="text-transform:none;font-weight:600;color:#9090A8">— una idea por línea</span></label>
+      <textarea id="cuDirigido" rows="3" placeholder="Personas que quieren emprender vendiendo papelería personalizada"></textarea>
+    </div>
+    <div class="field">
+      <label>✅ Requisitos <span style="text-transform:none;font-weight:600;color:#9090A8">— una idea por línea</span></label>
+      <textarea id="cuRequisitos" rows="3" placeholder="Ganas de aprender, no necesitas experiencia previa"></textarea>
+    </div>
+    <div class="field">
+      <label>📚 Qué vas a aprender <span style="text-transform:none;font-weight:600;color:#9090A8">— una idea por línea</span></label>
+      <textarea id="cuAprende" rows="3" placeholder="Diseñar libretas y agendas desde cero en Canva"></textarea>
+    </div>
+
+    <div class="mfooter">
+      <button class="btn btn-g" onclick="cerrarCursoModal()">Cancelar</button>
+      <button class="btn btn-p" id="cuGuardarBtn" onclick="guardarCurso()">Guardar curso</button>
+    </div>
+
+    <div style="border-top:1.5px solid #EBEBEB;margin-top:22px;padding-top:20px">
+      <div style="font-size:13px;font-weight:800;color:#1A1F4B;margin-bottom:4px">🎬 Temario y videos</div>
+      <div id="cuTemarioNota" style="font-size:12px;color:#9090A8;margin-bottom:14px">Guarda el curso primero para poder agregarle temas.</div>
+
+      <div id="cuTemarioList" style="display:none;margin-bottom:14px"></div>
+
+      <div id="cuTemarioForm" class="nivel-row" style="display:none;grid-template-columns:1fr;gap:10px;background:#F8F8FA;border-radius:12px;padding:14px;margin:0">
+        <input type="hidden" id="cuTemaEditId" value="">
+        <div style="display:grid;grid-template-columns:1fr 120px;gap:10px">
+          <input type="text" id="cuTemaTitulo" placeholder="Título del tema">
+          <input type="text" id="cuTemaDuracion" placeholder="Duración (ej. 14 min)">
+        </div>
+        <input type="text" id="cuTemaDescripcion" placeholder="Descripción corta del tema (opcional)">
+        <input type="text" id="cuTemaYoutube" placeholder="Link de YouTube no listado (https://youtu.be/...)">
+        <div style="font-size:11px;color:#9090A8">Sube tu video a YouTube como "No listado" y pega aquí el link — solo lo verán los clientes que ya pagaron este curso.</div>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn btn-p btn-sm" id="cuTemaGuardarBtn" onclick="guardarTemaAdmin()">➕ Agregar tema</button>
+          <button type="button" class="btn btn-g btn-sm" id="cuTemaCancelBtn" style="display:none" onclick="cancelarTemaAdmin()">Cancelar edición</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -649,6 +744,7 @@ async function mostrarApp() {
   cargarWebdevExtras();
   cargarCotizaciones();
   cargarPedidos();
+  cargarCursosAdmin();
 }
 
 /* ── Olvidé mi contraseña ── */
@@ -1908,6 +2004,9 @@ document.getElementById('cotMbg').addEventListener('click', e => {
 document.getElementById('pedidoMbg').addEventListener('click', e => {
   if (e.target === document.getElementById('pedidoMbg')) cerrarPedidoModal();
 });
+document.getElementById('cursoMbg').addEventListener('click', e => {
+  if (e.target === document.getElementById('cursoMbg')) cerrarCursoModal();
+});
 
 /* ── Pedidos en línea ── */
 const PD_ESTATUS_ENVIO_INFO = {
@@ -1990,6 +2089,225 @@ function renderPedidosTabla(list) {
 
 function fmtMXNAdmin(n) {
   return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+}
+
+/* ── Cursos ── */
+let cursosAdmin = [], cursoEditId = null, temarioAdmin = [], temaEditandoId = null;
+
+async function cargarCursosAdmin() {
+  document.getElementById('cursoTbody').innerHTML = '<div class="loading">Cargando cursos…</div>';
+  try {
+    cursosAdmin = await sbGet('cursos?select=*,curso_temas(id)&order=orden');
+  } catch (e) {
+    document.getElementById('cursoTbody').innerHTML = '<div class="empty">⚠️ No se pudo cargar (¿ya ejecutaste supabase_curso_temario.sql?)</div>';
+    return;
+  }
+  renderCursosAdminTabla();
+}
+
+function renderCursosAdminTabla() {
+  const tbody = document.getElementById('cursoTbody');
+  if (!cursosAdmin.length) {
+    tbody.innerHTML = '<div class="empty">No hay cursos todavía.</div>';
+    return;
+  }
+  tbody.innerHTML = cursosAdmin.map(c => `
+    <div class="tr" style="grid-template-columns:1fr 100px 90px 90px 90px">
+      <div><b>${escapeHtml(c.nombre)}</b></div>
+      <div>${fmtMXNAdmin(c.precio)}</div>
+      <div>${(c.curso_temas || []).length}</div>
+      <div><label class="tog"><input type="checkbox" ${c.activo ? 'checked' : ''} onchange="toggleActivoCurso(${c.id}, this.checked)"><span class="togslide"></span></label></div>
+      <div class="actions"><button class="btn btn-g btn-sm" onclick="abrirCursoModal(${c.id})">✏️ Editar</button></div>
+    </div>`).join('');
+}
+
+async function toggleActivoCurso(id, activo) {
+  try {
+    await sbPatch(`cursos?id=eq.${id}`, { activo });
+    const c = cursosAdmin.find(x => x.id === id);
+    if (c) c.activo = activo;
+    toast(activo ? '✓ Curso activado' : 'Curso desactivado', 'ok');
+  } catch (e) { toast('Error: ' + e.message, 'err'); cargarCursosAdmin(); }
+}
+
+function abrirCursoModal(id) {
+  const c = id ? cursosAdmin.find(x => x.id === id) : null;
+  cursoEditId = c ? c.id : null;
+  document.getElementById('cursoMtitle').textContent = c ? 'Editar curso' : 'Nuevo curso';
+  document.getElementById('cuNombre').value = c?.nombre || '';
+  document.getElementById('cuPrecio').value = c?.precio || '';
+  document.getElementById('cuImagen').value = c?.imagen_url || '';
+  document.getElementById('cuOrden').value = c?.orden || (cursosAdmin.length + 1);
+  document.getElementById('cuDescripcion').value = c?.descripcion || '';
+  document.getElementById('cuActivo').checked = c ? c.activo !== false : true;
+  document.getElementById('cuDirigido').value = c?.dirigido_a || '';
+  document.getElementById('cuRequisitos').value = c?.requisitos || '';
+  document.getElementById('cuAprende').value = c?.que_aprenderas || '';
+
+  cancelarTemaAdmin();
+  document.getElementById('cuTemarioNota').style.display = cursoEditId ? 'none' : 'block';
+  document.getElementById('cuTemarioList').style.display = cursoEditId ? 'block' : 'none';
+  document.getElementById('cuTemarioForm').style.display = cursoEditId ? 'grid' : 'none';
+  if (cursoEditId) cargarTemarioAdmin();
+
+  document.getElementById('cursoMbg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarCursoModal() {
+  document.getElementById('cursoMbg').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function slugify(str) {
+  return str.toLowerCase().trim()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'curso';
+}
+
+async function guardarCurso() {
+  const nombre = document.getElementById('cuNombre').value.trim();
+  const precio = parseFloat(document.getElementById('cuPrecio').value);
+  if (!nombre) { toast('Escribe el nombre del curso', 'err'); return; }
+  if (!precio || precio <= 0) { toast('Escribe un precio válido', 'err'); return; }
+
+  const btn = document.getElementById('cuGuardarBtn');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  try {
+    const datos = {
+      nombre,
+      precio,
+      imagen_url: document.getElementById('cuImagen').value.trim() || null,
+      orden: parseInt(document.getElementById('cuOrden').value) || 1,
+      descripcion: document.getElementById('cuDescripcion').value.trim() || null,
+      activo: document.getElementById('cuActivo').checked,
+      dirigido_a: document.getElementById('cuDirigido').value.trim() || null,
+      requisitos: document.getElementById('cuRequisitos').value.trim() || null,
+      que_aprenderas: document.getElementById('cuAprende').value.trim() || null
+    };
+
+    if (cursoEditId) {
+      await sbPatch(`cursos?id=eq.${cursoEditId}`, datos);
+      toast('✓ Curso actualizado', 'ok');
+    } else {
+      const [creado] = await sbPost('cursos', Object.assign({ slug: slugify(nombre) + '-' + Date.now() }, datos));
+      cursoEditId = creado.id;
+      toast('✓ Curso creado — ya puedes agregarle temas', 'ok');
+      document.getElementById('cuTemarioNota').style.display = 'none';
+      document.getElementById('cuTemarioList').style.display = 'block';
+      document.getElementById('cuTemarioForm').style.display = 'grid';
+      await cargarTemarioAdmin();
+    }
+    await cargarCursosAdmin();
+  } catch (e) {
+    toast('Error al guardar: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Guardar curso';
+  }
+}
+
+/* ── Temario y video de cada curso ── */
+async function cargarTemarioAdmin() {
+  try {
+    temarioAdmin = await sbGet(`curso_temas?select=*,curso_tema_videos(youtube_url)&curso_id=eq.${cursoEditId}&order=orden`);
+  } catch (e) { temarioAdmin = []; }
+  renderTemarioAdmin();
+}
+
+function renderTemarioAdmin() {
+  const list = document.getElementById('cuTemarioList');
+  if (!temarioAdmin.length) {
+    list.innerHTML = '<div style="font-size:12px;color:#9090A8;padding:4px 0 10px">Todavía no hay temas — agrega el primero abajo.</div>';
+    return;
+  }
+  list.innerHTML = temarioAdmin.map((t, i) => {
+    const yt = t.curso_tema_videos && t.curso_tema_videos.youtube_url;
+    return `
+      <div class="cu-tema-row">
+        <div class="cu-tema-num">${i + 1}</div>
+        <div class="cu-tema-info">
+          <b>${escapeHtml(t.titulo)}</b>
+          <small>${t.duracion ? escapeHtml(t.duracion) : 'Sin duración'}</small>
+          <div class="cu-tema-yt ${yt ? 'si' : 'no'}">${yt ? '▶ Tiene video' : '○ Sin video todavía'}</div>
+        </div>
+        <div class="cu-tema-actions">
+          <button class="edit" onclick="editarTemaAdmin(${t.id})" title="Editar">✏️</button>
+          <button class="del" onclick="eliminarTemaAdmin(${t.id})" title="Eliminar">🗑</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function editarTemaAdmin(id) {
+  const t = temarioAdmin.find(x => x.id === id);
+  if (!t) return;
+  temaEditandoId = id;
+  document.getElementById('cuTemaTitulo').value = t.titulo || '';
+  document.getElementById('cuTemaDuracion').value = t.duracion || '';
+  document.getElementById('cuTemaDescripcion').value = t.descripcion || '';
+  document.getElementById('cuTemaYoutube').value = (t.curso_tema_videos && t.curso_tema_videos.youtube_url) || '';
+  document.getElementById('cuTemaGuardarBtn').textContent = '💾 Guardar cambios';
+  document.getElementById('cuTemaCancelBtn').style.display = 'inline-flex';
+}
+
+function cancelarTemaAdmin() {
+  temaEditandoId = null;
+  document.getElementById('cuTemaTitulo').value = '';
+  document.getElementById('cuTemaDuracion').value = '';
+  document.getElementById('cuTemaDescripcion').value = '';
+  document.getElementById('cuTemaYoutube').value = '';
+  document.getElementById('cuTemaGuardarBtn').textContent = '➕ Agregar tema';
+  document.getElementById('cuTemaCancelBtn').style.display = 'none';
+}
+
+async function guardarTemaAdmin() {
+  const titulo = document.getElementById('cuTemaTitulo').value.trim();
+  const duracion = document.getElementById('cuTemaDuracion').value.trim() || null;
+  const descripcion = document.getElementById('cuTemaDescripcion').value.trim() || null;
+  const youtube = document.getElementById('cuTemaYoutube').value.trim();
+  if (!titulo) { toast('Escribe al menos el título del tema', 'err'); return; }
+
+  const btn = document.getElementById('cuTemaGuardarBtn');
+  btn.disabled = true;
+  try {
+    let temaId = temaEditandoId;
+    if (temaEditandoId) {
+      await sbPatch(`curso_temas?id=eq.${temaEditandoId}`, { titulo, duracion, descripcion });
+    } else {
+      const orden = temarioAdmin.length ? Math.max(...temarioAdmin.map(t => t.orden)) + 1 : 1;
+      const [creado] = await sbPost('curso_temas', { curso_id: cursoEditId, orden, titulo, duracion, descripcion });
+      temaId = creado.id;
+    }
+
+    if (youtube) {
+      const r = await fetch(URL_SB + '/rest/v1/curso_tema_videos?on_conflict=tema_id', {
+        method: 'POST',
+        headers: { apikey: KEY, Authorization: 'Bearer ' + authToken(), 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify({ tema_id: temaId, youtube_url: youtube })
+      });
+      if (!r.ok) throw new Error((await r.json()).message || 'No se pudo guardar el video');
+    }
+
+    toast('✓ Tema guardado', 'ok');
+    cancelarTemaAdmin();
+    await cargarTemarioAdmin();
+    await cargarCursosAdmin();
+  } catch (e) {
+    toast('Error: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function eliminarTemaAdmin(id) {
+  if (!confirm('¿Eliminar este tema y su video?')) return;
+  try {
+    await sbDelete(`curso_temas?id=eq.${id}`);
+    toast('Tema eliminado', 'ok');
+    if (temaEditandoId === id) cancelarTemaAdmin();
+    await cargarTemarioAdmin();
+    await cargarCursosAdmin();
+  } catch (e) { toast('Error: ' + e.message, 'err'); }
 }
 
 function verPedidoAdmin(id) {
