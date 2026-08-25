@@ -137,3 +137,523 @@ Tablas principales usadas por el frontend: `categorias`, `productos`, `precios_n
 
 ## Notas
 - Este archivo debe actualizarse conforme el proyecto evolucione (por ejemplo, si se agrega un backend, un framework, un sistema de pagos real, o un carrito/checkout propio).
+
+---
+
+# Guía de diseño y UX (frontend)
+
+## UX/UI Design System
+
+For all web design, redesign, UX/UI, and frontend tasks, use the available project skills when relevant:
+
+- `creative-director`
+- `ux-designer`
+- `frontend-design`
+
+Use them together when creating or substantially redesigning a page.
+
+### Responsibilities
+
+- `creative-director`: visual concept, art direction, originality, brand character, and composition.
+- `ux-designer`: usability, information architecture, hierarchy, accessibility, responsive behavior, and conversion.
+- `frontend-design`: visual execution, frontend quality, interactions, and implementation.
+
+Do not ignore these skills when the task involves UX/UI or frontend design.
+
+---
+
+## Creative Direction
+
+Do not immediately implement the first obvious design solution.
+
+Before a significant redesign, internally consider multiple substantially different creative directions and choose deliberately based on:
+
+- brand
+- audience
+- industry
+- content
+- business objective
+- desired emotional response
+- conversion goal
+
+Do not present all alternatives unless requested. Use this reasoning to produce a stronger final direction.
+
+---
+
+## Visual Quality Standard
+
+The website should feel:
+
+- professional
+- contemporary
+- intentional
+- polished
+- brand-specific
+- visually sophisticated
+- production-ready
+
+Avoid designs that feel:
+
+- childish
+- amateur
+- template-based
+- generic
+- visually repetitive
+- obviously AI-generated
+
+The goal is not decoration. The goal is strong visual communication.
+
+---
+
+## Avoid Generic AI Patterns
+
+Do not automatically use:
+
+- hero + three cards + CTA layouts
+- cards for every piece of information
+- excessive rounded corners
+- unnecessary pill-shaped elements
+- generic icon circles
+- repetitive icon + heading + paragraph sections
+- excessive gradients
+- purple/blue AI-startup aesthetics unless appropriate
+- random glassmorphism
+- decorative blobs
+- excessive shadows
+- unnecessary floating containers
+- identical section compositions
+- centered layouts for every section
+- generic stock imagery
+- decorative elements without purpose
+
+Cards are allowed when they are genuinely the best information architecture solution.
+
+---
+
+## Composition
+
+Prefer intentional composition.
+
+Consider when appropriate:
+
+- editorial layouts
+- asymmetric grids
+- strong typography
+- controlled whitespace
+- contrast in scale
+- full-bleed photography
+- split compositions
+- layered imagery
+- image-led storytelling
+- visual rhythm
+- modular grids
+- strong focal points
+- deliberate negative space
+
+Different sections may use different compositions while remaining part of the same visual system.
+
+---
+
+## Brand First
+
+Never force the same visual language onto every project.
+
+Before designing, understand the project's:
+
+- industry
+- audience
+- positioning
+- existing identity
+- colors
+- typography
+- imagery
+- tone
+- business goals
+
+Preserve established brand elements unless explicitly asked to change them.
+
+A logistics company should not look like a SaaS startup.
+A luxury company should not look like a children's brand.
+A professional service should not look like a generic template.
+
+---
+
+## UX Before Decoration
+
+Creativity must never damage usability.
+
+Always protect:
+
+- readability
+- navigation clarity
+- accessibility
+- information hierarchy
+- interaction predictability
+- conversion paths
+- responsive behavior
+- performance
+
+Distinctive does not mean confusing.
+
+---
+
+## Responsive Design
+
+Mobile must be intentionally designed.
+
+Do not simply shrink the desktop version.
+
+When necessary:
+
+- change stacking order
+- simplify compositions
+- adjust typography
+- reconsider spacing
+- preserve important visual moments
+- adapt navigation
+- adapt interactions
+- remove nonessential decorative elements
+
+Desktop, tablet, and mobile should each feel considered.
+
+---
+
+## Implementation Workflow
+
+For significant UX/UI work:
+
+1. Understand the existing page and its objective.
+2. Identify UX/UI problems.
+3. Determine the appropriate creative direction.
+4. Consider multiple possible compositions internally.
+5. Select the strongest direction.
+6. Implement it.
+7. Review responsive behavior.
+8. Review usability and accessibility.
+9. Perform a visual quality pass.
+10. Update the preview/Artifact when appropriate.
+
+Do not repeatedly stop for approval on minor implementation decisions unless a decision materially changes scope, branding, content, or functionality.
+
+---
+
+## Artifact / Preview Workflow
+
+When an Artifact or visual preview already exists for the current work:
+
+- Prefer updating the existing Artifact instead of creating a new one.
+- Keep the same preview URL whenever technically possible.
+- Update the preview after meaningful visual milestones.
+- Do not create unnecessary duplicate Artifacts.
+- Do not regenerate unchanged areas unnecessarily.
+
+The Artifact should function as the primary visual review surface when available.
+
+---
+
+## Token and Communication Efficiency
+
+Be concise during implementation.
+
+Do not provide long progress reports unless requested.
+
+Do not repeatedly explain code that has already been implemented.
+
+Prioritize:
+
+1. understanding the task
+2. modifying the necessary files
+3. validating the result
+4. updating the visual preview
+5. reporting completion briefly
+
+When a visual milestone is ready, a short status message is sufficient.
+
+Example:
+
+"Hero and navigation updated. Preview ready."
+
+Avoid narrating every intermediate action.
+
+---
+
+## Scope Discipline
+
+When asked to modify one page or section:
+
+- inspect only the files reasonably necessary for that task
+- avoid exploring unrelated areas of the repository
+- avoid refactoring unrelated components
+- avoid modifying sections that were not requested
+- preserve working functionality outside the requested scope
+
+Do not rebuild an entire page when a targeted change is sufficient.
+
+---
+
+## Iteration
+
+When feedback concerns one specific visual element, modify that element first.
+
+Do not redesign unrelated sections unless the requested change creates a genuine dependency.
+
+Preserve approved design decisions during subsequent iterations.
+
+---
+
+## Final Creative Review
+
+Before considering significant visual work complete, internally check:
+
+1. Does this look generic or obviously AI-generated?
+2. Are there too many cards?
+3. Are rounded containers being overused?
+4. Is the composition predictable?
+5. Is the typography creating strong hierarchy?
+6. Does the imagery have a purpose?
+7. Does the design reflect this specific brand?
+8. Is whitespace intentional?
+9. Does the page have visual rhythm?
+10. Is the interface easy to understand?
+11. Does mobile feel intentionally designed?
+12. Are decorative elements earning their place?
+
+If weaknesses are obvious, improve them before presenting the result.
+---
+
+# Image Performance & Token Efficiency
+
+## Primary Goal
+
+Maintain high visual quality while minimizing:
+
+- production page weight
+- unnecessary image downloads
+- oversized assets
+- unnecessary Claude context usage
+- repeated image analysis
+- unnecessary Artifact regeneration
+
+Performance optimization must not noticeably damage the visual quality or creative direction of the website.
+
+## Image Asset Rules
+
+Never assume that an original image is production-ready.
+
+Before using an image in production, consider:
+
+- actual rendered dimensions
+- source dimensions
+- file size
+- file format
+- transparency requirements
+- device sizes
+- visual importance
+
+Do not serve a multi-megabyte original image when a significantly smaller optimized asset can provide equivalent visual quality.
+
+## Preferred Formats
+
+Use:
+
+- AVIF when appropriate and well supported by the current implementation
+- WebP as a strong default for photographic web imagery
+- SVG for suitable logos, icons, and vector graphics
+- PNG only when transparency or image characteristics genuinely justify it
+
+Avoid large JPEG or PNG files when a modern format can substantially reduce size without visible quality loss.
+
+Do not convert assets blindly if doing so creates compatibility or quality problems.
+
+## Image Dimensions
+
+Images should be sized according to their actual use.
+
+Do not use extremely large source dimensions for small rendered components.
+
+Examples:
+
+A 400px visual card should not unnecessarily load a 4000px image.
+
+A full-width desktop hero may justify a substantially larger image.
+
+Preserve enough resolution for high-density displays when appropriate, but avoid excessive dimensions.
+
+## Responsive Images
+
+When supported by the framework or implementation, use appropriate responsive image techniques such as:
+
+- `srcset`
+- `sizes`
+- framework image optimization components
+- responsive source selection
+
+Mobile devices should not download desktop-sized imagery unnecessarily.
+
+## Loading Strategy
+
+Prioritize images visible in the initial viewport.
+
+For imagery below the fold:
+
+- prefer lazy loading
+- avoid unnecessary preload
+- load assets only when reasonably needed
+
+Do not lazy-load the primary Largest Contentful Paint image if doing so would hurt perceived performance.
+
+Use eager loading or appropriate priority only for genuinely critical visual assets.
+
+## Image Weight Targets
+
+Treat these as practical targets rather than absolute rules:
+
+- small UI imagery: preferably under 100 KB
+- ordinary content photography: approximately 80–250 KB when visually acceptable
+- important large imagery / hero photography: approximately 200–500 KB when visually acceptable
+
+If an image exceeds these ranges substantially, review whether its dimensions, format, or compression can be improved.
+
+Never sacrifice important visible image quality solely to meet an arbitrary file-size target.
+
+## Production Assets
+
+Do not ship:
+
+- unused image variations
+- obsolete design assets
+- duplicate images
+- unnecessarily large originals
+- temporary experimentation assets
+
+when they are not required by the production application.
+
+Do not delete original assets automatically unless explicitly requested.
+
+## Performance Awareness
+
+When implementing image-heavy pages, consider:
+
+- Largest Contentful Paint
+- cumulative page weight
+- number of network requests
+- responsive image delivery
+- lazy loading
+- layout stability
+- image dimensions
+- caching
+- perceived loading speed
+
+Avoid premature micro-optimization, but address obvious high-impact problems.
+
+---
+
+# Claude Context Efficiency
+
+## Do Not Inspect Everything Automatically
+
+Do not inspect every image or every project file unless the task genuinely requires it.
+
+When working on a specific page:
+
+1. identify the files directly associated with that page
+2. inspect those first
+3. inspect additional files only when necessary
+
+Avoid repository-wide exploration for localized visual changes.
+
+## Image Analysis
+
+Do not repeatedly analyze an image that has already been reviewed and approved unless:
+
+- the user requests changes to it
+- its usage changes materially
+- there is a technical reason to inspect it again
+
+Reuse known information about approved assets whenever possible.
+
+Do not perform visual analysis of unrelated images.
+
+## Existing Assets
+
+Prefer reusing suitable existing project assets rather than:
+
+- generating unnecessary replacements
+- creating duplicate variations
+- repeatedly reprocessing the same image
+
+Do not regenerate an approved image merely because surrounding layout changes.
+
+## Artifact Efficiency
+
+When an Artifact or preview already exists:
+
+- update the existing preview when technically possible
+- avoid generating duplicate Artifacts
+- avoid rebuilding unchanged sections unnecessarily
+- update after meaningful visual milestones rather than every micro-change
+
+The user can visually inspect the existing preview without requiring a detailed progress report.
+
+## Communication Efficiency
+
+During implementation:
+
+- keep status messages short
+- do not narrate routine file operations
+- do not repeatedly summarize unchanged work
+- do not provide large code explanations unless requested
+- do not ask for approval on trivial implementation choices
+
+Spend context on solving the task rather than describing routine actions.
+
+## Preserve Approved Work
+
+Once a section or visual direction has been approved:
+
+- preserve it
+- do not redesign it while working elsewhere
+- do not reread or regenerate it unnecessarily
+- modify it only when required by dependencies or explicitly requested
+
+## Targeted Iteration
+
+If feedback concerns one element, begin with that element.
+
+Examples:
+
+If the user dislikes the hero, do not redesign the footer.
+
+If the user requests a typography adjustment, do not reconstruct the entire page.
+
+If one image needs replacement, do not reprocess all project imagery.
+
+## Audit Before Bulk Optimization
+
+Before performing large-scale image optimization:
+
+1. inventory the relevant image assets
+2. determine dimensions and file sizes
+3. identify the highest-impact assets
+4. identify unused or duplicate assets where possible
+5. recommend priorities
+6. estimate potential savings when reasonably possible
+
+Do not modify, compress, convert, rename, move, or delete image files during an audit unless explicitly authorized.
+
+Prioritize high-impact improvements rather than blindly optimizing every asset.
+
+## Final Performance Check
+
+Before considering an image-heavy production page complete, review:
+
+1. Are any images unnecessarily large?
+2. Are appropriate modern formats being used?
+3. Are responsive image sizes available where useful?
+4. Are below-the-fold images lazy-loaded?
+5. Is the primary hero/LCP image prioritized correctly?
+6. Are unused assets being shipped?
+7. Are duplicate assets present?
+8. Is mobile downloading unnecessarily large imagery?
+9. Can meaningful page-weight savings be achieved without visible quality loss?
+10. Have unnecessary Claude re-analysis and Artifact regeneration been avoided?
