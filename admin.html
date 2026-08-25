@@ -1892,7 +1892,7 @@ async function verCotizacion(id) {
     renglones = await sbGet(`cotizacion_renglones?cotizacion_id=eq.${id}&order=orden`);
   } catch (e) { toast('Error: ' + e.message, 'err'); return; }
 
-  const logoUrl = location.origin + '/assets/images/logo-color.png';
+  const logoUrl = location.origin + '/assets/images/logo-color.webp';
   const total = renglones.reduce((sum, r) => sum + Number(r.cantidad || 0) * Number(r.precio_unitario || 0), 0);
   const filas = renglones.map(r => `
     <tr>

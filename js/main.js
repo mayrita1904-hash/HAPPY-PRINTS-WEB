@@ -43,23 +43,23 @@ async function get(path) {
 
 /* ── Secciones estáticas de servicios (tipo Canva) ── */
 const SERVICE_TILES = [
-  { title: 'Sublimación, DTF y Vinil', sub: '', icon: '👕', img: 'assets/images/sublimacion-dtf-vinil.png', color: '#7C3AED', showAll: true },
-  { title: 'Libretas, Agendas y Planners', sub: '', icon: '📓', img: 'assets/images/libretas-agendas-planners.png', color: '#1FB6AE', kw: ['libreta','agenda','planner'] },
-  { title: 'Sellos, Etiquetas y Credenciales', sub: '', icon: '🏷️', img: 'assets/images/sellos-etiquetas-credenciales.png', color: '#F5A623', kw: ['sello','etiqueta','credencial'] },
-  { title: 'Invitaciones y Papelería Social', sub: '', icon: '💌', img: 'assets/images/invitaciones-papeleria-social.png', color: '#FF2D78', kw: ['invitac','papeler'] },
-  { title: 'Impresión Digital y Publicidad', sub: '', icon: '🖼️', img: 'assets/images/impresion-digital-publicidad.png', color: '#F6C55B', kw: ['impresion','digital','publicidad'] },
-  { title: 'Offset y Serigrafía', sub: '', icon: '🖨️', img: 'assets/images/offset-serigrafia.png', color: '#E91E8C', kw: ['offset','serigraf'] },
-  { title: 'Grabado y Corte Láser', sub: '', icon: '✂️', img: 'assets/images/grabado-corte-laser.png', color: '#B4C430', kw: ['grabado','laser','corte'] },
-  { title: 'Contenido Digital', sub: '', icon: '🎨', img: 'assets/images/diseno-grafico-contenido-digital.png', color: '#1FADA0', link: '/pages/contenido-digital' }
+  { title: 'Sublimación, DTF y Vinil', sub: '', icon: '👕', img: 'assets/images/sublimacion-dtf-vinil.webp', color: '#7C3AED', showAll: true },
+  { title: 'Libretas, Agendas y Planners', sub: '', icon: '📓', img: 'assets/images/libretas-agendas-planners.webp', color: '#1FB6AE', kw: ['libreta','agenda','planner'] },
+  { title: 'Sellos, Etiquetas y Credenciales', sub: '', icon: '🏷️', img: 'assets/images/sellos-etiquetas-credenciales.webp', color: '#F5A623', kw: ['sello','etiqueta','credencial'] },
+  { title: 'Invitaciones y Papelería Social', sub: '', icon: '💌', img: 'assets/images/invitaciones-papeleria-social.webp', color: '#FF2D78', kw: ['invitac','papeler'] },
+  { title: 'Impresión Digital y Publicidad', sub: '', icon: '🖼️', img: 'assets/images/impresion-digital-publicidad.webp', color: '#F6C55B', kw: ['impresion','digital','publicidad'] },
+  { title: 'Offset y Serigrafía', sub: '', icon: '🖨️', img: 'assets/images/offset-serigrafia.webp', color: '#E91E8C', kw: ['offset','serigraf'] },
+  { title: 'Grabado y Corte Láser', sub: '', icon: '✂️', img: 'assets/images/grabado-corte-laser.webp', color: '#B4C430', kw: ['grabado','laser','corte'] },
+  { title: 'Contenido Digital', sub: '', icon: '🎨', img: 'assets/images/diseno-grafico-contenido-digital.webp', color: '#1FADA0', link: '/pages/contenido-digital' }
 ];
 
 const FEATURED = [
-  { key: 'tazas', label: 'Tazas', icon: '☕', color: '#1FB6AE', desc: 'Cambian de color o se personalizan con tu foto o diseño favorito.' },
-  { key: 'playeras', label: 'Playeras', icon: '👕', color: '#FF2D78', desc: 'Estampado full color de alta durabilidad, en el diseño que imagines.' },
-  { key: 'sudaderas', label: 'Sudaderas', icon: '🧥', color: '#7C3AED', desc: 'Ideal para regalo o uniforme de equipo, con tu diseño o logo.' },
-  { key: 'termos', label: 'Termos', icon: '🥤', color: '#F5A623', desc: 'Mantienen la temperatura y resisten el uso diario.' },
-  { key: 'vasos', label: 'Vasos', icon: '🧊', color: '#F6C55B', desc: 'Para el café o bebida de todos los días, con tu nombre o diseño.' },
-  { key: 'libretas', label: 'Libretas', icon: '📓', color: '#1FADA0', desc: 'Pasta dura o suave, perfectas para regalo u oficina.' }
+  { key: 'tazas', label: 'Tazas', icon: '☕', color: '#1FB6AE', img: 'assets/images/tazas.webp', desc: 'Cambian de color o se personalizan con tu foto o diseño favorito.' },
+  { key: 'playeras', label: 'Playeras', icon: '👕', color: '#FF2D78', img: 'assets/images/playeras.webp', desc: 'Estampado full color de alta durabilidad, en el diseño que imagines.' },
+  { key: 'sudaderas', label: 'Sudaderas', icon: '🧥', color: '#7C3AED', img: 'assets/images/sudadera.webp', desc: 'Ideal para regalo o uniforme de equipo, con tu diseño o logo.' },
+  { key: 'termos', label: 'Termos', icon: '🥤', color: '#F5A623', img: 'assets/images/termos.webp', desc: 'Mantienen la temperatura y resisten el uso diario.' },
+  { key: 'vasos', label: 'Vasos', icon: '🧊', color: '#F6C55B', img: 'assets/images/vasos.webp', desc: 'Para el café o bebida de todos los días, con tu nombre o diseño.' },
+  { key: 'libretas', label: 'Libretas', icon: '📓', color: '#1FADA0', img: 'assets/images/libretas.webp', desc: 'Pasta dura o suave, perfectas para regalo u oficina.' }
 ];
 
 function matchCatIds(keywords) {
@@ -87,8 +87,6 @@ function buildCatGrid() {
   }).join('');
 }
 
-let featuredIndex = 0;
-
 function buildFeatured() {
   const wrap = document.getElementById('featured-grid');
   if (!wrap) return;
@@ -98,67 +96,46 @@ function buildFeatured() {
     const prods = allProds.filter(p => p.categoria_id === cat.id);
     if (!prods.length) return null;
     const minPrice = Math.min(...prods.map(p => Number(p.precio_base)));
-    const withImg = prods.find(p => p.imagen_url);
-    const media = withImg
-      ? `<img src="${withImg.imagen_url}" alt="${f.label} personalizados - Happy Prints" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;feat-ph&quot;>${f.icon}</div>'">`
-      : `<div class="feat-ph">${f.icon}</div>`;
-    return { catId: cat.id, media, f, minPrice };
+    return { catId: cat.id, f, minPrice };
   }).filter(Boolean);
 
-  const cards = items.map((it, i) => `<div class="feat-card" onclick="focusFeatured(${i})">
-      <div class="feat-media" style="background:${it.f.color}22">${it.media}</div>
-      <div class="feat-name">${it.f.label}</div>
+  const cards = items.map(it => `<div class="feat-card" onclick="filt(${it.catId})">
+      <div class="feat-media" style="--tint:${it.f.color}22;--accent:${it.f.color}">
+        <img src="${it.f.img}" alt="${it.f.label} personalizados - Happy Prints" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="feat-ph" style="display:none">${it.f.icon}</div>
+        <div class="feat-caption">
+          <div class="feat-name">${it.f.label}</div>
+          <div class="feat-price">Desde ${fmt(it.minPrice)}</div>
+        </div>
+      </div>
       <div class="feat-desc">${it.f.desc}</div>
-      <div class="feat-price">Desde ${fmt(it.minPrice)}</div>
       <button class="feat-btn" onclick="event.stopPropagation();filt(${it.catId})">Ver catálogo</button>
     </div>`).join('');
   wrap.innerHTML = cards || '<p style="text-align:center;color:var(--ink-soft)">Cargando productos destacados…</p>';
-  featuredIndex = Math.min(featuredIndex, Math.max(items.length - 1, 0));
-  updateFeaturedCarousel();
-  setupFeaturedSwipe();
-}
-
-function updateFeaturedCarousel() {
-  const track = document.getElementById('featured-grid');
-  const viewport = track && track.parentElement;
-  if (!track || !viewport) return;
-  const cards = [...track.children];
-  if (!cards.length) return;
-  featuredIndex = Math.max(0, Math.min(featuredIndex, cards.length - 1));
-  cards.forEach((card, i) => {
-    const dist = Math.abs(i - featuredIndex);
-    card.classList.toggle('is-active', dist === 0);
-    card.classList.toggle('is-near', dist === 1);
-  });
-  const active = cards[featuredIndex];
-  const offset = viewport.clientWidth / 2 - (active.offsetLeft + active.offsetWidth / 2);
-  track.style.transform = `translateX(${offset}px)`;
+  setupFeaturedArrows();
 }
 
 function moveFeatured(dir) {
-  featuredIndex += dir;
-  updateFeaturedCarousel();
+  const track = document.getElementById('featured-grid');
+  if (!track) return;
+  track.scrollBy({ left: dir * track.clientWidth * 0.8, behavior: 'smooth' });
 }
 
-function focusFeatured(i) {
-  featuredIndex = i;
-  updateFeaturedCarousel();
-}
-
-function setupFeaturedSwipe() {
-  const viewport = document.querySelector('.featured-viewport');
-  if (!viewport || viewport.dataset.swipeBound) return;
-  viewport.dataset.swipeBound = '1';
-  let startX = 0, dragging = false;
-  viewport.addEventListener('pointerdown', e => { dragging = true; startX = e.clientX; });
-  viewport.addEventListener('pointerup', e => {
-    if (!dragging) return;
-    dragging = false;
-    const diff = e.clientX - startX;
-    if (Math.abs(diff) > 40) moveFeatured(diff < 0 ? 1 : -1);
-  });
-  viewport.addEventListener('pointercancel', () => { dragging = false; });
-  window.addEventListener('resize', () => updateFeaturedCarousel());
+function setupFeaturedArrows() {
+  const track = document.getElementById('featured-grid');
+  const prev = document.getElementById('fPrev');
+  const next = document.getElementById('fNext');
+  if (!track || !prev || !next) return;
+  const update = () => {
+    prev.disabled = track.scrollLeft <= 2;
+    next.disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 2;
+  };
+  if (!track.dataset.scrollBound) {
+    track.dataset.scrollBound = '1';
+    track.addEventListener('scroll', update);
+    window.addEventListener('resize', update);
+  }
+  update();
 }
 
 async function init() {
@@ -266,7 +243,7 @@ function loadMoreGrid() {
 
 /* ── Checklist de cotización personalizada (categorías sin costo fijo) ── */
 const QUOTE_ICON_IMG = {
-  'impresión digital': 'assets/images/impresion-digital-sticker.png'
+  'impresión digital': 'assets/images/impresion-digital-sticker.webp'
 };
 
 function quoteChecklistHtml(catObj) {
@@ -391,6 +368,7 @@ function openM(id) {
   renderThumbs(gallery);
 
   document.getElementById('mbar').style.background = color;
+  document.querySelector('.modal').style.setProperty('--modal-accent', color);
   document.getElementById('mbdg').textContent       = c.nombre || '';
   document.getElementById('mbdg').style.background  = color;
   document.getElementById('mname').textContent      = cur.nombre;

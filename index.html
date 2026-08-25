@@ -11,13 +11,13 @@
 <meta property="og:site_name" content="Happy Prints">
 <meta property="og:title" content="Happy Prints | Regalos Personalizados en Toluca, México">
 <meta property="og:description" content="Personalizamos tazas, vasos y playeras por sublimación. Diseño incluido y entrega rápida. Envíos a todo México.">
-<meta property="og:image" content="https://happy-prints-web.vercel.app/assets/images/hero-banner.jpg">
+<meta property="og:image" content="https://happy-prints-web.vercel.app/assets/images/hero-banner.webp">
 <meta property="og:locale" content="es_MX">
 <meta property="og:url" content="https://happy-prints-web.vercel.app/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Happy Prints | Regalos Personalizados en Toluca, México">
 <meta name="twitter:description" content="Personalizamos tazas, vasos y playeras por sublimación. Diseño incluido y entrega rápida. Envíos a todo México.">
-<meta name="twitter:image" content="https://happy-prints-web.vercel.app/assets/images/hero-banner.jpg">
+<meta name="twitter:image" content="https://happy-prints-web.vercel.app/assets/images/hero-banner.webp">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://ocwzwrapiqvyxdlijdoc.supabase.co; connect-src 'self' https://ocwzwrapiqvyxdlijdoc.supabase.co; frame-src https://www.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,7 +29,7 @@
 <div class="top-accent"></div>
 
 <header class="site-header" id="top">
-  <img class="hero-banner" src="assets/images/hero-banner.jpg" alt="Happy Prints — Tienda de productos personalizados por sublimación en México">
+  <img class="hero-banner" src="assets/images/hero-banner.webp" alt="Happy Prints — Tienda de productos personalizados por sublimación en México">
 </header>
 
 <div class="promo-banner" id="promoBanner">
@@ -62,16 +62,17 @@
 <div class="lime-divider"></div>
 
 <section class="featured" aria-labelledby="featured-h">
-  <h2 id="featured-h" class="section-h">Productos destacados</h2>
-  <div class="featured-wrap">
-    <div class="featured-carousel">
-      <button class="feat-nav feat-nav--prev" onclick="moveFeatured(-1)" aria-label="Ver producto anterior">‹</button>
-      <div class="featured-viewport">
-        <div class="featured-grid" id="featured-grid"></div>
-      </div>
-      <button class="feat-nav feat-nav--next" onclick="moveFeatured(1)" aria-label="Ver siguiente producto">›</button>
+  <div class="featured-head">
+    <div>
+      <h2 id="featured-h" class="section-h" style="margin:0">Productos destacados</h2>
+      <p class="featured-sub">Los favoritos de siempre, listos para personalizar a tu gusto.</p>
+    </div>
+    <div class="featured-arrows">
+      <button class="f-arrow" id="fPrev" onclick="moveFeatured(-1)" aria-label="Ver producto anterior">‹</button>
+      <button class="f-arrow" id="fNext" onclick="moveFeatured(1)" aria-label="Ver siguiente producto">›</button>
     </div>
   </div>
+  <div class="featured-track" id="featured-grid"></div>
 </section>
 
 <div class="lime-divider"></div>
@@ -181,7 +182,7 @@
 
 <footer>
   <div class="footer-brand">
-    <img class="footer-logo" src="assets/images/logo.jpg" alt="Logo de Happy Prints" width="60" height="60">
+    <img class="footer-logo" src="assets/images/logo.webp" alt="Logo de Happy Prints" width="60" height="60">
     <div>
       <p>@happyprintsmx &nbsp;·&nbsp; +52 1 722 461 6543</p>
       <p>happyprints.contacto@gmail.com</p>
@@ -213,7 +214,6 @@
       </div>
       <div class="mbar" id="mbar"></div>
       <div class="mbdg" id="mbdg"></div>
-      <button class="mclose" onclick="closeM()" aria-label="Cerrar">✕</button>
       <button class="mzoom" id="mzoom" onclick="toggleModalZoom(event)" aria-label="Acercar imagen" style="display:none">
         <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 5L20.49 19l-5-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"/><path d="M11 7h-1v3H7v1h3v3h1v-3h3V10h-3z"/></svg>
       </button>
@@ -224,6 +224,7 @@
       <div class="mdesc" id="mdesc"></div>
       <div id="mbody"></div>
     </div>
+    <button class="mclose" onclick="closeM()" aria-label="Cerrar">✕</button>
   </div>
 </div>
 
