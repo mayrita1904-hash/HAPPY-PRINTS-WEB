@@ -29,10 +29,10 @@ function renderWebdevTiers(paquetes) {
     wrap.innerHTML = '<div class="exp-tiers-loading">Muy pronto publicaremos los paquetes disponibles.</div>';
     return;
   }
-  wrap.innerHTML = paquetes.map(p => {
+  wrap.innerHTML = paquetes.map((p, i) => {
     const feats = [p.feature_1, p.feature_2, p.feature_3, p.feature_4, p.feature_5].filter(Boolean);
     return `
-    <div class="exp-tier exp-tier-${p.tier_key}${p.badge ? ' exp-tier-highlight' : ''}">
+    <div class="exp-tier exp-tier-${p.tier_key}${p.badge ? ' exp-tier-highlight' : ''} reveal" style="--i:${i}">
       ${p.badge ? `<div class="exp-tier-badge">${p.badge}</div>` : ''}
       <div class="exp-tier-head"><span class="exp-tier-icon">${TIER_ICON[p.tier_key] || '✨'}</span> ${p.nombre}</div>
       <div class="exp-tier-body">
@@ -46,6 +46,7 @@ function renderWebdevTiers(paquetes) {
       </div>
     </div>`;
   }).join('');
+  if (window.Motion) Motion.observeAll(wrap);
 }
 
 /* ── Extras (carrusel de tarjetas por categoría) ── */

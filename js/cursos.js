@@ -258,7 +258,7 @@ function renderCursos(cursos, inscripciones) {
   grid.innerHTML = cursos.map((c, i) => {
     const img = c.imagen_url ? `<img src="${c.imagen_url}" alt="${escapeHtml(c.nombre)}">` : CURSO_ICONS[i % CURSO_ICONS.length];
     return `
-      <div class="curso-card" data-nombre="${escapeHtml((c.nombre + ' ' + (c.descripcion || '')).toLowerCase())}">
+      <div class="curso-card reveal" data-nombre="${escapeHtml((c.nombre + ' ' + (c.descripcion || '')).toLowerCase())}">
         <div class="curso-card-img">${img}<span class="curso-card-badge">🎓 Curso online</span></div>
         <div class="curso-card-body">
           <div class="curso-card-title">${escapeHtml(c.nombre)}</div>
@@ -271,6 +271,7 @@ function renderCursos(cursos, inscripciones) {
       </div>`;
   }).join('');
   filtrarCursos();
+  if (window.Motion) Motion.observeAll(grid);
 }
 
 function escapeHtml(str) {

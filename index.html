@@ -22,7 +22,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=51">
+<link rel="stylesheet" href="css/styles.css?v=52">
 </head>
 <body>
 
@@ -63,7 +63,7 @@
 
 <section class="featured" aria-labelledby="featured-h">
   <div class="featured-head">
-    <div>
+    <div class="reveal">
       <h2 id="featured-h" class="section-h" style="margin:0">Productos destacados</h2>
       <p class="featured-sub">Los favoritos de siempre, listos para personalizar a tu gusto.</p>
     </div>
@@ -78,7 +78,7 @@
 <div class="lime-divider"></div>
 
 <section class="more-products" aria-labelledby="more-h">
-  <h2 id="more-h" class="section-h">Más productos y servicios</h2>
+  <h2 id="more-h" class="section-h reveal">Más productos y servicios</h2>
   <div class="more-banner">
     <p>• Sudaderas • Vasos • Termos • Agendas • Rompecabezas • Acrílicos • Lonas • Volantes •</p>
     <p>• Notas • Recetas • Sellos • Invitaciones • Hojas membretadas • Tarjetas de presentación •</p>
@@ -86,46 +86,46 @@
 </section>
 
 <section class="how-to" aria-labelledby="how-h">
-  <h2 class="how-pill" id="how-h">¿Cómo hacer tu pedido?</h2>
-  <p class="how-sub">Un proceso simple, rápido y personalizado <b>💗</b></p>
+  <h2 class="how-pill reveal" id="how-h">¿Cómo hacer tu pedido?</h2>
+  <p class="how-sub reveal">Un proceso simple, rápido y personalizado <b>💗</b></p>
   <div class="steps">
 
-    <div class="step" style="--sc:var(--teal)">
+    <div class="step reveal" style="--sc:var(--teal);--i:0">
       <span class="step-num">1</span>
       <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/><path d="M10.6 12.2c.6-.7 1.6-.7 2 0l1.4-.9-1.4 2.1-1.4-2.1 1.4.9Z"/></svg></div>
       <h3>Elige tu producto</h3>
       <p>Selecciona el producto o servicio, el diseño y la cantidad que necesitas.</p>
     </div>
 
-    <div class="step" style="--sc:var(--orange)">
+    <div class="step reveal" style="--sc:var(--orange);--i:1">
       <span class="step-num">2</span>
       <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M4 6h13a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/><circle cx="8" cy="11" r=".6" fill="currentColor"/><circle cx="11.5" cy="11" r=".6" fill="currentColor"/><circle cx="15" cy="11" r=".6" fill="currentColor"/></svg></div>
       <h3>Contáctanos</h3>
       <p>Escríbenos para cotizar y levantar tu pedido. Resolvemos todas tus dudas.</p>
     </div>
 
-    <div class="step" style="--sc:var(--purple)">
+    <div class="step reveal" style="--sc:var(--purple);--i:2">
       <span class="step-num">3</span>
       <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M14.5 4.5l5 5L8 21H3v-5L14.5 4.5Z"/><path d="M12.5 6.5l5 5"/></svg></div>
       <h3>Personalizamos</h3>
       <p>Preparamos tus productos y te mostramos el resultado antes de imprimirlo.</p>
     </div>
 
-    <div class="step" style="--sc:var(--lime)">
+    <div class="step reveal" style="--sc:var(--lime);--i:3">
       <span class="step-num">4</span>
       <div class="step-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10.5h18"/><path d="M6.5 15h4"/></svg></div>
       <h3>Elige tu método</h3>
       <p>Elige el método de pago que mejor te convenga y completa tu compra.</p>
     </div>
 
-    <div class="step" style="--sc:var(--navy)">
+    <div class="step reveal" style="--sc:var(--navy);--i:4">
       <span class="step-num">5</span>
       <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M3 8h11v8H3z"/><path d="M14 11h4l3 3v2h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg></div>
       <h3>Envíanos</h3>
       <p>Confirma tu pedido y, si requieres envío, tus datos completos de entrega.</p>
     </div>
 
-    <div class="step" style="--sc:var(--pink)">
+    <div class="step reveal" style="--sc:var(--pink);--i:5">
       <span class="step-num">6</span>
       <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M4 9h16v11H4z"/><path d="M4 9l1.5-4h13L20 9"/><path d="M12 9v11"/><path d="M10.4 5.6c.6-.7 1.6-.7 1.6.4 0-1.1 1-1.1 1.6-.4"/></svg></div>
       <h3>Recibe tu pedido</h3>
@@ -139,7 +139,7 @@
 <div class="cats" id="cat-chips" role="tablist" aria-label="Filtrar por categoría"></div>
 
 <main id="prods">
-  <h2 class="shd"><span class="sdot"></span> Catálogo completo</h2>
+  <h2 class="shd reveal"><span class="sdot"></span> Catálogo completo</h2>
   <div class="grid" id="grid">
     <div class="skel-card"><div class="skel" style="height:150px"></div><div style="padding:10px 12px 12px"><div class="skel" style="height:14px;margin-bottom:8px;border-radius:4px"></div><div class="skel" style="height:10px;width:70%;margin-bottom:12px;border-radius:4px"></div><div class="skel" style="height:20px;width:50%;border-radius:4px"></div></div></div>
     <div class="skel-card"><div class="skel" style="height:150px"></div><div style="padding:10px 12px 12px"><div class="skel" style="height:14px;margin-bottom:8px;border-radius:4px"></div><div class="skel" style="height:10px;width:70%;margin-bottom:12px;border-radius:4px"></div><div class="skel" style="height:20px;width:50%;border-radius:4px"></div></div></div>
@@ -149,16 +149,16 @@
 </main>
 
 <div class="trust">
-  <div class="ti">⚡ Entrega rápida</div>
-  <div class="ti">🎨 Diseño incluido</div>
-  <div class="ti">💳 Transferencia o tarjeta</div>
-  <div class="ti">📦 Envío a todo México</div>
+  <div class="ti reveal" style="--i:0">⚡ Entrega rápida</div>
+  <div class="ti reveal" style="--i:1">🎨 Diseño incluido</div>
+  <div class="ti reveal" style="--i:2">💳 Transferencia o tarjeta</div>
+  <div class="ti reveal" style="--i:3">📦 Envío a todo México</div>
 </div>
 
 <section class="reviews" aria-labelledby="rev-h">
-  <h2 id="rev-h" class="section-h">⭐ Lo que dicen nuestros clientes</h2>
+  <h2 id="rev-h" class="section-h reveal">⭐ Lo que dicen nuestros clientes</h2>
   <div class="reviews-grid">
-    <div class="review-card">
+    <div class="review-card reveal" style="--i:0">
       <div class="review-head">
         <div class="review-avatar" style="background:#1A73E8">M</div>
         <div>
@@ -168,7 +168,7 @@
       </div>
       <p class="review-body">Tienen una gran variedad de productos.. me encantaron mis vasos que pedí..</p>
     </div>
-    <div class="review-card">
+    <div class="review-card reveal" style="--i:1">
       <div class="review-head">
         <div class="review-avatar" style="background:#8B5CF6">O</div>
         <div>
@@ -178,7 +178,7 @@
       </div>
       <p class="review-body">Una gran variedad y creatividad!</p>
     </div>
-    <div class="review-card">
+    <div class="review-card reveal" style="--i:2">
       <div class="review-head">
         <div class="review-avatar" style="background:#E25822">A</div>
         <div>
@@ -188,7 +188,7 @@
       </div>
       <p class="review-body">Gran atención! Lo que personalizan queda increíble! Excelente trato y comunicación!</p>
     </div>
-    <div class="review-card">
+    <div class="review-card reveal" style="--i:3">
       <div class="review-head">
         <div class="review-avatar" style="background:#2D3E50">J</div>
         <div>
@@ -203,7 +203,7 @@
 </section>
 
 <section class="location" aria-labelledby="loc-h">
-  <h2 id="loc-h" class="section-h">📍 Encuéntranos en</h2>
+  <h2 id="loc-h" class="section-h reveal">📍 Encuéntranos en</h2>
   <div class="location-wrap">
     <iframe class="location-map" src="https://www.google.com/maps?q=Ignacio+Allende+224%2C+Centro%2C+50000+Toluca+de+Lerdo%2C+M%C3%A9x.&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Ubicación de Happy Prints en el mapa"></iframe>
     <div class="location-info">
@@ -214,7 +214,7 @@
 </section>
 
 <footer>
-  <div class="footer-brand">
+  <div class="footer-brand reveal">
     <img class="footer-logo" src="assets/images/logo.webp" alt="Logo de Happy Prints" width="60" height="60">
     <div>
       <p>@happyprintsmx &nbsp;·&nbsp; +52 1 722 461 6543</p>
@@ -349,7 +349,8 @@
 </a>
 
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-<script src="js/main.js?v=39"></script>
+<script src="js/motion.js?v=1"></script>
+<script src="js/main.js?v=40"></script>
 <script src="js/analytics.js?v=1" defer></script>
 </body>
 </html>

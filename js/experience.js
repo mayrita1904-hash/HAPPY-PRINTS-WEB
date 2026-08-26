@@ -22,8 +22,8 @@ function renderPaquetes(paquetes) {
     wrap.innerHTML = '<div class="exp-tiers-loading">Muy pronto publicaremos los paquetes disponibles.</div>';
     return;
   }
-  wrap.innerHTML = paquetes.map(p => `
-    <div class="exp-tier exp-tier-${p.color_key}${p.badge ? ' exp-tier-highlight' : ''}">
+  wrap.innerHTML = paquetes.map((p, i) => `
+    <div class="exp-tier exp-tier-${p.color_key}${p.badge ? ' exp-tier-highlight' : ''} reveal" style="--i:${i}">
       ${p.badge ? `<div class="exp-tier-badge">⭐ ${p.badge}</div>` : ''}
       <div class="exp-tier-head"><span class="exp-tier-icon">${TIER_ICON[p.color_key] || '✨'}</span>${p.nombre}</div>
       <div class="exp-tier-body">
@@ -38,6 +38,7 @@ function renderPaquetes(paquetes) {
       </div>
     </div>
   `).join('');
+  if (window.Motion) Motion.observeAll(wrap);
 }
 
 cargarPaquetes();
@@ -46,7 +47,7 @@ cargarPaquetes();
 function initExpSelector() {
   const panels = document.querySelectorAll('#expSelector .es-panel');
   panels.forEach((p, i) => {
-    setTimeout(() => p.classList.add('in'), 130 * i);
+    setTimeout(() => p.classList.add('in'), 90 * i);
     p.addEventListener('click', () => {
       const current = document.querySelector('#expSelector .es-panel.active');
       if (current) current.classList.remove('active');

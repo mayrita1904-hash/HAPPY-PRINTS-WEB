@@ -15,6 +15,16 @@
   --radius-lg: 22px;
   --radius-md: 16px;
   --radius-sm: 10px;
+  --reveal-dur: 580ms;
+  --reveal-ease: cubic-bezier(.22,1,.36,1);
+  --reveal-distance: 20px;
+  --stagger: 90ms;
+  --stagger-cap: 540ms;
+  --hover-dur: 200ms;
+  --hover-ease: cubic-bezier(.4,0,.2,1);
+}
+@media (max-width: 767px) {
+  :root { --reveal-distance: 16px; --stagger-cap: 270ms; }
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -26,6 +36,28 @@ body {
 }
 
 img { max-width: 100%; display: block; }
+
+/* ===== Sistema de motion (reveal + hover) =====
+   El contenido siempre parte visible: solo si JS confirma soporte y
+   prefers-reduced-motion no está activo se agrega .motion-on al <html>
+   y el CSS de abajo empieza a ocultar/animar. Si JS falla, no pasa nada. */
+.motion-on .reveal {
+  opacity: 0;
+  transform: translateY(var(--reveal-distance));
+  transition: opacity var(--reveal-dur) var(--reveal-ease), transform var(--reveal-dur) var(--reveal-ease);
+  transition-delay: min(calc(var(--i, 0) * var(--stagger)), var(--stagger-cap));
+}
+.motion-on .reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  /* Una vez revelada, la propiedad transform vuelve a la velocidad de hover:
+     si el elemento tiene su propio :hover con transform (tarjetas, botones),
+     no debe heredar la duración lenta del reveal. */
+  transition: opacity var(--reveal-dur) var(--reveal-ease), transform var(--hover-dur) var(--hover-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .motion-on .reveal { opacity: 1; transform: none; transition: none; }
+}
 
 /* ===== Header ===== */
 .top-accent { height: 10px; background: var(--pink); }
@@ -77,7 +109,7 @@ img { max-width: 100%; display: block; }
   border-radius: 999px;
   white-space: nowrap;
   cursor: pointer;
-  transition: background .15s;
+  transition: background var(--hover-dur) var(--hover-ease);
   text-transform: uppercase;
   letter-spacing: .5px;
   text-shadow: 0 1px 4px rgba(0,0,0,.2);
@@ -112,7 +144,7 @@ img { max-width: 100%; display: block; }
   padding: 16px;
   cursor: pointer;
   color: #fff;
-  transition: transform .15s;
+  transition: transform var(--hover-dur) var(--hover-ease);
 }
 .cat-tile:hover { transform: scale(1.02); }
 .cat-tile-icon { font-size: 34px; margin-bottom: 6px; filter: drop-shadow(0 2px 3px rgba(0,0,0,.2)); }
@@ -235,7 +267,7 @@ img { max-width: 100%; display: block; }
   border-radius: 999px;
   padding: 8px 16px;
   cursor: pointer;
-  transition: all .15s;
+  transition: all var(--hover-dur) var(--hover-ease);
 }
 .feat-btn:hover { background: var(--navy); color: #fff; }
 
@@ -385,7 +417,7 @@ img { max-width: 100%; display: block; }
   overflow: hidden;
   border: 2px solid var(--line);
   cursor: pointer;
-  transition: transform .18s, border-color .18s;
+  transition: transform var(--hover-dur) var(--hover-ease), border-color var(--hover-dur) var(--hover-ease);
   position: relative;
 }
 .card:hover { transform: translateY(-4px); border-color: var(--pink); }
@@ -398,7 +430,7 @@ img { max-width: 100%; display: block; }
 .card-heart:hover { transform: scale(1.1); }
 .card-heart.on { color: var(--pink); }
 .cst { height: 5px; }
-.cimg { width: 100%; height: 150px; object-fit: cover; background: #F4F4F4; display: block; transition: transform .3s; }
+.cimg { width: 100%; height: 150px; object-fit: cover; background: #F4F4F4; display: block; transition: transform var(--hover-dur) var(--hover-ease); }
 .card:hover .cimg { transform: scale(1.05); }
 .cph { width: 100%; height: 150px; background: #F4F4F4; display: flex; align-items: center; justify-content: center; font-size: 44px; }
 .cbody { padding: 12px 14px 14px; }
@@ -701,7 +733,7 @@ footer p { font-size: 11px; color: rgba(255,255,255,.55); margin: 0; line-height
 .exp-cta {
   display: block; text-align: center; background: var(--pink); color: #fff; font-family: 'Fredoka', sans-serif;
   font-weight: 700; text-decoration: none; max-width: 320px; margin: 28px auto 0; padding: 15px 20px;
-  border-radius: 999px; font-size: 15px; box-shadow: 0 6px 16px rgba(255,45,120,.35); transition: transform .15s;
+  border-radius: 999px; font-size: 15px; box-shadow: 0 6px 16px rgba(255,45,120,.35); transition: transform var(--hover-dur) var(--hover-ease);
 }
 .exp-cta:hover { transform: translateY(-2px); }
 
@@ -805,7 +837,7 @@ footer p { font-size: 11px; color: rgba(255,255,255,.55); margin: 0; line-height
 .exp-final-cta {
   display: inline-block; background: var(--pink); color: #fff; text-decoration: none;
   font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: .02em;
-  padding: 16px 32px; border-radius: 999px; transition: transform .15s; box-shadow: 0 10px 24px rgba(255,45,120,.35);
+  padding: 16px 32px; border-radius: 999px; transition: transform var(--hover-dur) var(--hover-ease); box-shadow: 0 10px 24px rgba(255,45,120,.35);
 }
 .exp-final-cta:hover { transform: translateY(-2px); }
 .exp-final-bullets { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 24px; margin: 26px auto 0; max-width: 560px; }
@@ -1040,7 +1072,7 @@ footer p { font-size: 11px; color: rgba(255,255,255,.55); margin: 0; line-height
 .curso-grid { display: grid; grid-template-columns: 1fr; gap: 22px; }
 @media (min-width: 760px) { .curso-grid { grid-template-columns: repeat(3, 1fr); } }
 
-.curso-card { background: #fff; border-radius: var(--radius-lg); box-shadow: 0 6px 22px rgba(26,31,75,.09); overflow: hidden; display: flex; flex-direction: column; transition: transform .18s, box-shadow .18s; }
+.curso-card { background: #fff; border-radius: var(--radius-lg); box-shadow: 0 6px 22px rgba(26,31,75,.09); overflow: hidden; display: flex; flex-direction: column; transition: transform var(--hover-dur) var(--hover-ease), box-shadow var(--hover-dur) var(--hover-ease); }
 .curso-card:hover { transform: translateY(-5px); box-shadow: 0 16px 34px rgba(26,31,75,.15); }
 .curso-card-img { position: relative; height: 150px; display: flex; align-items: center; justify-content: center; font-size: 50px; }
 .curso-card-img img { width: 100%; height: 100%; object-fit: cover; }
@@ -1054,7 +1086,7 @@ footer p { font-size: 11px; color: rgba(255,255,255,.55); margin: 0; line-height
 .curso-card-foot { display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed var(--line); padding-top: 14px; margin-top: auto; margin-bottom: 14px; }
 .curso-card-price-lbl { font-family: 'Nunito', sans-serif; font-size: 9.5px; font-weight: 800; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .4px; }
 .curso-card-price { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 21px; color: var(--navy); }
-.curso-card-btn { display: block; width: 100%; text-align: center; background: var(--pink); color: #fff; font-family: 'Fredoka', sans-serif; font-weight: 600; border: none; cursor: pointer; padding: 13px 16px; border-radius: 999px; font-size: 13.5px; box-shadow: 0 6px 16px rgba(255,45,120,.28); transition: transform .15s, opacity .15s; }
+.curso-card-btn { display: block; width: 100%; text-align: center; background: var(--pink); color: #fff; font-family: 'Fredoka', sans-serif; font-weight: 600; border: none; cursor: pointer; padding: 13px 16px; border-radius: 999px; font-size: 13.5px; box-shadow: 0 6px 16px rgba(255,45,120,.28); transition: transform var(--hover-dur) var(--hover-ease), opacity var(--hover-dur) var(--hover-ease); }
 .curso-card-btn:hover { transform: translateY(-2px); }
 .curso-card-btn:disabled { opacity: .7; cursor: not-allowed; transform: none; }
 .curso-card-btn.is-ok { background: var(--lime-2); color: var(--navy); box-shadow: none; }

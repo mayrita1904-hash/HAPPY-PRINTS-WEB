@@ -72,7 +72,7 @@ function matchCatIds(keywords) {
 function buildCatGrid() {
   const grid = document.getElementById('cat-grid-visual');
   if (!grid) return;
-  grid.innerHTML = SERVICE_TILES.map(t => {
+  grid.innerHTML = SERVICE_TILES.map((t, i) => {
     const fitClass = t.imgFit === 'cover' ? ' cover' : '';
     const media = t.img
       ? `<img class="cat-tile-img${fitClass}" src="${t.img}" alt="${t.title} - Happy Prints" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'cat-tile-icon',textContent:'${t.icon}'}))">`
@@ -80,11 +80,12 @@ function buildCatGrid() {
     const action = t.link
       ? `location.href='${t.link}'`
       : (() => { const arg = t.showAll ? `'all'` : (() => { const ids = matchCatIds(t.kw); return ids.length ? JSON.stringify(ids) : `'all'`; })(); return `filt(${arg})`; })();
-    return `<div class="cat-tile ${t.img?'has-img':''}${fitClass}" style="background:${t.color}" onclick="${action}">
+    return `<div class="cat-tile ${t.img?'has-img':''}${fitClass} reveal" style="background:${t.color};--i:${i}" onclick="${action}">
       ${media}
       <div class="cat-tile-title">${t.title}</div>
     </div>`;
   }).join('');
+  if (window.Motion) Motion.observeAll(grid);
 }
 
 function buildFeatured() {
@@ -215,7 +216,7 @@ function renderGrid(cat) {
            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : '';
     const ph = `<div class="cph" style="${p.imagen_url ? 'display:none' : ''}">${catEmoji(c.emoji||c.nombre)}</div>`;
-    return `<div class="card" onclick="openM(${p.id})">
+    return `<div class="card reveal" onclick="openM(${p.id})">
       <div class="cst" style="background:${p.color_marca || '#FF2D78'}"></div>
       <button class="card-heart ${favoritos.includes(p.id) ? 'on' : ''}" data-pid="${p.id}" onclick="event.stopPropagation();toggleFavorito(${p.id})" aria-label="Marcar como favorito">♥</button>
       ${imgTag}${ph}
@@ -233,7 +234,9 @@ function renderGrid(cat) {
     ? `<div class="load-more-wrap"><button class="load-more-btn" onclick="loadMoreGrid()">Ver más productos (${remaining})</button></div>`
     : '';
 
-  document.getElementById('grid').innerHTML = persHtml + cardsHtml + moreHtml + quoteHtml;
+  const gridEl = document.getElementById('grid');
+  gridEl.innerHTML = persHtml + cardsHtml + moreHtml + quoteHtml;
+  if (window.Motion) Motion.observeAll(gridEl);
 }
 
 function loadMoreGrid() {
