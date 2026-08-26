@@ -41,3 +41,17 @@ function renderPaquetes(paquetes) {
 }
 
 cargarPaquetes();
+
+/* ── Selector expandible "Una experiencia para cada celebración" ── */
+function initExpSelector() {
+  const panels = document.querySelectorAll('#expSelector .es-panel');
+  panels.forEach((p, i) => {
+    setTimeout(() => p.classList.add('in'), 130 * i);
+    p.addEventListener('click', () => {
+      const current = document.querySelector('#expSelector .es-panel.active');
+      if (current) current.classList.remove('active');
+      p.classList.add('active');
+    });
+  });
+}
+initExpSelector();
