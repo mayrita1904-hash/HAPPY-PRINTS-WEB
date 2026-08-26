@@ -16,7 +16,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../css/styles.css?v=58">
+<link rel="stylesheet" href="../css/styles.css?v=59">
 </head>
 <body>
 
@@ -72,18 +72,20 @@
   <p class="exp-pricing-foot">Precios varían según: <strong>número de páginas</strong> · <strong>complejidad del catálogo</strong> · <strong>funciones a la medida</strong></p>
 </section>
 
-<section class="webdev-extras">
-  <h2 class="webdev-extras-h reveal">✨ Extras que puedes agregar</h2>
-  <p class="webdev-extras-sub reveal">Se cobran aparte de cualquier paquete — perfectos para hacer tu página aún más completa</p>
-
-  <div class="webdev-extras-carousel">
-    <button class="feat-nav feat-nav--prev" onclick="moveExtras(-1)" aria-label="Ver extra anterior">‹</button>
-    <div class="webdev-extras-viewport">
-      <div class="webdev-extras-grid" id="extrasGrid">
-        <p class="webdev-empty-msg">Cargando extras…</p>
-      </div>
+<section class="webdev-extras" aria-labelledby="extras-h">
+  <div class="featured-head">
+    <div class="reveal">
+      <h2 id="extras-h" class="webdev-extras-h">✨ Extras que puedes agregar</h2>
+      <p class="featured-sub">Se cobran aparte de cualquier paquete — perfectos para hacer tu página aún más completa</p>
     </div>
-    <button class="feat-nav feat-nav--next" onclick="moveExtras(1)" aria-label="Ver siguiente extra">›</button>
+    <div class="featured-arrows">
+      <button class="f-arrow" id="exPrev" onclick="moveExtras(-1)" aria-label="Ver extra anterior">‹</button>
+      <button class="f-arrow" id="exNext" onclick="moveExtras(1)" aria-label="Ver siguiente extra">›</button>
+    </div>
+  </div>
+
+  <div class="webdev-extras-grid" id="extrasGrid">
+    <p class="webdev-empty-msg">Cargando extras…</p>
   </div>
 
   <a class="exp-cta exp-cta-2" href="https://wa.me/5217227118927?text=%C2%A1Hola%21%20%F0%9F%91%8B%20Vi%20la%20p%C3%A1gina%20de%20Contenido%20Digital%20de%20Happy%20Prints%20y%20me%20interesa%20que%20me%20ayuden%20a%20crear%20la%20p%C3%A1gina%20web%20de%20mi%20negocio.%0A%0A%C2%BFMe%20platican%20m%C3%A1s%20sobre%20los%20paquetes%20disponibles%3F" target="_blank" rel="noopener">Platícanos tu proyecto por WhatsApp</a>
@@ -111,7 +113,7 @@
 </a>
 
 <script src="../js/motion.js?v=1"></script>
-<script src="../js/contenido-digital.js?v=5"></script>
+<script src="../js/contenido-digital.js?v=6"></script>
 <script src="../js/analytics.js?v=1" defer></script>
 </body>
 </html>

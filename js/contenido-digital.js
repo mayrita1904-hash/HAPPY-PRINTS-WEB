@@ -74,58 +74,27 @@ function renderWebdevExtras(extras) {
   `).join('');
 }
 
-let extrasIndex = 0;
-
-function updateExtrasCarousel() {
-  const track = document.getElementById('extrasGrid');
-  const viewport = track && track.parentElement;
-  if (!track || !viewport) return;
-  const cards = [...track.children];
-  if (!cards.length) return;
-  extrasIndex = Math.max(0, Math.min(extrasIndex, cards.length - 1));
-  cards.forEach((card, i) => {
-    const dist = Math.abs(i - extrasIndex);
-    card.classList.toggle('is-active', dist === 0);
-    card.classList.toggle('is-near', dist === 1);
-  });
-  const active = cards[extrasIndex];
-  const offset = viewport.clientWidth / 2 - (active.offsetLeft + active.offsetWidth / 2);
-  track.style.transform = `translateX(${offset}px)`;
-}
-
 function moveExtras(dir) {
-  extrasIndex += dir;
-  updateExtrasCarousel();
+  const track = document.getElementById('extrasGrid');
+  if (!track) return;
+  track.scrollBy({ left: dir * track.clientWidth * 0.8, behavior: 'smooth' });
 }
 
-function focusExtras(i) {
-  extrasIndex = i;
-  updateExtrasCarousel();
-}
-
-function setupExtrasSwipe() {
-  const viewport = document.querySelector('.webdev-extras-viewport');
-  if (!viewport || viewport.dataset.swipeBound) return;
-  viewport.dataset.swipeBound = '1';
-  let startX = 0, dragging = false;
-  viewport.addEventListener('pointerdown', e => { dragging = true; startX = e.clientX; });
-  viewport.addEventListener('pointerup', e => {
-    if (!dragging) return;
-    dragging = false;
-    const diff = e.clientX - startX;
-    if (Math.abs(diff) > 40) moveExtras(diff < 0 ? 1 : -1);
-  });
-  viewport.addEventListener('pointercancel', () => { dragging = false; });
-  window.addEventListener('resize', updateExtrasCarousel);
-}
-
-function bindExtrasCardClicks() {
-  document.querySelectorAll('#extrasGrid .webdev-extras-card').forEach((card, i) => {
-    card.addEventListener('click', () => focusExtras(i));
-  });
-  extrasIndex = 0;
-  updateExtrasCarousel();
-  setupExtrasSwipe();
+function setupExtrasArrows() {
+  const track = document.getElementById('extrasGrid');
+  const prev = document.getElementById('exPrev');
+  const next = document.getElementById('exNext');
+  if (!track || !prev || !next) return;
+  const update = () => {
+    prev.disabled = track.scrollLeft <= 2;
+    next.disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 2;
+  };
+  if (!track.dataset.scrollBound) {
+    track.dataset.scrollBound = '1';
+    track.addEventListener('scroll', update);
+    window.addEventListener('resize', update);
+  }
+  update();
 }
 
 async function cargarWebdev() {
@@ -140,7 +109,7 @@ async function cargarWebdev() {
     document.getElementById('webdevTiers').innerHTML = '<div class="exp-tiers-loading">No se pudieron cargar los paquetes en este momento. Escríbenos por WhatsApp para más información.</div>';
     document.getElementById('extrasGrid').innerHTML = '<p class="webdev-empty-msg">No se pudieron cargar los extras en este momento.</p>';
   }
-  bindExtrasCardClicks();
+  setupExtrasArrows();
 }
 
 /* ── Imagen animada del pitch ── */
