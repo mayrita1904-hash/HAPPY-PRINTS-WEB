@@ -40,8 +40,11 @@ async function ensureFreshSession() {
 function cerrarSesion() {
   session = null;
   localStorage.removeItem(SESSION_KEY);
-  document.getElementById('cursosCatalogo').style.display = 'none';
-  document.getElementById('cursosAuth').style.display = 'flex';
+  document.getElementById('cursosLogoutBtn').style.display = 'none';
+  document.getElementById('cursosSaludo').textContent = 'Elige el curso que te interesa';
+  document.getElementById('pantallaCursoDetalle').style.display = 'none';
+  document.getElementById('pantallaCursosGrid').style.display = 'block';
+  cargarCursos();
 }
 
 /* ── Tabs iniciar sesión / crear cuenta ── */
@@ -51,8 +54,16 @@ function mostrarTabAuth(tab) {
   document.getElementById('panelLogin').style.display = tab === 'login' ? 'block' : 'none';
   document.getElementById('panelRegistro').style.display = tab === 'registro' ? 'block' : 'none';
   document.getElementById('cursosAuthSub').textContent = tab === 'login'
-    ? 'Inicia sesión para ver el catálogo'
-    : 'Crea tu cuenta para ver el catálogo';
+    ? 'Inicia sesión para ver los detalles de este curso'
+    : 'Crea tu cuenta para ver los detalles de este curso';
+}
+
+/* Pide cuenta solo al intentar ver el detalle de un curso (el catálogo es público) */
+let pendingCursoId = null;
+function mostrarAuthParaDetalle() {
+  document.getElementById('cursosCatalogo').style.display = 'none';
+  document.getElementById('cursosAuth').style.display = 'flex';
+  mostrarTabAuth('login');
 }
 
 /* Verificación antibots (Cloudflare Turnstile) — un solo widget arriba de las
@@ -291,7 +302,7 @@ async function cargarCursos() {
   try {
     const [cursos, inscripciones] = await Promise.all([
       get('cursos?select=*,curso_temas(*)&activo=eq.true&order=orden&curso_temas.order=orden'),
-      get(`inscripciones?select=*&user_id=eq.${session.user.id}`)
+      (session && session.user) ? get(`inscripciones?select=*&user_id=eq.${session.user.id}`) : Promise.resolve([])
     ]);
     cursosCache = cursos;
     inscripcionesCache = inscripciones;
@@ -315,6 +326,11 @@ function youtubeEmbedUrl(url) {
 }
 
 async function verDetalleCurso(id) {
+  if (!session || !session.access_token) {
+    pendingCursoId = id;
+    mostrarAuthParaDetalle();
+    return;
+  }
   const c = cursosCache.find(x => x.id === id);
   if (!c) return;
   document.getElementById('pantallaCursosGrid').style.display = 'none';
@@ -458,21 +474,36 @@ function mostrarBannerRetorno() {
 }
 
 /* ── Mostrar la app tras iniciar sesión ── */
-function mostrarApp() {
+async function mostrarApp() {
   document.getElementById('cursosAuth').style.display = 'none';
   document.getElementById('cursosReset').style.display = 'none';
   document.getElementById('cursosCatalogo').style.display = 'block';
+  document.getElementById('cursosLogoutBtn').style.display = '';
   const nombre = (session.user && session.user.user_metadata && session.user.user_metadata.nombre) || '';
   document.getElementById('cursosSaludo').textContent = nombre ? `¡Hola, ${nombre}! Elige el curso con el que quieres empezar` : 'Elige el curso con el que quieres empezar';
   mostrarBannerRetorno();
-  cargarCursos();
+  await cargarCursos();
+  if (pendingCursoId != null) {
+    const id = pendingCursoId;
+    pendingCursoId = null;
+    verDetalleCurso(id);
+  } else {
+    document.getElementById('pantallaCursosGrid').style.display = 'block';
+    document.getElementById('pantallaCursoDetalle').style.display = 'none';
+  }
 }
 
-/* ── Arranque ── */
+/* ── Arranque: el catálogo es público, solo se pide cuenta al ver el detalle ── */
 if (!checkRecoveryLink()) {
+  document.getElementById('cursosAuth').style.display = 'none';
+  document.getElementById('cursosCatalogo').style.display = 'block';
   if (session && session.access_token) {
-    mostrarApp();
+    document.getElementById('cursosLogoutBtn').style.display = '';
+    const nombre = (session.user && session.user.user_metadata && session.user.user_metadata.nombre) || '';
+    document.getElementById('cursosSaludo').textContent = nombre ? `¡Hola, ${nombre}! Elige el curso con el que quieres empezar` : 'Elige el curso con el que quieres empezar';
+    mostrarBannerRetorno();
   } else {
-    document.getElementById('cursosAuth').style.display = 'flex';
+    document.getElementById('cursosSaludo').textContent = 'Elige el curso que te interesa';
   }
+  cargarCursos();
 }
