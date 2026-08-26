@@ -155,7 +155,7 @@ async function init() {
     buildCatGrid();
     buildFeatured();
     buildChips();
-    renderGrid('all');
+    buildProdDropdown();
   } catch (e) {
     document.getElementById('grid').innerHTML = `<div class="empty">⚠️ No se pudieron cargar los productos.<br><small style="font-size:10px">${e.message}</small></div>`;
   }
@@ -169,7 +169,49 @@ function buildChips() {
     cats.map(c => `<button class="chip" data-cat="${c.id}" onclick="filt(${c.id},this)"><span class="ci">${catEmoji(c.emoji||c.nombre)}</span><span class="cl">${escapeHtmlMain(c.nombre)}</span></button>`).join('');
 }
 
+/* ── Menú "Productos" del nav: solo categorías vigentes (con producto activo o de cotización) ── */
+function buildProdDropdown() {
+  const usedIds = new Set(allProds.map(p => p.categoria_id));
+  const cats = allCats.filter(c => usedIds.has(c.id) || esCategoriaCotizacion(c.nombre));
+  const menu = document.getElementById('prodDdMenu');
+  if (!menu) return;
+  menu.innerHTML = `<button type="button" class="hnl-dd-item all" role="menuitem" onclick="elegirCategoriaNav('all')">Ver todo el catálogo</button>` +
+    cats.map(c => `<button type="button" class="hnl-dd-item" role="menuitem" onclick="elegirCategoriaNav(${c.id})">${escapeHtmlMain(c.nombre)}</button>`).join('');
+}
+
+function toggleProdDropdown(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('prodDdMenu');
+  const btn = document.getElementById('prodDdBtn');
+  const willOpen = !menu.classList.contains('open');
+  menu.classList.toggle('open', willOpen);
+  btn.setAttribute('aria-expanded', String(willOpen));
+}
+
+function cerrarProdDropdown() {
+  const menu = document.getElementById('prodDdMenu');
+  const btn = document.getElementById('prodDdBtn');
+  if (!menu || !menu.classList.contains('open')) return;
+  menu.classList.remove('open');
+  btn.setAttribute('aria-expanded', 'false');
+}
+
+function elegirCategoriaNav(cat) {
+  cerrarProdDropdown();
+  filt(cat);
+}
+
+document.addEventListener('click', e => {
+  const menu = document.getElementById('prodDdMenu');
+  const btn = document.getElementById('prodDdBtn');
+  if (!menu || !menu.classList.contains('open')) return;
+  if (!menu.contains(e.target) && e.target !== btn) cerrarProdDropdown();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarProdDropdown(); });
+
 function filt(cat, chipEl) {
+  document.getElementById('cat-chips').style.display = '';
+  document.getElementById('prods').style.display = '';
   document.querySelectorAll('.chip').forEach(e => e.classList.remove('on'));
   document.querySelectorAll('.hnl').forEach(e => e.classList.remove('on'));
   if (chipEl) {

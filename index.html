@@ -22,7 +22,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=52">
+<link rel="stylesheet" href="css/styles.css?v=53">
 </head>
 <body>
 
@@ -42,7 +42,7 @@
 <nav class="main-nav">
   <div class="nav-links">
     <a class="hnl on" href="#top">Home</a><span class="hnl-sep">|</span>
-    <a class="hnl" href="#prods" onclick="filt('all')">Productos</a><span class="hnl-sep">|</span>
+    <button type="button" class="hnl hnl-dd-trigger" id="prodDdBtn" aria-haspopup="true" aria-expanded="false" onclick="toggleProdDropdown(event)">Productos</button><span class="hnl-sep">|</span>
     <a class="hnl" href="/pages/experience">Servicios</a><span class="hnl-sep">|</span>
     <a class="hnl" href="/pages/contenido-digital">Sitios web</a><span class="hnl-sep">|</span>
     <a class="hnl" href="/pages/cursos">Cursos</a>
@@ -52,6 +52,7 @@
     <button class="acc-btn" id="btnFavoritos" title="Mis Favoritos" onclick="abrirFavoritos()">♥<span class="acc-btn-lbl">Favoritos</span><span class="acc-badge" id="favBadge" style="display:none">0</span></button>
     <button class="acc-btn" id="btnCarrito" title="Mi Carrito" onclick="abrirCarrito()">🛒<span class="acc-btn-lbl">Carrito</span><span class="acc-badge" id="cartBadge" style="display:none">0</span></button>
   </div>
+  <div class="hnl-dd-menu" id="prodDdMenu" role="menu" aria-label="Categorías de productos"></div>
 </nav>
 
 <!-- Pantalla de retorno de Mercado Pago tras pagar un pedido (?pedido=approved|pending|failure) -->
@@ -136,9 +137,9 @@
   <p class="how-done">💗 <b>¡Listo!</b> Así de fácil es pedir en Happy Prints. Estamos contigo en cada paso. ✨</p>
 </section>
 
-<div class="cats" id="cat-chips" role="tablist" aria-label="Filtrar por categoría"></div>
+<div class="cats" id="cat-chips" role="tablist" aria-label="Filtrar por categoría" style="display:none"></div>
 
-<main id="prods">
+<main id="prods" style="display:none">
   <h2 class="shd reveal"><span class="sdot"></span> Catálogo completo</h2>
   <div class="grid" id="grid">
     <div class="skel-card"><div class="skel" style="height:150px"></div><div style="padding:10px 12px 12px"><div class="skel" style="height:14px;margin-bottom:8px;border-radius:4px"></div><div class="skel" style="height:10px;width:70%;margin-bottom:12px;border-radius:4px"></div><div class="skel" style="height:20px;width:50%;border-radius:4px"></div></div></div>
@@ -350,7 +351,7 @@
 
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <script src="js/motion.js?v=1"></script>
-<script src="js/main.js?v=40"></script>
+<script src="js/main.js?v=41"></script>
 <script src="js/analytics.js?v=1" defer></script>
 </body>
 </html>
