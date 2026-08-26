@@ -57,8 +57,6 @@ const FEATURED = [
   { key: 'tazas', label: 'Tazas', icon: '☕', color: '#1FB6AE', img: 'assets/images/tazas.webp', desc: 'Cambian de color o se personalizan con tu foto o diseño favorito.' },
   { key: 'playeras', label: 'Playeras', icon: '👕', color: '#FF2D78', img: 'assets/images/playeras.webp', desc: 'Estampado full color de alta durabilidad, en el diseño que imagines.' },
   { key: 'sudaderas', label: 'Sudaderas', icon: '🧥', color: '#7C3AED', img: 'assets/images/sudadera.webp', desc: 'Ideal para regalo o uniforme de equipo, con tu diseño o logo.' },
-  { key: 'termos', label: 'Termos', icon: '🥤', color: '#F5A623', img: 'assets/images/termos.webp', desc: 'Mantienen la temperatura y resisten el uso diario.' },
-  { key: 'vasos', label: 'Vasos', icon: '🧊', color: '#F6C55B', img: 'assets/images/vasos.webp', desc: 'Para el café o bebida de todos los días, con tu nombre o diseño.' },
   { key: 'libretas', label: 'Libretas', icon: '📓', color: '#1FADA0', img: 'assets/images/libretas.webp', desc: 'Pasta dura o suave, perfectas para regalo u oficina.' }
 ];
 
