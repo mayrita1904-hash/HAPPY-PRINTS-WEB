@@ -97,8 +97,7 @@ img { max-width: 100%; display: block; }
   top: 0;
   z-index: 100;
 }
-.nav-links { display: flex; align-items: center; gap: 0; overflow-x: auto; scrollbar-width: none; }
-.nav-links::-webkit-scrollbar { display: none; }
+.nav-links { display: flex; align-items: center; flex-wrap: wrap; gap: 0 0; row-gap: 4px; }
 .hnl {
   font-family: 'Fredoka', sans-serif;
   font-size: 15px;
@@ -342,6 +341,11 @@ img { max-width: 100%; display: block; }
   font-size: 15px;
   line-height: 1.9;
   letter-spacing: .2px;
+}
+.more-banner-mobile { display: none; }
+@media (max-width: 640px) {
+  .more-banner-static { display: none; }
+  .more-banner-mobile { display: block; }
 }
 
 /* ===== How to order ===== */
