@@ -27,6 +27,8 @@ Sitio web de **Happy Prints** (Toluca, México) — catálogo y venta de product
 │   │                          # editor de personalización, subida de archivos, mensaje de WhatsApp
 │   ├── experience.js         # Carga los paquetes de la página de servicios
 │   ├── cursos.js              # Auth de clientes (Supabase Auth), catálogo de cursos, inicia el pago con Mercado Pago
+│   ├── animaciones.js         # Animaciones del home: hilo de "¿Cómo hacer tu pedido?", producto que vuela al carrito,
+│   │                          # estallido de favoritos, toquecito de WhatsApp, estrellas de reseñas (todo apagado con reduced-motion)
 │   └── analytics.js          # Beacon de analíticas propias (ver abajo)
 ├── /api
 │   ├── track.js              # Función serverless Vercel: recibe eventos de analytics.js, escribe en Redis
@@ -35,7 +37,9 @@ Sitio web de **Happy Prints** (Toluca, México) — catálogo y venta de product
 │   ├── mp-webhook.js           # Recibe la confirmación de pago de un curso y activa el acceso
 │   ├── mp-crear-preferencia-pedido.js # Crea la preferencia de pago de Mercado Pago para un pedido del carrito
 │   ├── mp-webhook-pedido.js     # Recibe la confirmación de pago de un pedido y actualiza su estatus
-│   └── cp-colonias.js           # Proxy server-side a la API externa codigos.zip (colonias por C.P.)
+│   ├── cp-colonias.js           # Proxy server-side a la API externa codigos.zip (colonias por C.P.)
+│   └── supabase-keepalive.js    # Cron de Vercel (cada 3 días, ver "crons" en vercel.json): consulta Supabase para
+│                                  # que el plan gratuito no pause el proyecto por inactividad (ya pasó una vez)
 ├── /assets/images
 ├── supabase_*.sql             # Scripts SQL sueltos para correr manualmente en el editor SQL de Supabase
 │                                # (RLS, tablas de galería, paquetes de experiencia, ítems de cotización, tallas,

@@ -373,12 +373,44 @@ function calcT() {
   return calcLineTotal(cur, st, nivelesDe(cur.id));
 }
 
+/* Total del modal: al cambiar cantidad/talla/hojas los números "corren" del total
+   anterior al nuevo (450ms). La primera vez que se abre un producto se pinta directo. */
+let taShown = null, taTween = 0, ahorroVisible = false;
+function pintarTotal(total) {
+  const el = document.getElementById('ta');
+  if (!el) return;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  cancelAnimationFrame(taTween);
+  if (taShown === null || reduce || taShown === total) { el.textContent = fmt(total); taShown = total; return; }
+  const from = taShown, t0 = performance.now(), dur = 450;
+  el.textContent = fmt(from);
+  const step = now => {
+    const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 3);
+    taShown = Math.round((from + (total - from) * e) * 100) / 100;
+    el.textContent = fmt(t < 1 ? taShown : total);
+    if (t < 1) taTween = requestAnimationFrame(step); else taShown = total;
+  };
+  taTween = requestAnimationFrame(step);
+}
+
+/* Cuánto se ahorra por mayoreo vs. el precio por pieza del primer nivel (solo escalonado/cantidad). */
+function calcAhorro(p, total) {
+  if (p.tipo !== 'escalonado' && p.tipo !== 'cantidad') return 0;
+  const nivs = nivelesDe(p.id).slice().sort((a, b) => a.cantidad_min - b.cantidad_min);
+  if (nivs.length < 2) return 0;
+  const minQ = Math.max(1, nivs[0].cantidad_min || 1);
+  const unitBase = calcLineTotal(p, { ...st, qty: minQ }, nivs) / minQ;
+  const ahorro = Math.round((unitBase * st.qty - total) * 100) / 100;
+  return ahorro >= 1 ? ahorro : 0;
+}
+
 function openM(id) {
   cur = allProds.find(p => p.id === id);
   if (!cur) return;
   const tallaInicial = cur.talla_adulto_activo === false && cur.precio_infantil && cur.talla_infantil_activo !== false
     ? 'infantil' : 'adulto';
   st = { qty: 1, talla: tallaInicial, hojas: 50 };
+  taShown = null; ahorroVisible = false;
   attachUrl = null; attachTooBig = false; attachName = '';
   hideDesignPreview();
   const c = cur.categorias || {};
@@ -506,6 +538,7 @@ function renderMB() {
   const color = p.color_marca || '#FF2D78';
   const nivs  = nivelesDe(p.id);
   const total = calcT();
+  const ahorro = calcAhorro(p, total);
   const permitePersonalizar = esPersonalizable(p);
   let h = '';
 
@@ -598,8 +631,9 @@ function renderMB() {
     <div>
       <div class="tlbl">Total estimado</div>
       <div style="font-size:10px;color:rgba(255,255,255,.32);margin-top:2px" id="tqi">${st.qty} pieza(s)</div>
+      ${ahorro ? `<div class="tsave${ahorroVisible ? '' : ' tsave-in'}">Ahorras ${fmt(ahorro)} por mayoreo</div>` : ''}
     </div>
-    <div class="tamt" id="ta">${fmt(total)}</div>
+    <div class="tamt" id="ta">${fmt(taShown === null ? total : taShown)}</div>
   </div>
 
   <button class="cartaddbtn" onclick="agregarAlCarritoDesdeModal()">🛒 Agregar al carrito</button>
@@ -613,13 +647,15 @@ function renderMB() {
   </button>`;
 
   document.getElementById('mbody').innerHTML = h;
+  ahorroVisible = !!ahorro;
+  pintarTotal(total);
 }
 
 function chgQ(d) {
   st.qty = Math.max(1, st.qty + d);
   if (cur.tipo === 'escalonado' || cur.tipo === 'cantidad') { renderMB(); return; }
   document.getElementById('qv').value       = st.qty;
-  document.getElementById('ta').textContent  = fmt(calcT());
+  pintarTotal(calcT());
   document.getElementById('tqi').textContent = st.qty + ' pieza(s)';
 }
 
@@ -629,7 +665,7 @@ function setQty(val) {
   st.qty = n;
   if (cur.tipo === 'escalonado' || cur.tipo === 'cantidad') { renderMB(); return; }
   document.getElementById('qv').value       = st.qty;
-  document.getElementById('ta').textContent  = fmt(calcT());
+  pintarTotal(calcT());
   document.getElementById('tqi').textContent = st.qty + ' pieza(s)';
 }
 
@@ -1222,6 +1258,7 @@ function agregarAlCarritoDesdeModal() {
     qty: st.qty, talla: st.talla, hojas: st.hojas, attachUrl: attachUrl, combinedUrl: combinedUrl
   });
   guardarCarrito();
+  if (window.animarAlCarrito) window.animarAlCarrito(document.getElementById('mimg'));
   const btn = document.querySelector('.cartaddbtn');
   if (btn) {
     const original = btn.textContent;
@@ -1478,6 +1515,7 @@ async function toggleFavorito(pid) {
   } catch (e) { return; }
   actualizarBadges();
   actualizarCorazonesTarjetas();
+  if (idx === -1 && window.animarCorazon) window.animarCorazon(pid);
   if (document.getElementById('favOv').classList.contains('open')) renderFavoritosPanel();
 }
 

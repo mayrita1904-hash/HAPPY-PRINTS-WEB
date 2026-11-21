@@ -374,15 +374,17 @@ img { max-width: 100%; display: block; }
 }
 .how-sub { text-align: center; font-size: 13.5px; color: var(--ink-soft); margin: 0 0 30px; }
 .steps {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: 22px;
   max-width: 960px;
   margin: 0 auto;
 }
-@media (min-width: 720px) { .steps { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 720px) { .steps { grid-template-columns: repeat(3, 1fr); column-gap: 30px; row-gap: 40px; } }
 .step {
   position: relative;
+  z-index: 1;
   background: #fff;
   border: 2px solid var(--sc, var(--navy));
   border-radius: var(--radius-md);
@@ -424,6 +426,75 @@ img { max-width: 100%; display: block; }
   color: var(--navy);
 }
 .how-done b { color: var(--pink); font-family: 'Fredoka', sans-serif; }
+
+/* ===== Animación de "¿Cómo hacer tu pedido?" (js/animaciones.js) =====
+   Sin .motion-on (sin JS o con "reducir movimiento") los pasos se ven completos y a color.
+   Con .motion-on empiezan en gris y un hilo rosa los va encendiendo en orden. */
+.how-done { position: relative; }
+.how-thread { display: none; }
+.motion-on .how-thread { display: block; position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 0; }
+.how-thread-base { fill: none; stroke: #E4E5EE; stroke-width: 2.5; stroke-dasharray: 2 7; stroke-linecap: round; }
+.how-thread-prog { fill: none; stroke: var(--pink); stroke-width: 3; stroke-linecap: round; }
+.motion-on .step { transition: border-color .45s ease; }
+.motion-on .step:not(.on) { border-color: #E4E5EE; }
+.motion-on .step-num, .motion-on .step-icon, .motion-on .step-icon svg { transition: background .4s ease, stroke .4s ease; }
+.motion-on .step:not(.on) .step-num { background: #A9AABD; }
+.motion-on .step:not(.on) .step-icon { background: #F3F3F7; }
+.motion-on .step:not(.on) .step-icon svg { stroke: #A9AABD; }
+.step-icon svg { overflow: visible; }
+.step-icon svg * { transform-box: fill-box; }
+.motion-on .step.on .step-num { animation: fx-pop .5s cubic-bezier(.34,1.56,.64,1); }
+.motion-on .step.on[data-a="bag"] svg { animation: how-drop .7s cubic-bezier(.34,1.4,.64,1); }
+.motion-on .step.on[data-a="chat"] .dot { animation: how-typing .9s ease-in-out 3; }
+.motion-on .step.on[data-a="chat"] .dot:nth-of-type(2) { animation-delay: .15s; }
+.motion-on .step.on[data-a="chat"] .dot:nth-of-type(3) { animation-delay: .3s; }
+.motion-on .step.on[data-a="pen"] svg { transform-origin: 15% 85%; animation: how-scribble .9s ease-in-out; }
+.motion-on .step.on[data-a="card"] .step-icon { animation: how-flip .8s ease-in-out; }
+.step[data-a="truck"] .speed { opacity: 0; }
+.motion-on .step.on[data-a="truck"] .truck { animation: how-drive .8s cubic-bezier(.22,1,.36,1); }
+.motion-on .step.on[data-a="truck"] .speed { animation: how-speed .8s ease-out; }
+.step[data-a="gift"] .spark { opacity: 0; }
+.motion-on .step.on[data-a="gift"] .lid { transform-origin: 20% 100%; animation: how-lid .8s cubic-bezier(.34,1.56,.64,1); }
+.motion-on .step.on[data-a="gift"] .spark { animation: how-spark .9s ease-out .2s; }
+.how-done.pop { animation: fx-pop .55s cubic-bezier(.34,1.56,.64,1); }
+@keyframes how-drop { 0% { transform: translateY(-12px); } 60% { transform: translateY(2px); } 80% { transform: translateY(-2px); } 100% { transform: none; } }
+@keyframes how-typing { 0%, 100% { transform: none; opacity: 1; } 40% { transform: translateY(-2.5px); opacity: .35; } }
+@keyframes how-scribble { 0%, 100% { transform: none; } 25% { transform: rotate(-14deg); } 50% { transform: rotate(8deg); } 75% { transform: rotate(-5deg); } }
+@keyframes how-flip { from { transform: perspective(200px) rotateY(0); } to { transform: perspective(200px) rotateY(360deg); } }
+@keyframes how-drive { 0% { transform: translateX(-14px); } 70% { transform: translateX(2px); } 100% { transform: none; } }
+@keyframes how-speed { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(-6px); } }
+@keyframes how-lid { 0%, 100% { transform: none; } 45% { transform: translateY(-4px) rotate(-14deg); } }
+@keyframes how-spark { 0% { opacity: 0; transform: scale(.3); } 40% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0; transform: scale(1); } }
+
+/* ===== Micro-animaciones compartidas (carrito, favoritos, WhatsApp, reseñas) ===== */
+@keyframes fx-pop { 0% { transform: scale(.4); } 70% { transform: scale(1.18); } 100% { transform: scale(1); } }
+@keyframes fx-wiggle { 0%, 100% { transform: none; } 25% { transform: rotate(-8deg); } 50% { transform: rotate(6deg); } 75% { transform: rotate(-3deg); } }
+.fx-dot { position: absolute; left: 50%; top: 50%; border-radius: 2px; pointer-events: none; }
+.fx-flyer { position: fixed; z-index: 300; border-radius: 14px; object-fit: cover; pointer-events: none; box-shadow: 0 8px 20px rgba(26,31,75,.28); }
+.fx-wiggle { animation: fx-wiggle .45s ease; }
+.acc-badge.fx-pop { animation: fx-pop .45s cubic-bezier(.34,1.56,.64,1); }
+.card-heart.fx-heart { animation: fx-pop .5s cubic-bezier(.34,1.56,.64,1); }
+.tsave { display: inline-block; margin-top: 6px; background: rgba(200,230,58,.16); color: var(--lime-2); font-size: 11px; font-weight: 800; border-radius: 999px; padding: 2px 9px; }
+.motion-on .tsave-in { animation: tsave-in .35s ease-out; }
+@keyframes tsave-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.wa-float.fx-nudge { animation: wa-nudge 1s ease-in-out; }
+@keyframes wa-nudge { 0%, 100% { transform: none; } 15% { transform: scale(1.12) rotate(-10deg); } 30% { transform: scale(1.12) rotate(9deg); } 45% { transform: scale(1.12) rotate(-6deg); } 60% { transform: scale(1.05) rotate(3deg); } }
+.wa-bubble {
+  position: fixed; right: 80px; bottom: 26px; z-index: 150; max-width: 210px;
+  background: #fff; color: var(--navy); text-decoration: none; font-weight: 700; font-size: 13px;
+  padding: 9px 13px; border-radius: 14px 14px 4px 14px; box-shadow: 0 4px 16px rgba(26,31,75,.18);
+  opacity: 0; transform: translateX(8px) scale(.95); transform-origin: right bottom;
+  transition: opacity .3s, transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.wa-bubble.show { opacity: 1; transform: none; }
+@media (min-width: 768px) { .wa-bubble { right: 96px; bottom: 36px; } }
+.motion-on .review-stars i { font-style: normal; display: inline-block; color: #E2E2EA; }
+.motion-on .review-card.is-visible .review-stars i { animation: star-on .4s cubic-bezier(.34,1.56,.64,1) forwards; animation-delay: calc(var(--s) * 140ms + 350ms); }
+@keyframes star-on { 0% { color: #E2E2EA; transform: scale(.4); } 70% { color: #F5A623; transform: scale(1.2); } 100% { color: #F5A623; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .fx-flyer, .fx-dot, .wa-bubble { display: none; }
+  .wa-float.fx-nudge, .fx-wiggle, .acc-badge.fx-pop, .card-heart.fx-heart { animation: none; }
+}
 
 /* ===== Filter chips ===== */
 .cats { padding: 20px 14px 4px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
