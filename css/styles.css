@@ -159,7 +159,7 @@ img { max-width: 100%; display: block; }
   .hnl-dd-menu { grid-template-columns: repeat(2, minmax(130px, 1fr)); max-width: min(440px, calc(100vw - 32px)); }
 }
 @media (max-width: 480px) {
-  .hnl-dd-menu { grid-template-columns: 1fr; max-width: calc(100vw - 32px); }
+  .hnl-dd-menu { grid-template-columns: repeat(2, minmax(120px, 1fr)); max-width: calc(100vw - 32px); }
 }
 @media (prefers-reduced-motion: reduce) { .hnl-dd-menu { transition: opacity .01ms, visibility .01ms; } }
 .nav-social { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
