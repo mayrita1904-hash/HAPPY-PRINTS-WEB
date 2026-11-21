@@ -16,7 +16,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../css/styles.css?v=63">
+<link rel="stylesheet" href="../css/styles.css?v=64">
 </head>
 <body>
 
@@ -53,10 +53,19 @@
       <p class="exp-pitch-callout"><strong>Convierte tu sitio web en una herramienta que genere clientes todos los días.</strong></p>
     </div>
     <div class="exp-pitch-media">
-      <div class="exp-pitch-media-imgwrap">
-        <img src="../assets/images/contenido-digital-chica.webp" alt="Diseñadora de Happy Prints saludando y mostrando en una laptop el catálogo del sitio web">
+      <!-- Navegador que "arma" una página de ejemplo en ciclo (js/contenido-digital.js → initWebBuilder) -->
+      <div class="wd-browser" id="wdBrowser" role="img" aria-label="Animación de una página web de ejemplo armándose: encabezado, productos con precio y botón de WhatsApp">
+        <div class="wd-chrome" aria-hidden="true"><div class="wd-dots"><i></i><i></i><i></i></div><div class="wd-url"><span class="wd-lock">🔒</span><span id="wdUrl">panaderialupita.com</span><span class="wd-caret"></span></div></div>
+        <div class="wd-site" id="wdSite" aria-hidden="true">
+          <div class="wd-nav wd-blk"><div class="wd-logo"><i id="wdIco">🥐</i><span id="wdName">Panadería Lupita</span></div><div class="wd-links"><i></i><i></i><i></i></div></div>
+          <div class="wd-hero wd-blk"><b id="wdTag">Pan recién horneado todos los días</b><span>Pide en línea y recoge en tienda</span></div>
+          <div class="wd-grid" id="wdGrid"></div>
+          <div class="wd-foot"><span class="wd-wa wd-blk">💬 Pedir por WhatsApp</span></div>
+          <div class="wd-toast" id="wdToast">✓ <b>¡Publicada!</b> Lista para recibir clientes</div>
+        </div>
       </div>
-      <a class="exp-cta exp-pitch-media-cta" href="/pages/arma-tu-sitio-web">👉 Quiero mi página web</a>
+      <a class="exp-cta exp-pitch-media-cta wd-shine" href="/pages/arma-tu-sitio-web">👉 Quiero mi página web</a>
+      <div class="wd-madeby"><img src="../assets/images/contenido-digital-chica.webp" alt="" width="44" height="44" loading="lazy">Diseñada y programada por el equipo de Happy Prints en Toluca.</div>
     </div>
   </div>
 </section>
@@ -65,11 +74,32 @@
   <h2 class="exp-pricing-h reveal">💻 Paquetes de página web</h2>
   <p class="exp-pricing-sub reveal"><strong>Elige el nivel que necesita tu negocio hoy</strong><br>Todos incluyen diseño a la medida y hosting listo para usarse</p>
 
-  <div class="exp-tiers exp-tiers-3" id="webdevTiers">
+  <div class="exp-tiers exp-tiers-3 wd-tiers" id="webdevTiers">
     <div class="exp-tiers-loading">Cargando paquetes…</div>
   </div>
 
   <p class="exp-pricing-foot">Precios varían según: <strong>número de páginas</strong> · <strong>complejidad del catálogo</strong> · <strong>funciones a la medida</strong></p>
+</section>
+
+<section class="wd-process" aria-labelledby="proceso-h">
+  <div class="wd-process-inner">
+    <figure class="wd-process-photo reveal">
+      <img src="../assets/images/contenido-digital-chica.webp" alt="Diseñadora de Happy Prints mostrando en su laptop el catálogo de un sitio web" loading="lazy">
+      <figcaption>Te acompañamos en cada paso, de la primera plática a tu página publicada.</figcaption>
+    </figure>
+    <div class="wd-process-text">
+      <h2 id="proceso-h" class="wd-process-h reveal">Así trabajamos</h2>
+      <p class="wd-process-sub reveal">Sin tecnicismos: tú nos cuentas de tu negocio y nosotros nos encargamos del resto.</p>
+      <div class="wd-steps" id="wdSteps">
+        <svg class="wd-thread" aria-hidden="true"><path class="wd-thread-base"/><path class="wd-thread-prog"/></svg>
+        <div class="wd-step" style="--sc:var(--teal)"><div class="wd-step-top"><span class="wd-step-ico" aria-hidden="true">💬</span><div><div class="wd-step-n">Paso 1</div><h3>Platicamos</h3></div></div><p>Por WhatsApp o llamada nos cuentas de tu negocio, qué vendes y qué necesitas.</p></div>
+        <div class="wd-step" style="--sc:var(--orange)"><div class="wd-step-top"><span class="wd-step-ico" aria-hidden="true">🎨</span><div><div class="wd-step-n">Paso 2</div><h3>Diseñamos</h3></div></div><p>Preparamos una propuesta visual a partir de tu logo, colores y referencias.</p></div>
+        <div class="wd-step" style="--sc:var(--purple)"><div class="wd-step-top"><span class="wd-step-ico" aria-hidden="true">👀</span><div><div class="wd-step-n">Paso 3</div><h3>La revisas</h3></div></div><p>Nos dices qué ajustar y lo dejamos como lo imaginaste.</p></div>
+        <div class="wd-step" style="--sc:var(--pink)"><div class="wd-step-top"><span class="wd-step-ico" aria-hidden="true">🚀</span><div><div class="wd-step-n">Paso 4</div><h3>La publicamos</h3></div></div><p>Tu página sale en línea con tu dominio y te enseñamos a actualizarla tú misma.</p></div>
+      </div>
+      <a class="exp-cta wd-shine wd-process-cta" href="/pages/arma-tu-sitio-web">👉 Quiero mi página web</a>
+    </div>
+  </div>
 </section>
 
 <section class="webdev-extras" aria-labelledby="extras-h">
@@ -88,7 +118,7 @@
     <p class="webdev-empty-msg">Cargando extras…</p>
   </div>
 
-  <a class="exp-cta exp-cta-2" href="https://wa.me/5217227118927?text=%C2%A1Hola%21%20%F0%9F%91%8B%20Vi%20la%20p%C3%A1gina%20de%20Contenido%20Digital%20de%20Happy%20Prints%20y%20me%20interesa%20que%20me%20ayuden%20a%20crear%20la%20p%C3%A1gina%20web%20de%20mi%20negocio.%0A%0A%C2%BFMe%20platican%20m%C3%A1s%20sobre%20los%20paquetes%20disponibles%3F" target="_blank" rel="noopener">Platícanos tu proyecto por WhatsApp</a>
+  <a class="exp-cta exp-cta-2 wd-shine" href="https://wa.me/5217227118927?text=%C2%A1Hola%21%20%F0%9F%91%8B%20Vi%20la%20p%C3%A1gina%20de%20Contenido%20Digital%20de%20Happy%20Prints%20y%20me%20interesa%20que%20me%20ayuden%20a%20crear%20la%20p%C3%A1gina%20web%20de%20mi%20negocio.%0A%0A%C2%BFMe%20platican%20m%C3%A1s%20sobre%20los%20paquetes%20disponibles%3F" target="_blank" rel="noopener">Platícanos tu proyecto por WhatsApp</a>
 </section>
 
 <footer>
@@ -114,7 +144,7 @@
 
 <script src="../js/motion.js?v=1"></script>
 <script src="/js/animaciones.js?v=3" defer></script>
-<script src="../js/contenido-digital.js?v=6"></script>
+<script src="../js/contenido-digital.js?v=7"></script>
 <script src="../js/analytics.js?v=1" defer></script>
 </body>
 </html>
