@@ -133,8 +133,9 @@
     const wa = document.querySelector('.wa-float');
     if (!wa || !motionOn()) return;
     try { if (sessionStorage.getItem('hp_wa_nudge')) return; } catch (e) { /* sin storage: seguimos */ }
-    setTimeout(() => {
-      if (document.querySelector('.ov.open')) return; // no interrumpir si hay un modal abierto
+    const show = () => {
+      // Si hay un modal abierto, esperamos a que lo cierre en vez de perder el aviso.
+      if (document.querySelector('.ov.open, .open[role="dialog"]')) { setTimeout(show, 3000); return; }
       try { sessionStorage.setItem('hp_wa_nudge', '1'); } catch (e) { /* nada */ }
       const bubble = document.createElement('a');
       bubble.className = 'wa-bubble';
@@ -144,7 +145,8 @@
       restart(wa, 'fx-nudge');
       requestAnimationFrame(() => bubble.classList.add('show'));
       setTimeout(() => { bubble.classList.remove('show'); setTimeout(() => bubble.remove(), 400); }, 5000);
-    }, 8000);
+    };
+    setTimeout(show, 8000);
   }
 
   /* ── Estrellas de reseñas: se separan para que el CSS las encienda una por una ── */
