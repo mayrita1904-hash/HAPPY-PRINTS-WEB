@@ -52,6 +52,10 @@ nav{background:#1A1F4B;padding:0 24px;display:flex;align-items:center;justify-co
 .badge-transito{background:#E0E7FF;color:#4338CA}
 .badge-entregado{background:#DCFCE7;color:#15803D}
 .badge-cancelado{background:#FEE2E2;color:#DC2626}
+.pd-tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#FF2D78;color:#fff;font-size:10px;font-weight:900;margin-left:4px;vertical-align:middle}
+.pd-tab-badge[hidden]{display:none}
+.pd-new-reply{display:inline-flex;align-items:center;background:#FFE4EF;color:#D61F65;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:middle}
+.pd-proof-up{background:#F5F5F8;border-radius:10px;padding:12px 14px;margin-top:10px}
 .freq-badge{display:inline-flex;align-items:center;gap:3px;background:#FEF9C3;color:#A16207;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:middle}
 .premium-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(100deg,#7C3AED,#DB2777);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:middle}
 .tog{position:relative;width:40px;height:22px;cursor:pointer;display:inline-block}
@@ -213,7 +217,7 @@ input:checked+.togslide::before{transform:translateX(18px)}
   <button class="atab" data-screen="experience" onclick="mostrarPantalla('experience')">🎉 Happy Prints Experience</button>
   <button class="atab" data-screen="webdev" onclick="mostrarPantalla('webdev')">💻 Sitios Web</button>
   <button class="atab" data-screen="cotreg" onclick="mostrarPantalla('cotreg')">🧾 Registro de Cotizaciones</button>
-  <button class="atab" data-screen="pedidos" onclick="mostrarPantalla('pedidos')">📦 Pedidos en línea</button>
+  <button class="atab" data-screen="pedidos" onclick="mostrarPantalla('pedidos')">📦 Pedidos en línea <span class="pd-tab-badge" id="pdTabBadge" hidden></span></button>
   <button class="atab" data-screen="cursos" onclick="mostrarPantalla('cursos')">🎓 Cursos</button>
 </div>
 
@@ -394,8 +398,24 @@ input:checked+.togslide::before{transform:translateX(18px)}
     <div class="olbl" style="margin-top:16px">📍 Dirección de entrega</div>
     <div id="pdDireccion" style="background:#F5F5F8;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.6"></div>
 
+    <div id="pdFecha"></div>
+
     <div class="olbl" style="margin-top:16px">🛍️ Productos</div>
     <div id="pdItems"></div>
+
+    <div class="olbl" style="margin-top:16px">🎨 Pruebas de diseño</div>
+    <div id="pdPruebas"></div>
+    <div class="pd-proof-up">
+      <div class="field" style="margin:0">
+        <label for="pdPruebaFile">Subir prueba para que el cliente la apruebe</label>
+        <input type="file" id="pdPruebaFile" accept="image/*">
+      </div>
+      <div class="field" style="margin:8px 0 0">
+        <label for="pdPruebaNota">Mensaje para el cliente (opcional)</label>
+        <input type="text" id="pdPruebaNota" maxlength="300" placeholder="Ej.: Así quedaría tu taza, ¿te gusta?">
+      </div>
+      <button class="btn btn-p btn-sm" id="pdPruebaBtn" onclick="subirPruebaDiseno()" style="margin-top:10px">⬆️ Enviar prueba al cliente</button>
+    </div>
 
     <div style="display:flex;justify-content:space-between;align-items:center;background:#1A1F4B;border-radius:10px;padding:12px 16px;margin-top:14px">
       <span style="font-size:11px;color:rgba(255,255,255,.6);font-weight:700">TOTAL (incluye envío)</span>
@@ -542,6 +562,13 @@ input:checked+.togslide::before{transform:translateX(18px)}
       <div class="field" id="finfantil" style="display:none">
         <label>Precio infantil (MXN)</label>
         <input type="number" id="fpi" placeholder="0.00" step="0.01" min="0">
+      </div>
+    </div>
+    <div class="frow">
+      <div class="field">
+        <label for="fdias">Días de producción (hábiles, lun–vie)</label>
+        <input type="number" id="fdias" placeholder="3" step="1" min="0" max="60">
+        <div style="font-size:11px;color:#9090A8;margin-top:4px">Con esto la tienda le dice al cliente "Si lo pides hoy, está listo el…".</div>
       </div>
     </div>
 
@@ -1017,6 +1044,7 @@ function abrirModal(prod = null) {
   document.getElementById('ft').value   = prod?.tipo || 'simple';
   document.getElementById('fp').value   = prod?.precio_base || '';
   document.getElementById('fpi').value  = prod?.precio_infantil || '';
+  document.getElementById('fdias').value = prod?.dias_produccion ?? 3;
   document.getElementById('factivoAdulto').checked   = prod?.talla_adulto_activo   !== false;
   document.getElementById('factivoInfantil').checked = prod?.talla_infantil_activo !== false;
   const color = prod?.color_marca || '#FF2D78';
@@ -1598,6 +1626,7 @@ async function guardar() {
       tipo:           document.getElementById('ft').value,
       precio_base:    precio,
       precio_infantil: parseFloat(document.getElementById('fpi').value) || null,
+      dias_produccion: Math.max(0, Math.min(60, parseInt(document.getElementById('fdias').value, 10) || 0)),
       talla_adulto_activo:   document.getElementById('factivoAdulto').checked,
       talla_infantil_activo: document.getElementById('factivoInfantil').checked,
       color_marca:    colorSel,
@@ -2053,7 +2082,7 @@ const PD_ESTATUS_PAGO_INFO = {
   rechazado: { label: 'Rechazado', cls: 'badge-rechazado' }
 };
 
-let pedidos = [], pedidoActual = null;
+let pedidos = [], pedidoActual = null, pruebas = [];
 
 async function cargarPedidos() {
   document.getElementById('pdtbody').innerHTML = '<div class="loading">Cargando pedidos…</div>';
@@ -2063,7 +2092,78 @@ async function cargarPedidos() {
     document.getElementById('pdtbody').innerHTML = '<div class="empty">⚠️ No se pudo cargar (¿ya ejecutaste supabase_pedidos.sql?)</div>';
     return;
   }
+  try { pruebas = await sbGet('pedido_pruebas?select=*&order=creado_en.desc'); }
+  catch (e) { pruebas = []; } // si aún no se corre supabase_experiencia_cliente.sql
+  actualizarBadgeRespuestas();
   filtrarPedidos();
+}
+
+/* Respuestas de clientes (aprobado / pidió cambio) que todavía no has visto. */
+const respuestaNueva = pedidoId => pruebas.some(x => x.pedido_id === pedidoId && !x.visto_admin);
+function actualizarBadgeRespuestas() {
+  const n = new Set(pruebas.filter(x => !x.visto_admin).map(x => x.pedido_id)).size;
+  const b = document.getElementById('pdTabBadge');
+  if (!b) return;
+  b.textContent = n; b.hidden = !n;
+  b.title = n ? `${n} pedido(s) con respuesta nueva sobre su diseño` : '';
+}
+
+const PRUEBA_INFO = {
+  pendiente: ['⏳ Esperando respuesta', '#FEF3C7', '#B45309'],
+  aprobado:  ['✅ Aprobado por el cliente', '#DCFCE7', '#15803D'],
+  cambio:    ['✏️ Pidió un cambio', '#FFE4E6', '#BE123C']
+};
+function renderPruebasPedido(p) {
+  const lista = pruebas.filter(x => x.pedido_id === p.id);
+  document.getElementById('pdPruebas').innerHTML = lista.length ? lista.map(x => {
+    const [lbl, bg, fg] = PRUEBA_INFO[x.estatus] || PRUEBA_INFO.pendiente;
+    const f = new Date(x.creado_en).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+    return `<div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #F2F2F2">
+      <a href="${escapeHtml(x.imagen_url)}" target="_blank" rel="noopener"><img src="${escapeHtml(x.imagen_url)}" alt="Prueba enviada el ${f}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;background:#F5F5F8"></a>
+      <div style="font-size:12px;line-height:1.5;min-width:0">
+        <span style="display:inline-block;background:${bg};color:${fg};font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px">${lbl}</span>
+        ${!x.visto_admin ? '<span style="display:inline-block;background:#FF2D78;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;margin-left:4px">Nuevo</span>' : ''}
+        <div style="color:#9090A8">Enviada el ${f}${x.nota_admin ? ' · "' + escapeHtml(x.nota_admin) + '"' : ''}</div>
+        ${x.comentario_cliente ? `<div style="margin-top:4px"><b>Cliente:</b> "${escapeHtml(x.comentario_cliente)}"</div>` : ''}
+      </div>
+    </div>`;
+  }).join('') : '<div style="font-size:12px;color:#9090A8;padding:4px 0">Aún no has enviado pruebas para este pedido.</div>';
+}
+
+async function marcarRespuestasVistas(pedidoId) {
+  const nuevas = pruebas.filter(x => x.pedido_id === pedidoId && !x.visto_admin);
+  if (!nuevas.length) return;
+  try {
+    await sbPatch(`pedido_pruebas?pedido_id=eq.${pedidoId}&visto_admin=eq.false`, { visto_admin: true });
+    nuevas.forEach(x => { x.visto_admin = true; });
+    actualizarBadgeRespuestas();
+    filtrarPedidos();
+  } catch (e) { /* se reintenta la próxima vez que se abra */ }
+}
+
+async function subirPruebaDiseno() {
+  if (!pedidoActual) return;
+  const file = document.getElementById('pdPruebaFile').files[0];
+  if (!file) { toast('Elige la imagen de la prueba', 'err'); return; }
+  const btn = document.getElementById('pdPruebaBtn');
+  btn.disabled = true; btn.textContent = 'Subiendo…';
+  try {
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const url = await sbUpload(`pruebas/pedido-${pedidoActual.id}-${Date.now()}.${ext}`, file);
+    const [nueva] = await sbPost('pedido_pruebas', {
+      pedido_id: pedidoActual.id, imagen_url: url,
+      nota_admin: document.getElementById('pdPruebaNota').value.trim() || null
+    });
+    if (nueva) pruebas.unshift(nueva);
+    document.getElementById('pdPruebaFile').value = '';
+    document.getElementById('pdPruebaNota').value = '';
+    renderPruebasPedido(pedidoActual);
+    toast('✓ Prueba enviada. El cliente la verá en Mi Perfil → Mis pedidos.', 'ok');
+  } catch (e) {
+    toast('Error: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = '⬆️ Enviar prueba al cliente';
+  }
 }
 
 function pedidosPagadosDe(userId) {
@@ -2108,7 +2208,7 @@ function renderPedidosTabla(list) {
     const fecha = new Date(p.creado_en).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
     return `<div class="tr" style="grid-template-columns:80px 1fr 100px 120px 150px 90px 70px">
       <div><b>#${p.id}</b></div>
-      <div>${escapeHtml(p.cliente_nombre)} ${distintivoCliente(p.user_id)}</div>
+      <div>${escapeHtml(p.cliente_nombre)} ${distintivoCliente(p.user_id)}${respuestaNueva(p.id) ? ' <span class="pd-new-reply" title="El cliente respondió a su prueba de diseño">💬 Respuesta nueva</span>' : ''}</div>
       <div>${fmtMXNAdmin(p.total)}</div>
       <div><span class="cbadge ${pagoInfo.cls}">${pagoInfo.label}</span></div>
       <div><span class="cbadge ${envioInfo.cls}">${envioInfo.label}</span></div>
@@ -2369,7 +2469,12 @@ function verPedidoAdmin(id) {
 
   document.getElementById('pdTotal').textContent = fmtMXNAdmin(p.total);
   document.getElementById('pdSelEstatus').value = p.estatus_envio;
+  document.getElementById('pdFecha').innerHTML = p.fecha_requerida
+    ? `<div style="margin-top:12px;background:#F3EEFF;color:#6D28D9;border-radius:10px;padding:10px 14px;font-size:12.5px;font-weight:700">📅 El cliente lo necesita para el ${new Date(p.fecha_requerida + 'T00:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}</div>`
+    : '';
+  renderPruebasPedido(p);
   document.getElementById('pedidoMbg').style.display = 'flex';
+  marcarRespuestasVistas(p.id);
 }
 
 function cerrarPedidoModal() {

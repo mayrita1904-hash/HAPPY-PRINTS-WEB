@@ -404,12 +404,60 @@ function calcAhorro(p, total) {
   return ahorro >= 1 ? ahorro : 0;
 }
 
+/* ── Fecha de entrega estimada ──
+   Se cuentan días hábiles de lunes a viernes a partir de hoy. Cada producto trae
+   productos.dias_produccion (lo edita la admin; 3 por default si aún no existe la columna). */
+const DIAS_ES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const esDiaHabil = d => d.getDay() !== 0 && d.getDay() !== 6;
+function sumarDiasHabiles(base, n) {
+  const r = new Date(base); r.setHours(0, 0, 0, 0);
+  let k = 0;
+  while (k < n) { r.setDate(r.getDate() + 1); if (esDiaHabil(r)) k++; }
+  while (!esDiaHabil(r)) r.setDate(r.getDate() + 1);
+  return r;
+}
+const fechaLarga = d => `${DIAS_ES[d.getDay()]} ${d.getDate()} de ${MESES_ES[d.getMonth()]}`;
+const ymdLocal = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const parseYmd = v => v ? new Date(v + 'T00:00:00') : null;
+function diasProduccion(p) {
+  const n = Number(p && p.dias_produccion);
+  return Number.isFinite(n) && n >= 0 ? n : 3;
+}
+function etaHtml(dias, fechaReq) {
+  const listo = sumarDiasHabiles(new Date(), dias);
+  const req = parseYmd(fechaReq);
+  if (!req) {
+    return `<span class="eta-ico" aria-hidden="true">📅</span><div><strong>Si lo pides hoy, está listo el ${fechaLarga(listo)}</strong>
+      <span>${dias} día${dias === 1 ? '' : 's'} hábil${dias === 1 ? '' : 'es'} de producción (lunes a viernes). Si es con envío, el tiempo de paquetería se suma a esta fecha.</span></div>`;
+  }
+  if (req >= listo) {
+    return `<span class="eta-ico" aria-hidden="true">✅</span><div><strong>¡Llegamos a tiempo para el ${fechaLarga(req)}!</strong>
+      <span>Estaría listo el ${fechaLarga(listo)}.</span></div>`;
+  }
+  return `<span class="eta-ico" aria-hidden="true">⚠️</span><div><strong>Tu fecha está muy justa</strong>
+    <span>Normalmente estaría listo el ${fechaLarga(listo)}. Escríbenos por WhatsApp antes de pagar y vemos si podemos hacerlo urgente.</span></div>`;
+}
+const etaClase = (dias, fechaReq) => {
+  const req = parseYmd(fechaReq);
+  if (!req) return 'eta-box';
+  return req >= sumarDiasHabiles(new Date(), dias) ? 'eta-box eta-ok' : 'eta-box eta-tight';
+};
+function setFechaReq(v) {
+  st.fecha = v || '';
+  const box = document.getElementById('etaBox');
+  if (!box || !cur) return;
+  const dias = diasProduccion(cur);
+  box.className = etaClase(dias, st.fecha);
+  box.innerHTML = etaHtml(dias, st.fecha);
+}
+
 function openM(id) {
   cur = allProds.find(p => p.id === id);
   if (!cur) return;
   const tallaInicial = cur.talla_adulto_activo === false && cur.precio_infantil && cur.talla_infantil_activo !== false
     ? 'infantil' : 'adulto';
-  st = { qty: 1, talla: tallaInicial, hojas: 50 };
+  st = { qty: 1, talla: tallaInicial, hojas: 50, fecha: '' };
   taShown = null; ahorroVisible = false;
   attachUrl = null; attachTooBig = false; attachName = '';
   hideDesignPreview();
@@ -540,6 +588,9 @@ function renderMB() {
   const total = calcT();
   const ahorro = calcAhorro(p, total);
   const permitePersonalizar = esPersonalizable(p);
+  const permiteTaza = esCilindro(p);
+  const diasProd = diasProduccion(p);
+  const manana = ymdLocal(new Date(Date.now() + 864e5));
   let h = '';
 
   if (p.tipo === 'talla') {
@@ -608,24 +659,42 @@ function renderMB() {
     <span style="font-size:12px;color:#9090A8;margin-left:6px">piezas</span>
   </div>
 
-  <span class="olbl">${permitePersonalizar ? '✨ Personaliza tu producto (opcional)' : '📎 Foto de referencia (opcional)'}</span>
-  <label class="attach-zone" id="attachZone" for="attachInput">
+  <span class="olbl">${permitePersonalizar ? '✨ Personaliza tu producto (opcional)' : permiteTaza ? `✨ Ve tu diseño en tu ${esTermo(p) ? 'termo' : 'taza'} (opcional)` : '📎 Foto de referencia (opcional)'}</span>
+  <label class="attach-zone" id="attachZone" for="attachInput" style="display:${design || mug ? 'none' : 'flex'}">
     <input type="file" id="attachInput" accept="image/*" onchange="handleAttach(event)" style="display:none">
     <span id="attachLabel">${permitePersonalizar
       ? '📎 Toca para subir tu foto o diseño y ver una vista previa (máx. 5 MB)'
+      : permiteTaza ? `📎 Toca para subir tu foto o diseño y verlo en tu ${esTermo(p) ? 'termo' : 'taza'} (máx. 5 MB)`
       : '📎 Toca para adjuntar una foto o diseño (máx. 5 MB)'}</span>
   </label>
+  ${permiteTaza ? `
+  <div id="mugHint" style="display:${mug ? 'block' : 'none'};margin-top:8px">
+    <div style="font-size:11px;color:var(--ink-soft);text-align:center;margin-bottom:8px">↔ Arrastra la imagen de arriba para girar tu ${esTermo(p) ? 'termo' : 'taza'}</div>
+    <label for="mugScale" style="display:block;font-size:11px;font-weight:700;color:var(--navy);margin-bottom:4px">Tamaño del diseño</label>
+    <input type="range" id="mugScale" min="40" max="100" value="${mug ? Math.round(mug.scale * 100) : 78}" oninput="setMugScale(this.value)" style="width:100%;accent-color:var(--pink)">
+    <div style="display:flex;align-items:center;gap:10px;background:#F5F5F8;border-radius:10px;padding:8px 12px;margin-top:8px">
+      <img id="mugThumb" src="${mug ? mug.src : ''}" alt="" style="width:36px;height:36px;object-fit:cover;border-radius:8px;flex-shrink:0">
+      <button type="button" onclick="toggleMugView()" id="mugViewBtn" style="background:none;border:none;font-size:11px;font-weight:700;color:var(--navy);cursor:pointer">👁️ Ver foto del producto</button>
+      <button type="button" onclick="document.getElementById('attachInput').click()" style="background:none;border:none;font-size:11px;font-weight:700;color:var(--navy);cursor:pointer">🔄 Reemplazar</button>
+      <button type="button" onclick="removeDesign()" style="background:none;border:none;font-size:11px;font-weight:700;color:#DC2626;cursor:pointer;margin-left:auto">🗑️ Eliminar</button>
+    </div>
+  </div>` : ''}
   ${permitePersonalizar ? `
-  <div id="designHint" style="display:none;margin-top:8px">
+  <div id="designHint" style="display:${design ? 'block' : 'none'};margin-top:8px">
     <div style="font-size:11px;color:var(--ink-soft);text-align:center;margin-bottom:8px">
       Arrastra el diseño para moverlo · esquinas para agrandarlo · ⟳ para girarlo
     </div>
     <div style="display:flex;align-items:center;gap:10px;background:#F5F5F8;border-radius:10px;padding:8px 12px">
-      <img id="designThumb" src="" alt="" style="width:36px;height:36px;object-fit:cover;border-radius:8px;flex-shrink:0">
+      <img id="designThumb" src="${design ? document.getElementById('mimgOverlay').src : ''}" alt="" style="width:36px;height:36px;object-fit:cover;border-radius:8px;flex-shrink:0">
       <button type="button" onclick="document.getElementById('attachInput').click()" style="background:none;border:none;font-size:11px;font-weight:700;color:var(--navy);cursor:pointer;display:flex;align-items:center;gap:4px">🔄 Reemplazar</button>
       <button type="button" onclick="removeDesign()" style="background:none;border:none;font-size:11px;font-weight:700;color:#DC2626;cursor:pointer;display:flex;align-items:center;gap:4px;margin-left:auto">🗑️ Eliminar</button>
     </div>
   </div>` : ''}
+
+  <span class="olbl">📅 Fecha de entrega</span>
+  <div class="${etaClase(diasProd, st.fecha)}" id="etaBox" aria-live="polite">${etaHtml(diasProd, st.fecha)}</div>
+  <label class="eta-date-lbl" for="needDate">¿Para qué fecha lo necesitas? <span>(opcional)</span></label>
+  <input type="date" class="eta-date" id="needDate" min="${manana}" value="${st.fecha || ''}" onchange="setFechaReq(this.value)">
 
   <div class="tbox">
     <div>
@@ -689,6 +758,173 @@ function esCategoriaPersonalizable(nombre) {
 
 let design = null; // { x, y, w, h, angle } — x,y = centro en px relativos a #mip
 
+/* ── Vista previa en tazas y termos ──
+   El diseño se "envuelve" alrededor de un cilindro dibujado en <canvas id="mugCanvas">:
+   cada columna visible del cilindro toma la columna de la textura que le toca según el ángulo,
+   así se ve la curvatura real y se puede girar arrastrando. La imagen resultante se sube a
+   Storage igual que la de playeras (combinedUrl) y se manda con el pedido. */
+function esCilindro(p) {
+  const n = ((p && p.categorias && p.categorias.nombre) || '').toLowerCase();
+  return n.includes('taza') || n.includes('termo');
+}
+function esTermo(p) {
+  return ((p && p.categorias && p.categorias.nombre) || '').toLowerCase().includes('termo');
+}
+let mug = null; // { img, src, scale, rot }
+const MUG_TEX_W = 1200, MUG_TEX_H = 400;
+const mugTex = document.createElement('canvas');
+mugTex.width = MUG_TEX_W; mugTex.height = MUG_TEX_H;
+
+function buildMugTexture() {
+  const c = mugTex.getContext('2d');
+  c.fillStyle = '#FFFFFF'; c.fillRect(0, 0, MUG_TEX_W, MUG_TEX_H);
+  if (!mug) return;
+  const maxW = MUG_TEX_W * .42 * mug.scale, maxH = MUG_TEX_H * .92 * mug.scale;
+  const r = Math.min(maxW / mug.img.naturalWidth, maxH / mug.img.naturalHeight);
+  const w = mug.img.naturalWidth * r, h = mug.img.naturalHeight * r;
+  c.drawImage(mug.img, MUG_TEX_W / 2 - w / 2, MUG_TEX_H / 2 - h / 2, w, h);
+}
+
+function drawMug() {
+  const canvas = document.getElementById('mugCanvas');
+  if (!canvas || !mug) return;
+  const c = canvas.getContext('2d');
+  const termo = esTermo(cur);
+  const angle = mug.rot * Math.PI / 180;
+  const bg = c.createLinearGradient(0, 0, 0, 640);
+  bg.addColorStop(0, '#FAFAFD'); bg.addColorStop(1, '#EFEFF5');
+  c.fillStyle = bg; c.fillRect(0, 0, 640, 640);
+  const L = termo ? 215 : 150, R = termo ? 425 : 450;
+  const T = termo ? 150 : 160, B = termo ? 585 : 520;
+  const cx = (L + R) / 2, rx = (R - L) / 2, ry = termo ? 18 : 26;
+  c.fillStyle = 'rgba(26,31,75,.10)';
+  c.beginPath(); c.ellipse(cx + (termo ? 10 : 30), B + 16, rx + (termo ? 40 : 70), 18, 0, 0, Math.PI * 2); c.fill();
+
+  // Asa (solo taza): se dibuja antes o después del cuerpo según quede atrás o adelante.
+  const handleFront = Math.cos(angle + Math.PI / 2) <= 0;
+  const handleX = cx + Math.sin(angle + Math.PI / 2) * rx;
+  const drawHandle = () => {
+    c.save(); c.strokeStyle = '#F4F4F8'; c.lineWidth = 34; c.lineCap = 'round';
+    const dir = handleX >= cx ? 1 : -1, w = Math.abs(handleX - cx) / rx;
+    c.beginPath(); c.moveTo(handleX - dir * 6, T + 80);
+    c.bezierCurveTo(handleX + dir * 120 * w, T + 70, handleX + dir * 120 * w, B - 90, handleX - dir * 6, B - 100);
+    c.stroke(); c.strokeStyle = 'rgba(26,31,75,.12)'; c.lineWidth = 3; c.stroke(); c.restore();
+  };
+  if (!termo && !handleFront) drawHandle();
+
+  c.save();
+  c.beginPath(); c.moveTo(L, T); c.lineTo(L, B - 20); c.ellipse(cx, B - 20, rx, ry, 0, Math.PI, 0, true); c.lineTo(R, T); c.closePath();
+  c.clip();
+  const bandTop = termo ? T + 40 : T + 12, bandH = termo ? B - T - 90 : B - T - 30;
+  for (let x = L; x < R; x += 2) {
+    const nx = (x + 1 - cx) / rx;
+    const th = Math.asin(Math.max(-1, Math.min(1, nx)));
+    let u = ((th - angle) / (Math.PI * 2) + .5) % 1; if (u < 0) u += 1;
+    c.drawImage(mugTex, u * MUG_TEX_W, 0, 2, MUG_TEX_H, x, bandTop, 2.6, bandH);
+  }
+  const g = c.createLinearGradient(L, 0, R, 0);
+  g.addColorStop(0, 'rgba(26,31,75,.28)'); g.addColorStop(.18, 'rgba(26,31,75,.06)'); g.addColorStop(.38, 'rgba(255,255,255,.28)');
+  g.addColorStop(.5, 'rgba(255,255,255,0)'); g.addColorStop(.8, 'rgba(26,31,75,.08)'); g.addColorStop(1, 'rgba(26,31,75,.30)');
+  c.fillStyle = g; c.fillRect(L, T, R - L, B - T + 10);
+  c.restore();
+
+  if (termo) {
+    // Tapa del termo
+    c.fillStyle = '#3A3F5C';
+    c.beginPath();
+    if (c.roundRect) c.roundRect(L - 4, T - 62, R - L + 8, 66, 14); else c.rect(L - 4, T - 62, R - L + 8, 66);
+    c.fill();
+    c.fillStyle = 'rgba(255,255,255,.14)'; c.fillRect(L + 18, T - 54, 14, 50);
+  } else {
+    c.fillStyle = '#FFFFFF'; c.beginPath(); c.ellipse(cx, T, rx, ry, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#E9E9EF'; c.beginPath(); c.ellipse(cx, T + 2, rx - 9, ry - 6, 0, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = 'rgba(26,31,75,.12)'; c.lineWidth = 2; c.beginPath(); c.ellipse(cx, T, rx, ry, 0, 0, Math.PI * 2); c.stroke();
+    if (handleFront) drawHandle();
+  }
+}
+
+function showMugPreview(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      mug = { img, src: e.target.result, scale: mug ? mug.scale : .78, rot: 0 };
+      buildMugTexture();
+      const canvas = document.getElementById('mugCanvas');
+      canvas.style.display = 'block';
+      drawMug();
+      const hint = document.getElementById('mugHint');
+      if (hint) hint.style.display = 'block';
+      const thumb = document.getElementById('mugThumb');
+      if (thumb) thumb.src = e.target.result;
+      const zone = document.getElementById('attachZone');
+      if (zone) zone.style.display = 'none';
+      const vb = document.getElementById('mugViewBtn');
+      if (vb) vb.textContent = '👁️ Ver foto del producto';
+      scheduleCombinedUpdate();
+      // Pequeño giro de presentación para que se note que se puede girar.
+      const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!reduce) {
+        const t0 = performance.now();
+        const intro = now => {
+          if (!mug || mugDrag) return;
+          const t = Math.min(1, (now - t0) / 1600);
+          mug.rot = Math.sin(t * Math.PI * 2) * 35 * (1 - t);
+          drawMug();
+          if (t < 1) requestAnimationFrame(intro);
+        };
+        requestAnimationFrame(intro);
+      }
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function setMugScale(v) {
+  if (!mug) return;
+  mug.scale = v / 100;
+  buildMugTexture(); drawMug();
+  scheduleCombinedUpdate();
+}
+
+function toggleMugView() {
+  const canvas = document.getElementById('mugCanvas');
+  const vb = document.getElementById('mugViewBtn');
+  if (!canvas || !mug) return;
+  const showing = canvas.style.display !== 'none';
+  canvas.style.display = showing ? 'none' : 'block';
+  if (vb) vb.textContent = showing ? '🎨 Ver con mi diseño' : '👁️ Ver foto del producto';
+}
+
+let mugDrag = null;
+(function initMugEditor() {
+  const canvas = document.getElementById('mugCanvas');
+  if (!canvas) return;
+  canvas.addEventListener('pointerdown', e => {
+    if (!mug) return;
+    mugDrag = { x: e.clientX };
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!mugDrag || !mug) return;
+    mug.rot += (e.clientX - mugDrag.x) * .6;
+    mug.rot = ((mug.rot + 180) % 360 + 360) % 360 - 180;
+    mugDrag.x = e.clientX;
+    drawMug();
+  });
+  const end = () => { if (mugDrag) scheduleCombinedUpdate(); mugDrag = null; };
+  canvas.addEventListener('pointerup', end);
+  canvas.addEventListener('pointercancel', end);
+  // Teclado: flechas giran la taza.
+  canvas.addEventListener('keydown', e => {
+    if (!mug || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+    e.preventDefault();
+    mug.rot += e.key === 'ArrowLeft' ? -15 : 15;
+    drawMug(); scheduleCombinedUpdate();
+  });
+})();
+
 function showDesignPreview(file) {
   const reader = new FileReader();
   reader.onload = e => {
@@ -719,6 +955,11 @@ function showDesignPreview(file) {
 
 function hideDesignPreview() {
   design = null;
+  mug = null;
+  const mugCanvas = document.getElementById('mugCanvas');
+  if (mugCanvas) mugCanvas.style.display = 'none';
+  const mugHint = document.getElementById('mugHint');
+  if (mugHint) mugHint.style.display = 'none';
   combinedUrl = null;
   clearTimeout(combinedTimer);
   document.getElementById('designBox').style.display = 'none';
@@ -771,6 +1012,10 @@ function fitRect(naturalW, naturalH, boxW, boxH) {
 }
 
 async function generarImagenCombinada() {
+  if (mug && cur) {
+    const canvas = document.getElementById('mugCanvas');
+    return canvas ? await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9)) : null;
+  }
   if (!design || !cur) return null;
   const mimg = document.getElementById('mimg');
   const mip  = document.getElementById('mip');
@@ -886,6 +1131,7 @@ async function handleAttach(e) {
   if (!file) return;
   attachUrl = null; attachTooBig = false; attachName = file.name;
   if (esPersonalizable(cur)) showDesignPreview(file);
+  else if (esCilindro(cur)) showMugPreview(file);
 
   if (file.size > ATTACH_MAX_BYTES) {
     attachTooBig = true;
@@ -924,7 +1170,7 @@ function pedirWA() {
     foto += `\n📎 *${combinedUrl ? 'Diseño original' : 'Foto de referencia'}:* les mando el archivo por este mismo chat (pesa más de 5 MB)`;
   }
   const msg = encodeURIComponent(
-    `¡Hola! 👋 Vengo de su catálogo y me encantó lo que vi ✨\n\nMe gustaría apartar este pedido:\n\n🛍️ *Producto:* ${cur.nombre}\n🔢 *Cantidad:* ${st.qty} pieza(s)${ex}${foto}\n💰 *Total estimado:* ${fmt(t)} MXN\n\n¿Podrían confirmarme disponibilidad, tiempo de entrega y cómo realizar el pago? ¡Quedo al pendiente! 😊`
+    `¡Hola! 👋 Vengo de su catálogo y me encantó lo que vi ✨\n\nMe gustaría apartar este pedido:\n\n🛍️ *Producto:* ${cur.nombre}\n🔢 *Cantidad:* ${st.qty} pieza(s)${ex}${st.fecha ? `\n📅 *Lo necesito para:* ${fechaLarga(parseYmd(st.fecha))}` : ''}${foto}\n💰 *Total estimado:* ${fmt(t)} MXN\n\n¿Podrían confirmarme disponibilidad, tiempo de entrega y cómo realizar el pago? ¡Quedo al pendiente! 😊`
   );
   window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
 }
@@ -1255,7 +1501,7 @@ function agregarAlCarritoDesdeModal() {
   if (!session) { abrirLoginPopup('carrito'); return; }
   carrito.push({
     producto_id: cur.id, nombre: cur.nombre, tipo: cur.tipo, imagen_url: cur.imagen_url || '',
-    qty: st.qty, talla: st.talla, hojas: st.hojas, attachUrl: attachUrl, combinedUrl: combinedUrl
+    qty: st.qty, talla: st.talla, hojas: st.hojas, attachUrl: attachUrl, combinedUrl: combinedUrl, fecha: st.fecha || ''
   });
   guardarCarrito();
   if (window.animarAlCarrito) window.animarAlCarrito(document.getElementById('mimg'));
@@ -1432,8 +1678,36 @@ function renderCarritoPanel() {
       <div class="accordion-body"><div class="accordion-body-inner">${direccionCheckoutHtml()}</div></div>
     </div>
 
+    <div class="accordion open" id="accFecha">
+      <button type="button" class="accordion-head" onclick="toggleAccordionCarrito('accFecha')">
+        <span class="accordion-head-lbl">📅 Fecha de entrega</span>
+        <span class="accordion-chevron">${CHEVRON_SVG}</span>
+      </button>
+      <div class="accordion-body"><div class="accordion-body-inner">
+        <div class="${etaClase(diasCarrito(), fechaCarrito())}" id="ckEta" aria-live="polite">${etaHtml(diasCarrito(), fechaCarrito())}</div>
+        <label class="eta-date-lbl" for="ckFecha">¿Para qué fecha lo necesitas? <span>(opcional)</span></label>
+        <input type="date" class="eta-date" id="ckFecha" min="${ymdLocal(new Date(Date.now() + 864e5))}" value="${fechaCarrito()}" onchange="actualizarEtaCheckout(this.value)">
+      </div></div>
+    </div>
+
     <button class="pay-btn" id="payBtn" onclick="pagarConMercadoPago()">💳 Pagar con Mercado Pago — ${fmtMoney(total)}</button>
     <div class="pay-note">Se abrirá la página segura de Mercado Pago para completar tu pago (tarjeta u OXXO).</div>`;
+}
+
+/* Fecha del carrito: manda el producto que más tarda; la fecha requerida sugerida es la más próxima que eligió en sus productos. */
+function diasCarrito() {
+  return carrito.reduce((m, l) => Math.max(m, diasProduccion(allProds.find(p => p.id === l.producto_id))), 0);
+}
+function fechaCarrito() {
+  const hoy = ymdLocal(new Date());
+  const fechas = carrito.map(l => l.fecha).filter(f => f && f > hoy).sort();
+  return fechas[0] || '';
+}
+function actualizarEtaCheckout(v) {
+  const box = document.getElementById('ckEta');
+  if (!box) return;
+  box.className = etaClase(diasCarrito(), v);
+  box.innerHTML = etaHtml(diasCarrito(), v);
 }
 
 async function pagarConMercadoPago() {
@@ -1468,7 +1742,11 @@ async function pagarConMercadoPago() {
     const r = await fetch('/api/mp-crear-preferencia-pedido', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
-      body: JSON.stringify({ items, cliente: { nombre, telefono, correo, calle, numero, colonia, cp, ciudad, entre_calles, notas } })
+      body: JSON.stringify({
+        items,
+        cliente: { nombre, telefono, correo, calle, numero, colonia, cp, ciudad, entre_calles, notas },
+        fecha_requerida: (document.getElementById('ckFecha') || {}).value || null
+      })
     });
     const data = await r.json();
     if (!r.ok || !data.init_point) throw new Error(data.error || 'No se pudo iniciar el pago.');
@@ -1575,10 +1853,88 @@ async function cargarDirecciones() {
     direcciones = await sbAuthGet(`direcciones?select=*&user_id=eq.${session.user.id}&order=predeterminada.desc,creado_en.desc`);
   } catch (e) { direcciones = []; }
 }
+let misPruebas = []; // pruebas de diseño de mis pedidos (tabla pedido_pruebas)
 async function cargarMisPedidos() {
   try {
     misPedidos = await sbAuthGet(`pedidos?select=*,pedido_items(*)&user_id=eq.${session.user.id}&order=creado_en.desc`);
   } catch (e) { misPedidos = []; }
+  misPruebas = [];
+  if (!misPedidos.length) return;
+  try {
+    const ids = misPedidos.map(p => p.id).join(',');
+    misPruebas = await sbAuthGet(`pedido_pruebas?select=*&pedido_id=in.(${ids})&order=creado_en.desc`);
+  } catch (e) { misPruebas = []; } // si la tabla aún no existe, el resto de Mi Perfil sigue funcionando
+}
+
+const PASOS_PEDIDO = [
+  ['💳', 'Pago confirmado'], ['🎨', 'Tu diseño'], ['🖨️', 'En preparación'], ['🚚', 'En camino'], ['✅', 'Entregado']
+];
+function pasoPedido(ped) {
+  return { confirmado: 1, preparacion: 2, transito: 3, entregado: 5 }[ped.estatus_envio] ?? 1;
+}
+function lineaTiempoHtml(ped) {
+  const n = pasoPedido(ped);
+  const pct = (Math.min(n, PASOS_PEDIDO.length - 1) / (PASOS_PEDIDO.length - 1)) * 80;
+  return `<ol class="order-timeline" aria-label="Estado del pedido">
+    <span class="order-timeline-bar" style="width:${pct}%" aria-hidden="true"></span>
+    ${PASOS_PEDIDO.map(([ico, lbl], i) => `<li class="${i < n ? 'done' : i === n ? 'now' : ''}"${i === n ? ' aria-current="step"' : ''}><span class="pt" aria-hidden="true">${i < n ? '✓' : ico}</span>${lbl}</li>`).join('')}
+  </ol>`;
+}
+function pruebaHtml(ped) {
+  const prueba = misPruebas.find(x => x.pedido_id === ped.id);
+  const llevaDiseno = (ped.pedido_items || []).some(it => it.combined_url || it.attach_url);
+  if (!prueba) {
+    return ped.estatus_envio === 'confirmado' && llevaDiseno
+      ? '<div class="proof-wait">🎨 Estamos preparando la prueba de tu diseño. Aparecerá aquí para que la apruebes antes de imprimir.</div>'
+      : '';
+  }
+  const img = `<a class="proof-thumb" href="${escapeHtmlMain(prueba.imagen_url)}" target="_blank" rel="noopener"><img src="${escapeHtmlMain(prueba.imagen_url)}" alt="Prueba de diseño del pedido ${ped.id}" loading="lazy"></a>`;
+  if (prueba.estatus === 'aprobado') {
+    const f = new Date(prueba.respondido_en || prueba.creado_en).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' });
+    return `<div class="proof-card proof-done">${img}<div><strong>✓ Aprobaste tu diseño el ${f}</strong><span>Ya está en producción.</span></div></div>`;
+  }
+  if (prueba.estatus === 'cambio') {
+    return `<div class="proof-card proof-change">${img}<div><strong>Recibimos tu comentario</strong>
+      <span>"${escapeHtmlMain(prueba.comentario_cliente || '')}"</span><span>Te subiremos una nueva prueba aquí mismo.</span></div></div>`;
+  }
+  return `<div class="proof-card proof-pending">${img}<div>
+      <strong>Tu diseño está listo para revisar</strong>
+      <span>${prueba.nota_admin ? escapeHtmlMain(prueba.nota_admin) : 'Si te gusta, apruébalo y empezamos a producir. Si quieres algo distinto, cuéntanos qué cambiar.'}</span>
+      <div class="proof-actions">
+        <button type="button" class="proof-ok" onclick="responderPrueba(${prueba.id}, true)">✓ Aprobar diseño</button>
+        <button type="button" class="proof-ask" onclick="mostrarCambioPrueba(${prueba.id})">Pedir un cambio</button>
+      </div>
+      <div class="proof-change-box" id="cambioBox${prueba.id}" hidden>
+        <label for="cambioTxt${prueba.id}">¿Qué te gustaría cambiar?</label>
+        <textarea id="cambioTxt${prueba.id}" maxlength="1000" placeholder="Ej.: ¿Pueden hacer el texto más grande y en color rosa?"></textarea>
+        <button type="button" class="proof-send" onclick="responderPrueba(${prueba.id}, false)">Enviar comentario</button>
+      </div>
+    </div></div>`;
+}
+function mostrarCambioPrueba(id) {
+  const box = document.getElementById('cambioBox' + id);
+  if (!box) return;
+  box.hidden = false;
+  document.getElementById('cambioTxt' + id).focus();
+}
+async function responderPrueba(id, aprobar) {
+  const txtEl = document.getElementById('cambioTxt' + id);
+  const comentario = txtEl ? txtEl.value.trim() : '';
+  if (!aprobar && !comentario) { alert('Cuéntanos qué te gustaría cambiar.'); return; }
+  try {
+    await ensureFreshSession();
+    const r = await fetch(SB_URL + '/rest/v1/rpc/responder_prueba', {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_id: id, p_aprobar: aprobar, p_comentario: aprobar ? null : comentario })
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.message || 'No se pudo guardar tu respuesta. Intenta de nuevo.');
+    }
+    await cargarMisPedidos();
+    renderPerfilPanel();
+  } catch (e) { alert(e.message); }
 }
 
 async function guardarDatosPersonales() {
@@ -1719,11 +2075,15 @@ function renderPerfilPanel() {
     const items = (ped.pedido_items || []).map(it => `${it.producto_nombre} x${it.cantidad}`).join(', ');
     const [cls, lbl] = ESTATUS_ENVIO_INFO[ped.estatus_envio] || ESTATUS_ENVIO_INFO.confirmado;
     const fecha = new Date(ped.creado_en).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+    const pagado = ped.estatus_pago === 'pagado' && ped.estatus_envio !== 'cancelado';
+    const req = ped.fecha_requerida ? `<div class="order-need">📅 Lo necesitas para el ${fechaLarga(parseYmd(ped.fecha_requerida))}</div>` : '';
     return `
       <div class="order-row">
         <div class="order-row-top"><span class="order-num">Pedido #${ped.id}</span><span class="order-date">${fecha}</span></div>
         <div class="order-items">${escapeHtmlMain(items)}</div>
-        <div class="order-row-bottom"><span class="order-total">${fmtMoney(ped.total)}</span><span class="status-badge ${cls}">${lbl}</span></div>
+        ${req}
+        ${pagado ? lineaTiempoHtml(ped) + pruebaHtml(ped) : ''}
+        <div class="order-row-bottom"><span class="order-total">${fmtMoney(ped.total)}</span>${pagado ? '' : `<span class="status-badge ${cls}">${lbl}</span>`}</div>
       </div>`;
   }).join('') : '<div class="cart-empty-hint">Todavía no tienes pedidos.</div>';
 

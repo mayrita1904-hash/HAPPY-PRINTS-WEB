@@ -58,6 +58,12 @@ module.exports = async (req, res) => {
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
     const items = (body && body.items) || [];
     const cliente = (body && body.cliente) || {};
+    // Fecha para la que el cliente necesita el pedido (opcional). Solo se acepta YYYY-MM-DD de hoy en adelante.
+    let fechaRequerida = null;
+    if (body && typeof body.fecha_requerida === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.fecha_requerida)) {
+      const hoy = new Date().toISOString().slice(0, 10);
+      if (body.fecha_requerida >= hoy) fechaRequerida = body.fecha_requerida;
+    }
     if (!items.length) { res.status(400).json({ error: 'El carrito está vacío' }); return; }
     if (!cliente.nombre || !cliente.telefono || !cliente.correo || !cliente.calle || !cliente.numero || !cliente.colonia || !cliente.cp || !cliente.ciudad) {
       res.status(400).json({ error: 'Faltan datos del cliente o de la dirección' });
@@ -104,6 +110,7 @@ module.exports = async (req, res) => {
         cliente_nombre: cliente.nombre, cliente_telefono: cliente.telefono, cliente_email: cliente.correo,
         calle: cliente.calle, numero: cliente.numero, colonia: cliente.colonia, cp: cliente.cp, ciudad: cliente.ciudad,
         entre_calles: cliente.entre_calles || null, notas: cliente.notas || null,
+        ...(fechaRequerida ? { fecha_requerida: fechaRequerida } : {}),
         envio: ENVIO_FIJO, estatus_pago: 'pendiente', total
       })
     });
