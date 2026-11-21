@@ -24,7 +24,7 @@ Archivos que hay que subir (avísame y te voy guiando uno por uno como siempre):
 ## Paso 4 — Verificar
 1. Espera a que Vercel termine de desplegar (detecta `package.json` y las funciones en `/api` automáticamente, no requiere configuración extra).
 2. Abre tu sitio normal y navega un poco (para generar datos de prueba).
-3. Entra a `https://happy-prints-web.vercel.app/dashboard.html`, escribe la clave del Paso 2 y deberías ver las tarjetas y la gráfica con la actividad reciente.
+3. Entra a `https://happyprintsmx.com/dashboard.html`, escribe la clave del Paso 2 y deberías ver las tarjetas y la gráfica con la actividad reciente.
 
 ## Qué mide
 - **Vistas de página** por día y por URL.
