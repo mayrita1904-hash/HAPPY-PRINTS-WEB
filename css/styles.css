@@ -694,6 +694,8 @@ footer p { font-size: 11px; color: rgba(255,255,255,.55); margin: 0; line-height
   background: #fff; border-radius: 26px 26px 0 0; width: 100%; max-width: 500px;
   overflow: hidden; animation: up .22s ease; max-height: 92vh; display: flex; flex-direction: column;
   position: relative;
+  /* En iPhone, 92vh no descuenta la barra de Safari y la ✕ quedaba escondida arriba; dvh sí la descuenta. */
+  max-height: 92dvh;
 }
 @media (min-width: 640px) { .ov { align-items: center; } .modal { border-radius: var(--radius-lg); } }
 @keyframes up { from { transform: translateY(38px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -731,8 +733,8 @@ footer p { font-size: 11px; color: rgba(255,255,255,.55); margin: 0; line-height
 .mbar { position: absolute; bottom: 0; left: 0; right: 0; height: 6px; }
 .mbdg { position: absolute; top: 12px; left: 12px; border-radius: 999px; font-size: 10px; font-weight: 800; padding: 5px 13px; color: #fff; text-transform: uppercase; }
 .mclose {
-  position: absolute; top: 10px; right: 11px; background: rgba(255,255,255,.92); border: none;
-  border-radius: 50%; width: 32px; height: 32px; font-size: 14px; cursor: pointer;
+  position: absolute; top: 10px; right: 11px; background: rgba(255,255,255,.95); border: none;
+  border-radius: 50%; width: 38px; height: 38px; font-size: 15px; cursor: pointer; box-shadow: 0 2px 10px rgba(26,31,75,.22);
   display: flex; align-items: center; justify-content: center; color: var(--navy); font-weight: 900;
   z-index: 2;
 }
@@ -1675,3 +1677,14 @@ footer p { font-size: 11px; color: rgba(255,255,255,.55); margin: 0; line-height
 .motion-on .reco.is-visible .reco-stars i { animation: star-on .4s cubic-bezier(.34,1.56,.64,1) forwards; animation-delay: calc(var(--s) * 120ms + 500ms); }
 .motion-on .reco .reco-promo::before { transform: rotate(-2deg) scaleX(0); transition: transform .6s cubic-bezier(.22,1,.36,1) .9s; }
 .motion-on .reco.is-visible .reco-promo::before { transform: rotate(-2deg) scaleX(1); }
+
+/* Botón "Seguir viendo productos" al final del detalle del producto */
+.mback { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 12px; background: #fff; color: var(--navy);
+  border: 2px solid #E0E0E8; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 700; padding: 12px 0; cursor: pointer;
+  transition: border-color var(--hover-dur), color var(--hover-dur); }
+.mback:hover { border-color: var(--navy); }
+.mback:focus-visible, .mclose:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
+
+/* iPhone: el input de fecha tiene un ancho propio y se salía del borde */
+.eta-date { display: block; max-width: 100%; min-width: 0; min-height: 42px; -webkit-appearance: none; appearance: none; text-align: left; }
+.eta-date::-webkit-date-and-time-value { text-align: left; }

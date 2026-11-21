@@ -566,13 +566,21 @@ function openM(id) {
   renderMB();
   document.getElementById('ov').classList.add('open');
   document.body.style.overflow = 'hidden';
+  // Registrar el modal en el historial: así el botón/gesto "atrás" del celular lo cierra
+  // en vez de sacar al cliente de la página.
+  if (!(history.state && history.state.hpModal)) history.pushState({ hpModal: true }, '');
 }
 
-function closeM() {
-  document.getElementById('ov').classList.remove('open');
+function closeM(desdeAtras) {
+  const ov = document.getElementById('ov');
+  if (!ov.classList.contains('open')) return;
+  ov.classList.remove('open');
   document.body.style.overflow = '';
   resetModalZoom();
+  // Si se cerró con la ✕ o el botón, quitamos la entrada del historial que agregó openM.
+  if (!desdeAtras && history.state && history.state.hpModal) history.back();
 }
+window.addEventListener('popstate', () => closeM(true));
 
 /* ── Zoom de imagen dentro del mismo modal ── */
 function updateZoomOrigin(e) {
@@ -779,7 +787,8 @@ function renderMB() {
       <path d="M12 0C5.373 0 0 5.373 0 12c0 2.092.537 4.058 1.477 5.769L0 24l6.406-1.469A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.895 0-3.673-.513-5.197-1.407l-.373-.219-3.8.872.908-3.71-.242-.388A9.944 9.944 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
     </svg>
     Pedir por WhatsApp
-  </button>`;
+  </button>
+  <button type="button" class="mback" onclick="closeM()">← Seguir viendo productos</button>`;
 
   document.getElementById('mbody').innerHTML = h;
   ahorroVisible = !!ahorro;
