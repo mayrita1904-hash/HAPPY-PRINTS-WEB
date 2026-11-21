@@ -1626,3 +1626,52 @@ footer p { font-size: 11px; color: rgba(255,255,255,.55); margin: 0; line-height
 @media (prefers-reduced-motion: reduce) {
   .wd-shine::after, .wd-caret { animation: none !important; }
 }
+
+/* ===== Recomiéndanos (dentro de "Encuéntranos", index.html) ===== */
+.reco { position: relative; max-width: 1060px; margin: 6px auto 28px; background: #FFF6FA; border-radius: 28px; padding: 30px 20px 28px; overflow: hidden; isolation: isolate; }
+.location > .reco { margin-inline: 16px; }
+@media (min-width: 1092px) { .location > .reco { margin-inline: auto; } }
+.reco::before, .reco::after { content: ""; position: absolute; z-index: -1; border-radius: 50%; }
+.reco::before { width: 220px; height: 220px; right: -70px; top: -80px; background: #FFD1E3; }
+.reco::after { width: 170px; height: 170px; left: -60px; bottom: -70px; background: #CFF1EE; }
+.reco-head { text-align: center; max-width: 620px; margin: 0 auto 22px; }
+.reco-eyebrow { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--teal); }
+.reco-h { font-family: 'Fredoka', sans-serif; font-weight: 700; color: var(--navy); font-size: clamp(24px, 4.4vw, 36px); line-height: 1.08; margin: 6px 0 10px; }
+.reco-h span { color: var(--pink); }
+.reco-head p { margin: 0; color: var(--ink-soft); font-size: 14.5px; line-height: 1.55; }
+.reco-head p b { color: var(--pink); }
+.reco-steps { display: grid; gap: 14px; }
+@media (min-width: 820px) { .reco-steps { grid-template-columns: repeat(3, 1fr); } }
+.reco-step { background: #fff; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 6px 18px -12px rgba(26,31,75,.35); }
+.reco-top { display: flex; align-items: center; gap: 12px; }
+.reco-ico { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font-size: 24px; flex: none; background: var(--soft); }
+.reco-n { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--c); }
+.reco-step h3 { margin: 0; font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 17px; line-height: 1.2; color: var(--navy); }
+.reco-step p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
+.reco-step p b { color: var(--navy); }
+.reco-stars { display: flex; gap: 3px; font-size: 20px; }
+.reco-stars i { font-style: normal; color: var(--orange); display: inline-block; }
+.reco-handle { font-weight: 800; color: var(--teal); }
+.reco-btn { margin-top: auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 13.5px; border-radius: 999px; padding: 11px 14px; transition: transform var(--hover-dur) var(--hover-ease); }
+.reco-btn:hover { transform: translateY(-2px); }
+.reco-btn-google { background: var(--navy); color: #fff; }
+.reco-btn-wa { background: #25D366; color: #fff; }
+.reco-socials { margin-top: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.reco-socials a { flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; font-size: 12.5px; font-weight: 700; color: var(--navy); background: #F3F3F8; border-radius: 999px; padding: 9px 10px; transition: background var(--hover-dur), color var(--hover-dur); }
+.reco-socials a:hover { background: var(--navy); color: #fff; }
+.reco-promo-step { background: var(--navy); }
+.reco-promo-step h3 { color: #fff; }
+.reco-promo-step p { color: rgba(255,255,255,.78); }
+.reco-promo { position: relative; align-self: flex-start; font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: clamp(24px, 3.2vw, 30px); line-height: 1; color: var(--navy); padding: 8px 14px 10px; }
+.reco-promo::before { content: ""; position: absolute; inset: 0; background: #D7E84A; border-radius: 6px 14px 8px 16px; transform: rotate(-2deg); transform-origin: left; }
+.reco-promo span, .reco-promo small { position: relative; }
+.reco-promo small { display: block; font-size: 13px; margin-top: 4px; letter-spacing: .02em; }
+.reco-fine { font-size: 11.5px; color: rgba(255,255,255,.6); }
+.reco-foot { text-align: center; margin: 22px auto 0; max-width: 560px; font-size: 14px; color: var(--navy); line-height: 1.55; }
+.reco-foot b { color: var(--pink); }
+.reco-btn:focus-visible, .reco-socials a:focus-visible { outline: 3px solid var(--purple); outline-offset: 3px; }
+/* Animación (solo con .motion-on): estrellas una por una y la pincelada lima se dibuja */
+.motion-on .reco .reco-stars i { color: #E2E2EA; }
+.motion-on .reco.is-visible .reco-stars i { animation: star-on .4s cubic-bezier(.34,1.56,.64,1) forwards; animation-delay: calc(var(--s) * 120ms + 500ms); }
+.motion-on .reco .reco-promo::before { transform: rotate(-2deg) scaleX(0); transition: transform .6s cubic-bezier(.22,1,.36,1) .9s; }
+.motion-on .reco.is-visible .reco-promo::before { transform: rotate(-2deg) scaleX(1); }

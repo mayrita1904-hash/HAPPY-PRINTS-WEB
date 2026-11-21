@@ -1,7 +1,7 @@
 const SB_URL = 'https://ocwzwrapiqvyxdlijdoc.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jd3p3cmFwaXF2eXhkbGlqZG9jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MzA1NzgsImV4cCI6MjA5ODUwNjU3OH0._3r9pDu7Vg09o_5MZt3tcu7i2CZoWk3xKtbOMWcY_wM';
 const HDR = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
-const WA_NUMBER = '5217227118927';
+const WA_NUMBER = '5217224616543';
 
 async function get(path) {
   const r = await fetch(SB_URL + '/rest/v1/' + path, { headers: HDR });
