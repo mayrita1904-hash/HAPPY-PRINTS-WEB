@@ -54,10 +54,11 @@ const SERVICE_TILES = [
 ];
 
 const FEATURED = [
-  { key: 'tazas', label: 'Tazas', icon: '☕', color: '#1FB6AE', img: 'assets/images/tazas.webp', desc: 'Cambian de color o se personalizan con tu foto o diseño favorito.' },
-  { key: 'playeras', label: 'Playeras', icon: '👕', color: '#FF2D78', img: 'assets/images/playeras.webp', desc: 'Estampado full color de alta durabilidad, en el diseño que imagines.' },
-  { key: 'sudaderas', label: 'Sudaderas', icon: '🧥', color: '#7C3AED', img: 'assets/images/sudadera.webp', desc: 'Ideal para regalo o uniforme de equipo, con tu diseño o logo.' },
-  { key: 'libretas', label: 'Libretas', icon: '📓', color: '#1FADA0', img: 'assets/images/libretas.webp', desc: 'Pasta dura o suave, perfectas para regalo u oficina.' }
+  { key: 'tazas', label: 'Tazas', icon: '☕', color: '#1FB6AE', tint: '#E3F6F4', img: 'assets/images/tazas.webp', chip: '⭐ Lo más pedido', star: true,
+    desc: 'Mágicas, de espejo o clásicas. Sube tu foto y mírala en tu taza antes de pedirla.' },
+  { key: 'playeras', label: 'Playeras', icon: '👕', color: '#FF2D78', tint: '#FFE6EF', img: 'assets/images/playeras.webp', chip: '🎨 Diseña la tuya' },
+  { key: 'sudaderas', label: 'Sudaderas', icon: '🧥', color: '#7C3AED', tint: '#EFE7FD', img: 'assets/images/sudadera.webp', chip: '🏆 Para tu equipo' },
+  { key: 'libretas', label: 'Libretas', icon: '📓', color: '#1FADA0', tint: '#E2F5F3', img: 'assets/images/libretas.webp', chip: '🎁 Para regalo' }
 ];
 
 function matchCatIds(keywords) {
@@ -86,56 +87,121 @@ function buildCatGrid() {
   if (window.Motion) Motion.observeAll(grid);
 }
 
+/* ── Productos destacados: mosaico (Tazas protagonista) en escritorio, carrusel con puntos en celular ── */
 function buildFeatured() {
   const wrap = document.getElementById('featured-grid');
   if (!wrap) return;
   const items = FEATURED.map(f => {
     const cat = allCats.find(c => c.nombre.toLowerCase().includes(f.key));
     if (!cat) return null;
-    const prods = allProds.filter(p => p.categoria_id === cat.id);
+    const prods = allProds.filter(p => p.categoria_id === cat.id).sort((a, b) => (a.orden || 0) - (b.orden || 0));
     if (!prods.length) return null;
     const minPrice = Math.min(...prods.map(p => Number(p.precio_base)));
-    return { catId: cat.id, f, minPrice };
+    return { catId: cat.id, f, minPrice, count: prods.length, firstId: prods[0].id };
   }).filter(Boolean);
 
-  const cards = items.map(it => `<div class="feat-card" onclick="filt(${it.catId})">
-      <div class="feat-media" style="--tint:${it.f.color}22;--accent:${it.f.color}">
-        <img src="${it.f.img}" alt="${it.f.label} personalizados - Happy Prints" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="feat-ph" style="display:none">${it.f.icon}</div>
-        <div class="feat-caption">
-          <div class="feat-name">${it.f.label}</div>
-          <div class="feat-price">Desde ${fmt(it.minPrice)}</div>
+  const precio = n => '$' + Number(n).toLocaleString('es-MX', { maximumFractionDigits: 0 });
+  wrap.innerHTML = items.map((it, i) => {
+    const f = it.f, modelos = `${it.count} modelo${it.count === 1 ? '' : 's'}`;
+    const media = `<div class="ft-ph"><img src="${f.img}" alt="${f.label} personalizados - Happy Prints" loading="lazy"></div>`;
+    if (f.star) {
+      return `<article class="ft-tile ft-${f.key} ft-star reveal" style="--tint:${f.tint};--accent:${f.color};--i:${i}" onclick="filt(${it.catId})">
+        <span class="ft-chip ft-chip-star">${f.chip}</span>
+        <div class="ft-tryon" aria-hidden="true"><canvas class="ft-mini" width="240" height="240"></canvas><span>Gírala con <em>tu foto</em></span></div>
+        ${media}
+        <div class="ft-info">
+          <div>
+            <h3>${f.label}</h3>
+            <div class="ft-meta">Desde <b>${precio(it.minPrice)}</b> · ${modelos}</div>
+            <p class="ft-lead">${f.desc}</p>
+          </div>
+          <div class="ft-actions">
+            <button type="button" class="ft-btn ft-btn-dark" onclick="event.stopPropagation();filt(${it.catId})">Ver ${f.label.toLowerCase()}</button>
+            <button type="button" class="ft-btn ft-btn-light" onclick="event.stopPropagation();openM(${it.firstId})">✨ Pruébala con tu foto</button>
+          </div>
         </div>
+      </article>`;
+    }
+    return `<article class="ft-tile ft-${f.key} reveal" style="--tint:${f.tint};--accent:${f.color};--i:${i}" onclick="filt(${it.catId})">
+      <span class="ft-chip">${f.chip}</span>
+      ${media}
+      <div class="ft-info">
+        <div><h3>${f.label}</h3><div class="ft-meta">Desde <b>${precio(it.minPrice)}</b> · ${modelos}</div></div>
+        <button type="button" class="ft-go" onclick="event.stopPropagation();filt(${it.catId})" aria-label="Ver ${f.label.toLowerCase()}">→</button>
       </div>
-      <div class="feat-desc">${it.f.desc}</div>
-      <button class="feat-btn" onclick="event.stopPropagation();filt(${it.catId})">Ver catálogo</button>
-    </div>`).join('');
-  wrap.innerHTML = cards || '<p style="text-align:center;color:var(--ink-soft)">Cargando productos destacados…</p>';
-  setupFeaturedArrows();
+    </article>`;
+  }).join('') || '<p class="ft-loading">Cargando productos destacados…</p>';
+
+  if (window.Motion) Motion.observeAll(wrap);
+  setupFeaturedDots(wrap, items.length);
+  const mini = wrap.querySelector('.ft-mini');
+  if (mini) initMiniTaza(mini);
 }
 
-function moveFeatured(dir) {
-  const track = document.getElementById('featured-grid');
-  if (!track) return;
-  track.scrollBy({ left: dir * track.clientWidth * 0.8, behavior: 'smooth' });
+function setupFeaturedDots(track, n) {
+  const dots = document.getElementById('ftDots');
+  if (!dots) return;
+  dots.innerHTML = Array.from({ length: n }, (_, i) => `<i${i === 0 ? ' class="on"' : ''}></i>`).join('');
+  if (track.dataset.dotsBound) return;
+  track.dataset.dotsBound = '1';
+  track.addEventListener('scroll', () => {
+    let idx = 0;
+    [...track.children].forEach((t, i) => { if (t.offsetLeft - track.offsetLeft <= track.scrollLeft + 24) idx = i; });
+    [...dots.children].forEach((d, i) => d.classList.toggle('on', i === idx));
+  }, { passive: true });
 }
 
-function setupFeaturedArrows() {
-  const track = document.getElementById('featured-grid');
-  const prev = document.getElementById('fPrev');
-  const next = document.getElementById('fNext');
-  if (!track || !prev || !next) return;
-  const update = () => {
-    prev.disabled = track.scrollLeft <= 2;
-    next.disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 2;
+/* Mini taza girando con un diseño de ejemplo en la tarjeta de Tazas (misma técnica que drawMug).
+   Solo gira con .motion-on y mientras está en pantalla. */
+function initMiniTaza(canvas) {
+  const tex = document.createElement('canvas'); tex.width = 900; tex.height = 300;
+  const mc = canvas.getContext('2d');
+  const drawTex = () => {
+    const c = tex.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, 900, 300);
+    const cols = ['#FF2D78', '#1FB6AE', '#F5A623', '#7C3AED'];
+    for (let i = 0; i < 26; i++) { c.fillStyle = cols[i % 4]; c.beginPath(); c.arc(300 + (i * 53) % 300, 30 + (i * 37) % 240, 5 + i % 3 * 2, 0, Math.PI * 2); c.fill(); }
+    c.textAlign = 'center'; c.fillStyle = '#1A1F4B'; c.font = '600 34px Fredoka, sans-serif'; c.fillText('Feliz día', 450, 120);
+    c.fillStyle = '#FF2D78'; c.font = '700 64px Fredoka, sans-serif'; c.fillText('Mamá ♥', 450, 195);
   };
-  if (!track.dataset.scrollBound) {
-    track.dataset.scrollBound = '1';
-    track.addEventListener('scroll', update);
-    window.addEventListener('resize', update);
-  }
-  update();
+  const draw = rot => {
+    const S = canvas.width / 640; mc.setTransform(S, 0, 0, S, 0, 0);
+    mc.fillStyle = '#F6F6FA'; mc.fillRect(0, 0, 640, 640);
+    const L = 150, R = 450, T = 170, B = 520, cx = 300, rx = 150, ry = 26, ang = rot * Math.PI / 180;
+    const hx = cx + Math.sin(ang + Math.PI / 2) * rx, front = Math.cos(ang + Math.PI / 2) <= 0;
+    const handle = () => {
+      mc.save(); mc.strokeStyle = '#EDEDF3'; mc.lineWidth = 34; mc.lineCap = 'round';
+      const dir = hx >= cx ? 1 : -1, w = Math.abs(hx - cx) / rx;
+      mc.beginPath(); mc.moveTo(hx - dir * 6, T + 80); mc.bezierCurveTo(hx + dir * 120 * w, T + 70, hx + dir * 120 * w, B - 90, hx - dir * 6, B - 100); mc.stroke(); mc.restore();
+    };
+    if (!front) handle();
+    mc.save(); mc.beginPath(); mc.moveTo(L, T); mc.lineTo(L, B - 20); mc.ellipse(cx, B - 20, rx, ry, 0, Math.PI, 0, true); mc.lineTo(R, T); mc.closePath(); mc.clip();
+    for (let x = L; x < R; x += 3) {
+      const th = Math.asin(Math.max(-1, Math.min(1, (x + 1.5 - cx) / rx)));
+      let u = ((th - ang) / (Math.PI * 2) + .5) % 1; if (u < 0) u += 1;
+      mc.drawImage(tex, u * 900, 0, 3, 300, x, T + 12, 3.8, B - T - 30);
+    }
+    const g = mc.createLinearGradient(L, 0, R, 0);
+    g.addColorStop(0, 'rgba(26,31,75,.28)'); g.addColorStop(.38, 'rgba(255,255,255,.25)'); g.addColorStop(.55, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(26,31,75,.3)');
+    mc.fillStyle = g; mc.fillRect(L, T, R - L, B - T + 10); mc.restore();
+    mc.fillStyle = '#fff'; mc.beginPath(); mc.ellipse(cx, T, rx, ry, 0, 0, Math.PI * 2); mc.fill();
+    mc.fillStyle = '#E6E6EE'; mc.beginPath(); mc.ellipse(cx, T + 2, rx - 9, ry - 6, 0, 0, Math.PI * 2); mc.fill();
+    if (front) handle();
+  };
+  const start = () => {
+    drawTex(); draw(-20);
+    if (!document.documentElement.classList.contains('motion-on')) return;
+    let visible = false, raf = 0;
+    const t0 = performance.now();
+    const tick = now => { draw(Math.sin((now - t0) / 1400) * 55); if (visible) raf = requestAnimationFrame(tick); };
+    new IntersectionObserver(es => {
+      const was = visible; visible = es.some(e => e.isIntersecting);
+      if (visible && !was) raf = requestAnimationFrame(tick);
+      if (!visible) cancelAnimationFrame(raf);
+    }).observe(canvas);
+  };
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(start);
 }
+
 
 async function init() {
   try {

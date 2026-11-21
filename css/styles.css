@@ -256,7 +256,7 @@ img { max-width: 100%; display: block; }
 .pers-banner span { display: block; font-size: 11px; font-weight: 600; opacity: .9; margin-top: 3px; text-transform: none; letter-spacing: 0; }
 
 /* ===== Featured ===== */
-.featured { background: #fff; padding-bottom: 6px; }
+.featured { background: #fff; padding: 26px 0 10px; }
 .featured-head {
   position: relative;
   display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px;
@@ -278,50 +278,68 @@ img { max-width: 100%; display: block; }
 .f-arrow:disabled { opacity: .32; cursor: default; background: #fff; color: var(--navy); }
 @media (max-width: 480px) { .featured-arrows { display: none; } }
 
-.featured-track {
-  display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory;
-  padding: 4px 16px 14px; scrollbar-width: none;
-  justify-content: center;
-}
-.featured-track::-webkit-scrollbar { display: none; }
+/* ===== Productos destacados (js/main.js → buildFeatured) =====
+   Escritorio: mosaico con Tazas como pieza protagonista 2×2. Celular: carrusel con la siguiente asomándose. */
+.ft-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 24px; max-width: 1100px; margin: 0 auto 20px; padding: 0 16px; }
+.ft-eyebrow { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--pink); }
+.ft-h { font-family: 'Fredoka', sans-serif; font-weight: 700; color: var(--navy); font-size: clamp(24px, 3.8vw, 34px); line-height: 1.1; margin: 6px 0; }
+.ft-sub { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 48ch; line-height: 1.5; }
+.ft-all { background: none; border: 0; border-bottom: 2px solid var(--pink); padding: 0 0 2px; font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 14px; color: var(--navy); cursor: pointer; white-space: nowrap; }
+.ft-all:hover { color: var(--pink); }
+.ft-loading { text-align: center; color: var(--ink-soft); padding: 20px; }
 
-.feat-card { flex: 0 0 208px; scroll-snap-align: start; cursor: pointer; }
-@media (min-width: 600px) { .feat-card { flex-basis: 228px; } }
+.ft-bento { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 4px 16px 14px; scroll-padding-inline: 16px; max-width: 1100px; margin: 0 auto; }
+.ft-bento::-webkit-scrollbar { display: none; }
+.ft-tile { position: relative; flex: 0 0 82%; height: 360px; scroll-snap-align: start; overflow: hidden; border-radius: var(--radius-lg); background: var(--tint); color: var(--navy); display: flex; flex-direction: column; justify-content: flex-end; padding: 16px; isolation: isolate; cursor: pointer; transition: box-shadow var(--hover-dur) var(--hover-ease); }
+.ft-tile:hover { box-shadow: 0 18px 36px -18px rgba(26,31,75,.45); }
+.ft-ph { position: absolute; inset: 0; z-index: -1; display: flex; align-items: center; justify-content: center; padding: 16px 16px 84px; }
+.ft-ph img { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 14px 18px rgba(26,31,75,.18)); transition: transform .5s cubic-bezier(.22,1,.36,1); }
+.ft-tile:hover .ft-ph img { transform: scale(1.06) translateY(-4px) rotate(-1.5deg); }
+.ft-chip { position: absolute; top: 14px; left: 14px; font-size: 11px; font-weight: 800; background: #fff; color: var(--navy); border-radius: 999px; padding: 5px 10px; box-shadow: 0 2px 8px rgba(26,31,75,.12); }
+.ft-chip-star { background: var(--navy); color: #fff; }
+.ft-info { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; background: rgba(255,255,255,.94); border-radius: var(--radius-md); padding: 12px 14px; }
+.ft-info h3 { margin: 0; font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 19px; color: var(--navy); }
+.ft-meta { font-size: 12.5px; color: var(--ink-soft); font-weight: 700; margin-top: 2px; }
+.ft-meta b { color: var(--accent); font-weight: 900; }
+.ft-go { flex: none; width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--accent); color: #fff; font-size: 18px; display: grid; place-items: center; cursor: pointer; transition: transform var(--hover-dur) var(--hover-ease); }
+.ft-tile:hover .ft-go { transform: translateX(4px); }
+.ft-go:focus-visible, .ft-btn:focus-visible, .ft-all:focus-visible { outline: 3px solid var(--purple); outline-offset: 3px; }
 
-.feat-media {
-  position: relative; border-radius: var(--radius-lg); aspect-ratio: 4/5; overflow: hidden;
-  background: var(--tint, var(--cream));
-  box-shadow: 0 10px 24px rgba(26,31,75,.12);
-  padding: 8%;
+.ft-star .ft-ph { padding: 20px 20px 178px; }
+.ft-star .ft-info { flex-direction: column; align-items: stretch; gap: 10px; }
+.ft-star .ft-info h3 { font-size: 24px; }
+.ft-lead { font-size: 13px; color: var(--ink-soft); line-height: 1.45; margin: 4px 0 0; }
+.ft-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ft-btn { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 13px; border-radius: 999px; padding: 10px 16px; border: 0; cursor: pointer; transition: background var(--hover-dur), color var(--hover-dur); }
+.ft-btn-dark { background: var(--navy); color: #fff; }
+.ft-btn-dark:hover { background: var(--pink); }
+.ft-btn-light { background: #fff; color: var(--navy); box-shadow: inset 0 0 0 2px var(--navy); }
+.ft-btn-light:hover { background: var(--navy); color: #fff; }
+.ft-tryon { position: absolute; top: 14px; right: 14px; width: 104px; background: #fff; border-radius: 18px; padding: 7px 7px 8px; box-shadow: 0 10px 24px -10px rgba(26,31,75,.4); text-align: center; }
+.ft-tryon canvas { width: 100%; aspect-ratio: 1; display: block; border-radius: 12px; background: #F6F6FA; }
+.ft-tryon span { display: block; font-size: 10.5px; font-weight: 800; color: var(--navy); margin-top: 6px; line-height: 1.25; }
+.ft-tryon em { font-style: normal; color: var(--pink); }
+
+.ft-dots { display: flex; justify-content: center; gap: 6px; margin: 4px 0 8px; }
+.ft-dots i { width: 7px; height: 7px; border-radius: 4px; background: #D9D9E3; transition: width .3s, background .3s; }
+.ft-dots i.on { width: 20px; background: var(--pink); }
+
+@media (min-width: 761px) {
+  .ft-bento { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: 250px 250px; gap: 16px; overflow: visible; }
+  .ft-tile { height: auto; }
+  .ft-tazas { grid-column: 1 / 3; grid-row: 1 / 3; }
+  .ft-playeras { grid-column: 3 / 5; grid-row: 1; }
+  .ft-sudaderas { grid-column: 3; grid-row: 2; }
+  .ft-libretas { grid-column: 4; grid-row: 2; }
+  .ft-star .ft-ph { padding: 30px 30px 150px; }
+  .ft-star .ft-info h3 { font-size: 26px; }
+  .ft-tryon { width: 132px; }
+  .ft-dots { display: none; }
 }
-.feat-media img { width: 100%; height: 100%; object-fit: contain; object-position: center; display: block; }
-.feat-ph { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 56px; }
-.feat-caption {
-  position: absolute; left: 0; right: 0; bottom: 0; background: var(--accent, var(--pink));
-  color: #fff; padding: 10px 12px 11px;
+@media (max-width: 760px) { .ft-all { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .ft-tile:hover .ft-ph img, .ft-tile:hover .ft-go { transform: none; }
 }
-.feat-name {
-  font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 14px;
-  text-transform: uppercase; color: #fff;
-}
-.feat-price { font-size: 11px; font-weight: 800; opacity: .92; margin-top: 1px; }
-.feat-desc { font-size: 11.5px; color: var(--ink-soft); line-height: 1.5; margin: 10px 2px 0; }
-.feat-btn {
-  margin: 10px 2px 0;
-  background: #fff;
-  border: 2px solid var(--navy);
-  color: var(--navy);
-  font-family: 'Fredoka', sans-serif;
-  font-weight: 700;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: .3px;
-  border-radius: 999px;
-  padding: 8px 16px;
-  cursor: pointer;
-  transition: all var(--hover-dur) var(--hover-ease);
-}
-.feat-btn:hover { background: var(--navy); color: #fff; }
 
 /* ===== More products banner ===== */
 .more-products { background: #fff; padding-bottom: 8px; }

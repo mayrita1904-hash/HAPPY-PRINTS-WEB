@@ -22,7 +22,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=64">
+<link rel="stylesheet" href="css/styles.css?v=65">
 </head>
 <body>
 
@@ -63,17 +63,16 @@
 <div class="lime-divider"></div>
 
 <section class="featured" aria-labelledby="featured-h">
-  <div class="featured-head">
+  <div class="ft-head">
     <div class="reveal">
-      <h2 id="featured-h" class="section-h" style="margin:0">Productos destacados</h2>
-      <p class="featured-sub">Los favoritos de siempre, listos para personalizar a tu gusto.</p>
+      <div class="ft-eyebrow">Los favoritos de siempre</div>
+      <h2 id="featured-h" class="ft-h">Productos destacados</h2>
+      <p class="ft-sub">Personalizados con tu foto, frase o logo. Diseño incluido y entrega rápida.</p>
     </div>
-    <div class="featured-arrows">
-      <button class="f-arrow" id="fPrev" onclick="moveFeatured(-1)" aria-label="Ver producto anterior">‹</button>
-      <button class="f-arrow" id="fNext" onclick="moveFeatured(1)" aria-label="Ver siguiente producto">›</button>
-    </div>
+    <button type="button" class="ft-all" onclick="filt('all')">Ver todo el catálogo →</button>
   </div>
-  <div class="featured-track" id="featured-grid"></div>
+  <div class="ft-bento" id="featured-grid"><p class="ft-loading">Cargando productos destacados…</p></div>
+  <div class="ft-dots" id="ftDots" aria-hidden="true"></div>
 </section>
 
 <div class="lime-divider"></div>
@@ -354,7 +353,7 @@
 
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <script src="js/motion.js?v=1"></script>
-<script src="js/main.js?v=44"></script>
+<script src="js/main.js?v=45"></script>
 <script src="js/animaciones.js?v=3"></script>
 <script src="js/analytics.js?v=1" defer></script>
 </body>
