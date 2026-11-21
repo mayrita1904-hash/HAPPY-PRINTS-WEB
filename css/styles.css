@@ -747,6 +747,13 @@ footer p { font-size: 11px; color: rgba(255,255,255,.55); margin: 0; line-height
 .mzoom svg { width: 20px; height: 20px; fill: #fff; }
 .mzoom.on { background: var(--pink); }
 .mthumbs { display: none; flex-wrap: wrap; gap: 8px; padding: 10px 20px 0; justify-content: center; max-height: 124px; overflow-y: auto; scrollbar-width: none; }
+/* Celular: el modal es una columna flex con altura limitada y la tira de miniaturas se encogía
+   hasta quedar cortada. Ahora no se encoge y va en una sola fila deslizable con el dedo. */
+@media (max-width: 899px) {
+  .mthumbs { flex-shrink: 0; flex-wrap: nowrap; max-height: none; overflow-x: auto; overflow-y: hidden;
+    justify-content: safe center; padding: 10px 16px 4px; scroll-snap-type: x proximity; }
+  .mthumb { flex-shrink: 0; scroll-snap-align: center; }
+}
 .mthumbs::-webkit-scrollbar { display: none; }
 .mthumb {
   width: 56px; height: 56px; flex: 0 0 auto; object-fit: cover; border-radius: 10px;
