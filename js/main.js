@@ -44,13 +44,13 @@ async function get(path) {
 /* ── Secciones estáticas de servicios (tipo Canva) ── */
 const SERVICE_TILES = [
   { title: 'Sublimación, DTF y Vinil', sub: '', icon: '👕', img: 'assets/images/sublimacion-dtf-vinil.webp', color: '#7C3AED', showAll: true },
-  { title: 'Libretas, Agendas y Planners', sub: '', icon: '📓', img: 'assets/images/libretas-agendas-planners.webp', color: '#1FB6AE', kw: ['libreta','agenda','planner'] },
+  { title: 'Libretas, Agendas y Planners', sub: '', icon: '📓', img: 'assets/images/libretas-agendas-planners.webp?v=2', color: '#1FB6AE', kw: ['libreta','agenda','planner'] },
   { title: 'Sellos, Etiquetas y Credenciales', sub: '', icon: '🏷️', img: 'assets/images/sellos-etiquetas-credenciales.webp', color: '#F5A623', kw: ['sello','etiqueta','credencial'] },
   { title: 'Invitaciones y Papelería Social', sub: '', icon: '💌', img: 'assets/images/invitaciones-papeleria-social.webp', color: '#FF2D78', kw: ['invitac','papeler'] },
   { title: 'Impresión Digital y Publicidad', sub: '', icon: '🖼️', img: 'assets/images/impresion-digital-publicidad.webp', color: '#F6C55B', kw: ['impresion','digital','publicidad'] },
   { title: 'Offset y Serigrafía', sub: '', icon: '🖨️', img: 'assets/images/offset-serigrafia.webp', color: '#E91E8C', kw: ['offset','serigraf'] },
   { title: 'Grabado y Corte Láser', sub: '', icon: '✂️', img: 'assets/images/grabado-corte-laser.webp', color: '#B4C430', kw: ['grabado','laser','corte'] },
-  { title: 'Contenido Digital', sub: '', icon: '🎨', img: 'assets/images/diseno-grafico-contenido-digital.webp', color: '#1FADA0', link: '/pages/contenido-digital' }
+  { title: 'Contenido Digital', sub: '', icon: '🎨', img: 'assets/images/diseno-grafico-contenido-digital.webp?v=2', color: '#1FADA0', link: '/pages/contenido-digital' }
 ];
 
 const FEATURED = [
