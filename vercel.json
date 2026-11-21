@@ -37,5 +37,18 @@
       "path": "/api/supabase-keepalive",
       "schedule": "0 15 */3 * *"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/((?!api/).*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "happy-prints-web.vercel.app"
+        }
+      ],
+      "destination": "https://happyprintsmx.com/$1",
+      "permanent": true
+    }
   ]
 }
