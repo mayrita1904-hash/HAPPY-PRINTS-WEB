@@ -331,6 +331,10 @@ img { max-width: 100%; display: block; }
   .ft-playeras { grid-column: 3 / 5; grid-row: 1; }
   .ft-sudaderas { grid-column: 3; grid-row: 2; }
   .ft-libretas { grid-column: 4; grid-row: 2; }
+  /* Playeras: tarjeta ancha y foto vertical → foto a la derecha a toda la altura, texto a la izquierda */
+  .ft-playeras .ft-ph { left: 40%; padding: 12px 12px 0; align-items: flex-end; }
+  .ft-playeras .ft-ph img { height: 100%; max-height: none; }
+  .ft-playeras .ft-info { max-width: 46%; }
   .ft-star .ft-ph { padding: 30px 30px 150px; }
   .ft-star .ft-info h3 { font-size: 26px; }
   .ft-tryon { width: 132px; }
