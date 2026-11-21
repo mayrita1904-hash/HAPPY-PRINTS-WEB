@@ -67,23 +67,41 @@
       prog.style.strokeDashoffset = total - len;
       cards.forEach((c, i) => c.classList.toggle('on', marks[i] <= len + 0.5));
     }
-    function play() {
-      buildPath();
-      const dur = 4200, t0 = performance.now();
-      const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    // Se repite en ciclo mientras la sección está en pantalla:
+    // recorre los 6 pasos (4.2 s) → se queda completo (3 s) → se rebobina (0.8 s) → pausa → otra vez.
+    // Fuera de pantalla se detiene, y retoma al volver. El confeti solo sale la primera vez.
+    let visible = false, running = false, firstRun = true;
+    const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    function animate(from, to, dur, cb) {
+      const t0 = performance.now();
       const tick = now => {
         const t = Math.min(1, (now - t0) / dur);
-        setProgress(total * ease(t));
-        if (t < 1) requestAnimationFrame(tick);
-        else if (done) { restart(done, 'pop'); burst(done, 16, 110, 7); }
+        setProgress(from + (to - from) * ease(t));
+        if (t < 1) requestAnimationFrame(tick); else cb();
       };
       requestAnimationFrame(tick);
+    }
+    function cycle() {
+      if (!visible) { running = false; return; }
+      running = true;
+      buildPath();
+      // Si quedó completo de una vuelta anterior, primero se rebobina con suavidad.
+      if (cards[cards.length - 1].classList.contains('on')) { animate(total, 0, 800, () => setTimeout(cycle, 500)); return; }
+      animate(0, total, 4200, () => {
+        if (done) { restart(done, 'pop'); if (firstRun) burst(done, 16, 110, 7); }
+        firstRun = false;
+        setTimeout(() => {
+          if (!visible) { running = false; return; } // se queda completo si ya no está a la vista
+          animate(total, 0, 800, () => setTimeout(cycle, 700));
+        }, 3000);
+      });
     }
 
     buildPath();
     setProgress(0);
-    new IntersectionObserver((entries, ob) => {
-      if (entries.some(e => e.isIntersecting) && !played) { played = true; ob.disconnect(); setTimeout(play, 300); }
+    new IntersectionObserver(entries => {
+      visible = entries.some(e => e.isIntersecting);
+      if (visible && !running) { played = true; running = true; setTimeout(cycle, 300); }
     }, { threshold: .3 }).observe(steps);
 
     let lastW = steps.offsetWidth;
