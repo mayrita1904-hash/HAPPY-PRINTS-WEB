@@ -1817,3 +1817,23 @@ footer p { font-size: 11px; color: rgba(255,255,255,.55); margin: 0; line-height
 @media (prefers-reduced-motion: reduce) {
   .xp-sticky, .xp-tier, .xp-prod { transition: none; }
 }
+
+/* Experience: prensa en vivo y productos disponibles en una sola sección (lado a lado en escritorio) */
+.xp-duo-grid { display: grid; gap: 44px; max-width: 1120px; margin: 0 auto; }
+.xp-col { min-width: 0; }
+.xp-duo .exp-steps-h { text-transform: none; letter-spacing: 0; font-size: clamp(19px, 4vw, 26px); margin-bottom: 8px; }
+.xp-duo .exp-products-sub { margin-bottom: 22px; }
+.xp-try-sec { padding-top: 36px; }
+.xp-try-sec .xp-try { margin-top: 0; }
+@media (min-width: 900px) {
+  .xp-duo { padding-left: 32px; padding-right: 32px; }
+  .xp-duo-grid { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 48px; align-items: stretch; }
+  .xp-duo .exp-steps-h, .xp-duo .exp-products-h, .xp-duo .exp-products-sub { text-align: left; margin-left: 0; margin-right: 0; max-width: none; }
+  .xp-col-press { display: flex; flex-direction: column; }
+  .xp-col-press .xp-press-wrap { flex: 1; display: flex; flex-direction: column; max-width: none; margin: 0; }
+  .xp-col-press .xp-press { flex: 1; padding: 24px; }
+  .xp-duo .exp-product-list { max-width: none; gap: 14px; }
+  .xp-duo .exp-product-card { min-height: 150px; }
+  .xp-duo .exp-product-text { max-width: 54%; padding: 22px 18px 22px 26px; }
+  .xp-duo .exp-product-imgwrap { width: 54%; }
+}
