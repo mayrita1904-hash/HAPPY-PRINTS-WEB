@@ -25,7 +25,10 @@ Sitio web de **Happy Prints** (Toluca, México) — catálogo y venta de product
 ├── /js
 │   ├── main.js               # Toda la lógica del home: carga Supabase, catálogo, calculadora de precio,
 │   │                          # editor de personalización, subida de archivos, mensaje de WhatsApp
-│   ├── experience.js         # Carga los paquetes de la página de servicios
+│   ├── experience.js         # Página Experience: paquetes (con precio por invitado), cotizador "Arma tu evento" (#cotiza,
+│   │                          # arma el mensaje de WhatsApp y recomienda paquete), prensa animada, "Pruébalo con tu diseño"
+│   │                          # (la imagen subida solo se usa para la vista previa, no se sube), celebraciones que avanzan solas,
+│   │                          # barra fija "Cotizar" en celular
 │   ├── cursos.js              # Auth de clientes (Supabase Auth), catálogo de cursos, inicia el pago con Mercado Pago
 │   ├── animaciones.js         # Animaciones del home: hilo de "¿Cómo hacer tu pedido?", producto que vuela al carrito,
 │   │                          # estallido de favoritos, toquecito de WhatsApp, estrellas de reseñas (todo apagado con reduced-motion)
