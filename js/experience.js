@@ -291,7 +291,7 @@ function actualizarCotizador() {
     rec = P[i === -1 ? P.length - 1 : i];
     document.getElementById('xpTiers').innerHTML = P.map(p => `<div class="xp-tier${p === rec ? ' rec' : ''}">
       <b>${escHtml(p.nombre)}</b><span>${p.piezas}${p.plus ? '+' : ''} piezas</span>
-      <strong>${money(p.precio)}${p.plus ? '+' : ''}</strong><span>≈ ${money(p.precio / p.piezas)} c/u</span></div>`).join('');
+      <strong>${money(p.precio)}${p.plus ? '+' : ''}</strong></div>`).join('');
     const extra = inv > rec.piezas ? ` Para ${inv} invitados cotizamos las piezas extra.` : '';
     document.getElementById('xpReco').innerHTML = `Para <b>${inv} invitados</b> te recomendamos el paquete <b>${escHtml(rec.nombre)}</b>: ${rec.piezas}${rec.plus ? '+' : ''} piezas por ${money(rec.precio)}${rec.plus ? '+' : ''}.${extra}`;
   } else {
